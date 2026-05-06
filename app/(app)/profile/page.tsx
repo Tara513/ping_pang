@@ -11,10 +11,10 @@ import PageWrapper from "@/components/layout/PageWrapper"
 import Avatar from "@/components/ui/Avatar"
 import Card from "@/components/ui/Card"
 import Badge from "@/components/ui/Badge"
-import { Settings } from "lucide-react"
+import { Settings, Disc, Swords, BarChart2, MapPin, Flame, Zap, Target, Trophy, TrendingUp, Globe, Users } from "lucide-react"
 import type { Profile, Session, Match, Equipment, EloRating } from "@/types/database"
 import { FEDERATION_META } from "@/lib/elo/calculator"
-import { BADGE_DEFINITIONS } from "@/types/app"
+import { BADGE_DEFINITIONS, BADGE_ICONS } from "@/types/app"
 import { demoSessions, demoMatches, demoEloRatings } from "@/lib/seeds/demoData"
 
 const LEVEL_LABELS: Record<string, string> = {
@@ -98,7 +98,10 @@ export default function ProfilePage() {
                 <span className="ml-2 text-xs text-olive">{PLAY_STYLE_LABELS[profile.play_style]}</span>
               )}
               {profile?.city && (
-                <div className="text-xs text-olive mt-1">📍 {profile.city}{profile.club ? ` · ${profile.club}` : ""}</div>
+                <div className="text-xs text-olive mt-1 flex items-center gap-1">
+                  <MapPin size={11} strokeWidth={1.5} />
+                  {profile.city}{profile.club ? ` · ${profile.club}` : ""}
+                </div>
               )}
             </div>
           </div>
@@ -154,8 +157,8 @@ export default function ProfilePage() {
                         href={item.type === "session" ? `/session/${item.data.id}` : `/match/${item.data.id}`}
                       >
                         <Card className="flex items-center gap-3 hover:border-white/20 transition-all">
-                          <div className="text-2xl">
-                            {item.type === "session" ? "🏓" : "⚔️"}
+                          <div className="text-olive">
+                            {item.type === "session" ? <Disc size={22} strokeWidth={1.5} /> : <Swords size={22} strokeWidth={1.5} />}
                           </div>
                           <div className="flex-1">
                             <div className="text-sm text-white font-semibold">
@@ -196,9 +199,9 @@ export default function ProfilePage() {
               {tab === 2 && (
                 <div className="flex flex-col gap-3">
                   {elos.length === 0 ? (
-                    <div className="text-center py-12 text-olive">
-                      <div className="text-4xl mb-2">📊</div>
-                      Aucun ELO enregistré
+                    <div className="text-center py-12 text-olive flex flex-col items-center gap-2">
+                      <BarChart2 size={36} strokeWidth={1} />
+                      <span>Aucun ELO enregistré</span>
                     </div>
                   ) : (
                     elos.map((r) => {
@@ -206,7 +209,9 @@ export default function ProfilePage() {
                       return (
                         <Card key={r.federation} className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <span className="text-2xl">{meta?.flag}</span>
+                            <div className="w-8 h-8 bg-anthracite border border-white/10 flex items-center justify-center">
+                              <Globe size={16} strokeWidth={1.5} className="text-olive" />
+                            </div>
                             <div>
                               <div className="font-semibold text-sm text-white">{meta?.name}</div>
                               <div className="text-xs text-olive">{meta?.country}</div>
@@ -223,9 +228,9 @@ export default function ProfilePage() {
               {tab === 3 && (
                 <div className="flex flex-col gap-3">
                   {equipment.length === 0 ? (
-                    <div className="text-center py-12 text-olive">
-                      <div className="text-4xl mb-2">🏓</div>
-                      Aucun matériel renseigné
+                    <div className="text-center py-12 text-olive flex flex-col items-center gap-2">
+                      <Disc size={36} strokeWidth={1} />
+                      <span>Aucun matériel renseigné</span>
                     </div>
                   ) : (
                     equipment.map((eq) => (
@@ -268,7 +273,9 @@ export default function ProfilePage() {
                           earned ? "border-kaki bg-kaki/10" : "border-white/10 opacity-40"
                         }`}
                       >
-                        <div className="text-3xl mb-1">{b.emoji}</div>
+                        <div className="flex justify-center mb-2" style={{ color: b.color }}>
+                          {(() => { const Icon = BADGE_ICONS[b.type]; return <Icon size={24} strokeWidth={1.5} /> })()}
+                        </div>
                         <div className="text-[10px] text-white font-semibold uppercase tracking-wider">{b.label}</div>
                         <div className="text-[10px] text-olive mt-0.5">{b.description}</div>
                       </div>

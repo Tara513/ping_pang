@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client"
 import TopBar from "@/components/layout/TopBar"
 import type { Session, Match } from "@/types/database"
 import { demoSessions, demoMatches } from "@/lib/seeds/demoData"
+import { Map } from "lucide-react"
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || ""
 
@@ -122,14 +123,18 @@ export default function MapPage() {
             display: flex; align-items: center; justify-content: center;
             cursor: pointer; font-size: 14px;
           `
-          el.textContent = point.type === "session" ? "🏓" : "⚔️"
+          el.style.fontFamily = "'Bebas Neue', sans-serif"
+          el.style.color = "#F5F2EC"
+          el.style.fontSize = "11px"
+          el.style.letterSpacing = "0.05em"
+          el.textContent = point.type === "session" ? "S" : "M"
 
           const popup = new mapboxgl.Popup({ offset: 20, className: "pingtrack-popup" })
             .setHTML(`
               <div style="font-family: system-ui; color: #F5F2EC;">
                 <div style="font-weight: 600; font-size: 13px;">${point.label}</div>
                 <div style="font-size: 11px; color: #8A9178; margin-top: 2px;">
-                  ${point.type === "session" ? "🏓 Séance" : "⚔️ Match"}
+                  ${point.type === "session" ? "Séance" : "Match"}
                   ${point.result ? (point.result === "win" ? " — Victoire" : " — Défaite") : ""}
                 </div>
                 <div style="font-size: 10px; color: #8A9178;">${point.date}</div>
@@ -163,7 +168,7 @@ export default function MapPage() {
                 filter === f ? "bg-white text-black border-white" : "border-white/20 text-olive hover:border-white/40"
               }`}
             >
-              {f === "all" ? "Tous" : f === "session" ? "🏓 Séances" : "⚔️ Matchs"}
+              {f === "all" ? "Tous" : f === "session" ? "Séances" : "Matchs"}
             </button>
           ))}
           <span className="ml-auto text-xs text-olive self-center">{filteredCount} lieux</span>
@@ -171,7 +176,7 @@ export default function MapPage() {
 
         {!MAPBOX_TOKEN ? (
           <div className="flex items-center justify-center h-full flex-col gap-4 text-center px-8">
-            <div className="text-5xl">🗺</div>
+            <div className="text-olive"><Map size={48} strokeWidth={1} /></div>
             <div className="font-display text-3xl text-white uppercase">Carte</div>
             <p className="text-olive text-sm">
               Configure <code className="text-white bg-anthracite px-2 py-0.5">NEXT_PUBLIC_MAPBOX_TOKEN</code> pour activer la carte interactive.

@@ -3,9 +3,9 @@
 export const dynamic = "force-dynamic"
 
 
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import Link from "next/link"
-import { Bell, Flame } from "lucide-react"
+import { Bell, Flame, Disc, Swords, Dumbbell, Target, Trophy, Coffee, MapPin, Star } from "lucide-react"
 import { motion } from "framer-motion"
 import { createClient } from "@/lib/supabase/client"
 import Avatar from "@/components/ui/Avatar"
@@ -25,8 +25,8 @@ interface FeedEntry {
   profile: Profile
 }
 
-const SESSION_ICONS: Record<string, string> = {
-  technique: "🏓", physique: "💪", match: "⚔️", service: "🎯", competition: "🏆", chill: "😎"
+const SESSION_ICON_COMPONENTS: Record<string, React.ElementType> = {
+  technique: Disc, physique: Dumbbell, match: Swords, service: Target, competition: Trophy, chill: Coffee
 }
 
 const SESSION_LABELS: Record<string, string> = {
@@ -107,7 +107,9 @@ function FeedItem({ entry }: { entry: FeedEntry }) {
   const typeColor = isSession
     ? SESSION_TYPE_COLORS[s.session_type] || "#4A5240"
     : m.result === "win" ? "#4A5240" : "#C8352A"
-  const icon = isSession ? SESSION_ICONS[s.session_type] : "⚔️"
+  const IconComponent = isSession
+    ? (SESSION_ICON_COMPONENTS[s.session_type] || Disc)
+    : Swords
   const dateStr = formatDistanceToNow(new Date(entry.data.date), { addSuffix: true, locale: fr })
 
   return (
@@ -121,10 +123,10 @@ function FeedItem({ entry }: { entry: FeedEntry }) {
                 {entry.profile.full_name || entry.profile.username}
               </span>
               <span
-                className="text-[10px] font-semibold uppercase px-2 py-0.5 text-white"
+                className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase px-2 py-0.5 text-white"
                 style={{ backgroundColor: typeColor }}
               >
-                {icon} {typeLabel}
+                <IconComponent size={10} strokeWidth={2} /> {typeLabel}
               </span>
               {!isSession && m.result && (
                 <Badge
@@ -138,8 +140,18 @@ function FeedItem({ entry }: { entry: FeedEntry }) {
             {isSession && (
               <div className="flex items-center gap-3 mt-2 text-xs text-olive">
                 <span>{Math.round((s.duration_min || 0) / 60 * 10) / 10}h</span>
-                {s.feeling && <span>{"⭐".repeat(s.feeling)}</span>}
-                {s.location && <span>📍 {s.location}</span>}
+                {s.feeling && (
+                  <span className="flex items-center gap-0.5">
+                    {Array.from({ length: s.feeling }).map((_, i) => (
+                      <Star key={i} size={10} fill="currentColor" strokeWidth={0} className="text-yellow" />
+                    ))}
+                  </span>
+                )}
+                {s.location && (
+                  <span className="flex items-center gap-1">
+                    <MapPin size={10} strokeWidth={1.5} /> {s.location}
+                  </span>
+                )}
               </div>
             )}
 
@@ -274,7 +286,9 @@ export default function DashboardPage() {
           </div>
         ) : (
           <Card className="text-center py-12">
-            <div className="text-4xl mb-3">🏓</div>
+            <div className="flex justify-center mb-3 text-olive">
+              <Disc size={40} strokeWidth={1} />
+            </div>
             <div className="font-display text-2xl text-white uppercase mb-2">C&apos;est parti !</div>
             <div className="text-olive text-sm">Enregistre ta première séance</div>
           </Card>

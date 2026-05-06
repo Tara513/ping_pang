@@ -15,6 +15,7 @@ import type { Match } from "@/types/database"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
 import { demoMatches } from "@/lib/seeds/demoData"
+import { MapPin } from "lucide-react"
 
 const MATCH_LABELS: Record<string, string> = {
   friendly: "Amical", league: "Championnat", tournament: "Tournoi", training: "Entraînement"
@@ -133,7 +134,7 @@ export default function MatchDetailPage() {
           {match.location && (
             <Card>
               <div className="text-[10px] text-olive uppercase tracking-wider mb-1 font-semibold">Lieu</div>
-              <div className="text-sm text-white">📍 {match.location}</div>
+              <div className="text-sm text-white flex items-center gap-1"><MapPin size={12} strokeWidth={1.5} /> {match.location}</div>
             </Card>
           )}
 

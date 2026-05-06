@@ -10,6 +10,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { motion } from "framer-motion"
+import { Disc } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
@@ -59,7 +60,7 @@ export default function RegisterPage() {
       >
         <div className="inline-flex items-center gap-3">
           <div className="w-10 h-10 bg-kaki flex items-center justify-center">
-            <span className="text-white text-lg">🏓</span>
+            <Disc size={20} strokeWidth={1.5} className="text-white" />
           </div>
           <div>
             <div className="font-display text-3xl text-white uppercase leading-none">PingTrack</div>

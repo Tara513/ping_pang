@@ -15,6 +15,7 @@ import StatCard from "@/components/ui/StatCard"
 import Card from "@/components/ui/Card"
 import type { Session, Match } from "@/types/database"
 import { demoSessions, demoMatches } from "@/lib/seeds/demoData"
+import { Flame } from "lucide-react"
 import { format, startOfWeek, eachWeekOfInterval, subMonths } from "date-fns"
 import { fr } from "date-fns/locale"
 
@@ -271,7 +272,7 @@ export default function StatsPage() {
                 {filteredMatches.length > 0 && (
                   <>Ton win rate est de <span className={`font-semibold ${winRate >= 50 ? "text-kaki" : "text-red"}`}>{winRate}%</span> sur {filteredMatches.length} matchs. </>
                 )}
-                {streak > 2 && <span className="text-yellow">🔥 Tu es sur une série de {streak} jours !</span>}
+                {streak > 2 && <span className="text-yellow inline-flex items-center gap-1"><Flame size={13} fill="currentColor" strokeWidth={0} /> Tu es sur une série de {streak} jours !</span>}
               </p>
             </Card>
           </div>

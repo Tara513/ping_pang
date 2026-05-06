@@ -9,6 +9,7 @@ import { demoSessions, demoMatches } from "@/lib/seeds/demoData"
 import type { Session, Match } from "@/types/database"
 import { formatDistanceToNow } from "date-fns"
 import { fr } from "date-fns/locale"
+import { Disc, Dumbbell, Swords, Target, Trophy, Coffee, Heart, Star, type LucideIcon } from "lucide-react"
 
 const DEMO_FRIENDS = [
   { id: "f1", username: "thomas_m", full_name: "Thomas M.", avatar_url: null },
@@ -20,8 +21,9 @@ const SESSION_LABELS: Record<string, string> = {
   technique: "Technique", physique: "Physique", match: "Match",
   service: "Service", competition: "Compétition", chill: "Chill"
 }
-const SESSION_ICONS: Record<string, string> = {
-  technique: "🏓", physique: "💪", match: "⚔️", service: "🎯", competition: "🏆", chill: "😎"
+const SESSION_ICON_MAP: Record<string, LucideIcon> = {
+  technique: Disc, physique: Dumbbell, match: Swords,
+  service: Target, competition: Trophy, chill: Coffee
 }
 
 export default function SocialFeedPage() {
@@ -73,8 +75,9 @@ export default function SocialFeedPage() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-semibold text-sm text-white">{item.friend.full_name}</span>
                     {isSession ? (
-                      <span className="text-[10px] font-semibold uppercase px-2 py-0.5 bg-kaki text-white">
-                        {SESSION_ICONS[s.session_type || ""]} {SESSION_LABELS[s.session_type || ""] || s.session_type}
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase px-2 py-0.5 bg-kaki text-white">
+                        {(() => { const Icon = SESSION_ICON_MAP[s.session_type || ""] || Disc; return <Icon size={10} strokeWidth={2} /> })()}
+                        {SESSION_LABELS[s.session_type || ""] || s.session_type}
                       </span>
                     ) : (
                       <Badge label={m.result === "win" ? "Victoire" : "Défaite"} color={m.result === "win" ? "kaki" : "red"} />
@@ -85,7 +88,13 @@ export default function SocialFeedPage() {
                   {isSession && (
                     <div className="flex gap-3 mt-2 text-xs text-olive">
                       <span>{Math.round((s.duration_min || 0) / 60 * 10) / 10}h</span>
-                      {s.feeling && <span>{"⭐".repeat(s.feeling)}</span>}
+                      {s.feeling && (
+                        <span className="flex items-center gap-0.5">
+                          {Array.from({ length: s.feeling }).map((_, i) => (
+                            <Star key={i} size={9} fill="currentColor" strokeWidth={0} className="text-yellow" />
+                          ))}
+                        </span>
+                      )}
                     </div>
                   )}
                   {!isSession && (
@@ -94,8 +103,8 @@ export default function SocialFeedPage() {
                     </div>
                   )}
                 </div>
-                <button className="text-[10px] text-olive border border-white/20 px-2 py-1 hover:border-white/40 transition-all uppercase">
-                  ❤
+                <button className="text-olive border border-white/20 p-2 hover:border-white/40 hover:text-red transition-all">
+                  <Heart size={14} strokeWidth={1.5} />
                 </button>
               </Card>
             )

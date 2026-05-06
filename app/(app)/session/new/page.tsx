@@ -6,6 +6,7 @@ export const dynamic = "force-dynamic"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
+import { Disc, Dumbbell, Swords, Target, Trophy, Coffee, type LucideIcon } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/components/ui/Toast"
 import TopBar from "@/components/layout/TopBar"
@@ -16,13 +17,13 @@ import Textarea from "@/components/ui/Textarea"
 import Slider from "@/components/ui/Slider"
 import type { SessionType } from "@/types/database"
 
-const SESSION_TYPES: { value: SessionType; label: string; icon: string; color: string }[] = [
-  { value: "technique", label: "Technique", icon: "🏓", color: "#4A5240" },
-  { value: "physique", label: "Physique", icon: "💪", color: "#8A9178" },
-  { value: "match", label: "Match", icon: "⚔️", color: "#C8352A" },
-  { value: "service", label: "Service", icon: "🎯", color: "#E8C840" },
-  { value: "competition", label: "Compétition", icon: "🏆", color: "#E8C840" },
-  { value: "chill", label: "Chill", icon: "😎", color: "#2A2A2A" },
+const SESSION_TYPES: { value: SessionType; label: string; icon: LucideIcon; color: string }[] = [
+  { value: "technique", label: "Technique", icon: Disc, color: "#4A5240" },
+  { value: "physique", label: "Physique", icon: Dumbbell, color: "#8A9178" },
+  { value: "match", label: "Match", icon: Swords, color: "#C8352A" },
+  { value: "service", label: "Service", icon: Target, color: "#E8C840" },
+  { value: "competition", label: "Compétition", icon: Trophy, color: "#E8C840" },
+  { value: "chill", label: "Chill", icon: Coffee, color: "#2A2A2A" },
 ]
 
 const EXERCISES_PRESETS = [
@@ -33,7 +34,7 @@ const EXERCISES_PRESETS = [
   "Match entraînement", "Jeu libre",
 ]
 
-const FEELING_LABELS = ["", "😤 Mauvais", "😕 Bof", "😐 Neutre", "😊 Bien", "🤩 Excellent"]
+const FEELING_LABELS = ["", "Mauvais", "Bof", "Neutre", "Bien", "Excellent"]
 
 function SessionEndedModal({ onDescribe, onQuick, loading }: { onDescribe: () => void; onQuick: () => void; loading: boolean }) {
   return (
@@ -47,7 +48,9 @@ function SessionEndedModal({ onDescribe, onQuick, loading }: { onDescribe: () =>
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 0.1, type: "spring" }}
       >
-        <div className="text-6xl mb-4">🏓</div>
+        <div className="flex justify-center mb-4 text-olive">
+          <Disc size={56} strokeWidth={1} />
+        </div>
         <h2 className="font-display text-5xl text-white uppercase mb-2">Séance terminée !</h2>
         <p className="text-olive text-sm mb-8">Tu veux décrire ta séance ?</p>
 
@@ -111,7 +114,7 @@ export default function NewSessionPage() {
         has_description: withDescription,
       })
 
-      toast("Séance enregistrée ! 🏓", "success")
+      toast("Séance enregistrée !", "success")
       router.push("/dashboard")
     } catch {
       toast("Erreur lors de l'enregistrement", "error")
@@ -157,7 +160,7 @@ export default function NewSessionPage() {
                       }`}
                       style={sessionType === t.value ? { borderColor: t.color, backgroundColor: `${t.color}20` } : {}}
                     >
-                      <span className="text-2xl">{t.icon}</span>
+                      <t.icon size={20} strokeWidth={1.5} />
                       <span className="font-semibold text-sm">{t.label}</span>
                     </button>
                   ))}
@@ -272,12 +275,13 @@ export default function NewSessionPage() {
                     <button
                       key={v}
                       onClick={() => setFeeling(v)}
-                      className={`flex-1 py-3 text-2xl border transition-all ${
-                        feeling === v ? "border-kaki bg-kaki/20" : "border-white/10 hover:border-white/30"
+                      className={`flex-1 py-3 border transition-all flex flex-col items-center gap-1 ${
+                        feeling === v ? "border-kaki bg-kaki/20 text-white" : "border-white/10 text-olive hover:border-white/30"
                       }`}
                       title={FEELING_LABELS[v]}
                     >
-                      {["", "😤", "😕", "😐", "😊", "🤩"][v]}
+                      <span className="font-display text-2xl leading-none">{v}</span>
+                      <span className="text-[9px] uppercase tracking-wide">{FEELING_LABELS[v]}</span>
                     </button>
                   ))}
                 </div>

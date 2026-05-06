@@ -6,6 +6,7 @@ export const dynamic = "force-dynamic"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
+import { Sprout, Disc, Zap, Medal, Crown, Flame, Shield, Scale, Pen, Shuffle, TrendingUp, Smile, Trophy, Target, BookOpen, type LucideIcon } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -18,20 +19,20 @@ import { FEDERATION_META } from "@/lib/elo/calculator"
 
 const TOTAL_STEPS = 5
 
-const LEVELS: { value: PlayerLevel; label: string; icon: string }[] = [
-  { value: "beginner", label: "Débutant", icon: "🌱" },
-  { value: "intermediate", label: "Intermédiaire", icon: "🏓" },
-  { value: "advanced", label: "Avancé", icon: "⚡" },
-  { value: "competitive", label: "Compétiteur", icon: "🥇" },
-  { value: "elite", label: "Elite", icon: "👑" },
+const LEVELS: { value: PlayerLevel; label: string; icon: LucideIcon }[] = [
+  { value: "beginner", label: "Débutant", icon: Sprout },
+  { value: "intermediate", label: "Intermédiaire", icon: Disc },
+  { value: "advanced", label: "Avancé", icon: Zap },
+  { value: "competitive", label: "Compétiteur", icon: Medal },
+  { value: "elite", label: "Elite", icon: Crown },
 ]
 
-const PLAY_STYLES: { value: PlayStyle; label: string; icon: string }[] = [
-  { value: "attacker", label: "Attaquant", icon: "🔥" },
-  { value: "defender", label: "Défenseur", icon: "🛡" },
-  { value: "allround", label: "Polyvalent", icon: "⚖️" },
-  { value: "penhold", label: "Penholder", icon: "✏️" },
-  { value: "other", label: "Autre", icon: "🌀" },
+const PLAY_STYLES: { value: PlayStyle; label: string; icon: LucideIcon }[] = [
+  { value: "attacker", label: "Attaquant", icon: Flame },
+  { value: "defender", label: "Défenseur", icon: Shield },
+  { value: "allround", label: "Polyvalent", icon: Scale },
+  { value: "penhold", label: "Penholder", icon: Pen },
+  { value: "other", label: "Autre", icon: Shuffle },
 ]
 
 const FEDERATIONS = Object.keys(FEDERATION_META) as Federation[]
@@ -262,7 +263,7 @@ function Step2({ data, update }: { data: Partial<OnboardingData>; update: (p: Pa
                   : "border-white/10 text-olive hover:border-white/30"
               }`}
             >
-              <span className="text-2xl">{l.icon}</span>
+              <l.icon size={20} strokeWidth={1.5} />
               <span className="font-sans font-semibold">{l.label}</span>
             </button>
           ))}
@@ -282,7 +283,7 @@ function Step2({ data, update }: { data: Partial<OnboardingData>; update: (p: Pa
                   : "border-white/10 text-olive hover:border-white/30"
               }`}
             >
-              <span>{s.icon}</span>
+              <s.icon size={16} strokeWidth={1.5} />
               <span className="font-sans text-sm font-medium">{s.label}</span>
             </button>
           ))}
@@ -302,7 +303,7 @@ function Step2({ data, update }: { data: Partial<OnboardingData>; update: (p: Pa
                   : "border-white/10 text-olive hover:border-white/30"
               }`}
             >
-              {h === "right" ? "🤜 Droite" : "🤛 Gauche"}
+              {h === "right" ? "Droite" : "Gauche"}
             </button>
           ))}
         </div>
@@ -315,7 +316,7 @@ function Step3({ data, update }: { data: Partial<OnboardingData>; update: (p: Pa
   if (data.skip_equipment) {
     return (
       <div className="flex flex-col gap-6 items-center justify-center flex-1 text-center">
-        <span className="text-6xl">🏓</span>
+        <div className="text-olive"><Disc size={52} strokeWidth={1} /></div>
         <h2 className="font-display text-3xl text-white uppercase">Matériel ignoré</h2>
         <p className="text-olive text-sm">Tu pourras renseigner ton matériel plus tard depuis ton profil.</p>
         <button onClick={() => update({ skip_equipment: false })} className="text-xs text-olive underline hover:text-white">
@@ -451,12 +452,12 @@ function Step4({ data, update }: { data: Partial<OnboardingData>; update: (p: Pa
 }
 
 function Step5({ data, update }: { data: Partial<OnboardingData>; update: (p: Partial<OnboardingData>) => void }) {
-  const GOALS = [
-    { value: "progress", label: "Progresser", icon: "📈" },
-    { value: "fun", label: "Me défouler", icon: "🎉" },
-    { value: "competition", label: "Compétition", icon: "🏆" },
-    { value: "coaching", label: "Coaching", icon: "🎯" },
-    { value: "discovery", label: "Découverte", icon: "🌱" },
+  const GOALS: { value: string; label: string; icon: LucideIcon }[] = [
+    { value: "progress", label: "Progresser", icon: TrendingUp },
+    { value: "fun", label: "Me défouler", icon: Smile },
+    { value: "competition", label: "Compétition", icon: Trophy },
+    { value: "coaching", label: "Coaching", icon: Target },
+    { value: "discovery", label: "Découverte", icon: BookOpen },
   ]
 
   return (
@@ -489,7 +490,7 @@ function Step5({ data, update }: { data: Partial<OnboardingData>; update: (p: Pa
                   : "border-white/10 text-olive hover:border-white/30"
               }`}
             >
-              <span className="text-2xl">{g.icon}</span>
+              <g.icon size={20} strokeWidth={1.5} />
               <span className="font-sans font-semibold">{g.label}</span>
             </button>
           ))}
@@ -498,7 +499,7 @@ function Step5({ data, update }: { data: Partial<OnboardingData>; update: (p: Pa
 
       <div className="bg-kaki/10 border border-kaki/30 p-4 text-center">
         <p className="font-display text-2xl text-white uppercase mb-1">Prêt à tracker !</p>
-        <p className="text-sm text-olive">Ton profil est configuré. Let&apos;s play. 🏓</p>
+        <p className="text-sm text-olive">Ton profil est configuré. Let&apos;s play.</p>
       </div>
     </div>
   )

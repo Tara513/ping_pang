@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
-import { Plus, Trash2 } from "lucide-react"
+import { Plus, Trash2, Handshake, Medal, Trophy, Target, type LucideIcon } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/components/ui/Toast"
 import TopBar from "@/components/layout/TopBar"
@@ -17,11 +17,11 @@ import Textarea from "@/components/ui/Textarea"
 import Card from "@/components/ui/Card"
 import type { MatchType } from "@/types/database"
 
-const MATCH_TYPES: { value: MatchType; label: string; icon: string }[] = [
-  { value: "friendly", label: "Amical", icon: "🤝" },
-  { value: "league", label: "Championnat", icon: "🏅" },
-  { value: "tournament", label: "Tournoi", icon: "🏆" },
-  { value: "training", label: "Entraînement", icon: "🎯" },
+const MATCH_TYPES: { value: MatchType; label: string; icon: LucideIcon }[] = [
+  { value: "friendly", label: "Amical", icon: Handshake },
+  { value: "league", label: "Championnat", icon: Medal },
+  { value: "tournament", label: "Tournoi", icon: Trophy },
+  { value: "training", label: "Entraînement", icon: Target },
 ]
 
 interface SetScore {
@@ -113,7 +113,7 @@ export default function NewMatchPage() {
         notes: notes || null,
       })
 
-      toast("Match enregistré ! ⚔️", "success")
+      toast("Match enregistré !", "success")
       router.push("/dashboard")
     } catch {
       toast("Erreur lors de l'enregistrement", "error")
@@ -147,7 +147,7 @@ export default function NewMatchPage() {
                       : "border-white/10 text-olive hover:border-white/30"
                   }`}
                 >
-                  <span>{t.icon}</span>
+                  <t.icon size={18} strokeWidth={1.5} />
                   <span className="font-semibold text-sm">{t.label}</span>
                 </button>
               ))}

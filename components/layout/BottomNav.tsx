@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, BarChart2, Map, User, Plus } from "lucide-react"
+import { Home, BarChart2, Map, User, Plus, Disc, Swords } from "lucide-react"
 import { cn } from "@/lib/utils/cn"
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
@@ -39,14 +39,14 @@ function QuickActionMenu({ onClose }: QuickActionMenuProps) {
           onClick={onClose}
           className="bg-kaki text-white px-8 py-3 font-sans font-semibold text-sm uppercase tracking-wide flex items-center gap-3 min-w-[200px] justify-center"
         >
-          <span>🏓</span> Logger une séance
+          <Disc size={16} strokeWidth={1.5} /> Logger une séance
         </Link>
         <Link
           href="/match/new"
           onClick={onClose}
           className="bg-anthracite border border-white/20 text-white px-8 py-3 font-sans font-semibold text-sm uppercase tracking-wide flex items-center gap-3 min-w-[200px] justify-center"
         >
-          <span>⚔️</span> Logger un match
+          <Swords size={16} strokeWidth={1.5} /> Logger un match
         </Link>
       </motion.div>
     </AnimatePresence>

@@ -15,15 +15,17 @@ import { SESSION_TYPE_COLORS } from "@/types/app"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
 import { demoSessions } from "@/lib/seeds/demoData"
+import { Disc, Dumbbell, Swords, Target, Trophy, Coffee, MapPin, Search, type LucideIcon } from "lucide-react"
 
 const SESSION_LABELS: Record<string, string> = {
   technique: "Technique", physique: "Physique", match: "Match",
   service: "Service", competition: "Compétition", chill: "Chill"
 }
-const SESSION_ICONS: Record<string, string> = {
-  technique: "🏓", physique: "💪", match: "⚔️", service: "🎯", competition: "🏆", chill: "😎"
+const SESSION_ICON_MAP: Record<string, LucideIcon> = {
+  technique: Disc, physique: Dumbbell, match: Swords,
+  service: Target, competition: Trophy, chill: Coffee
 }
-const FEELING_ICONS = ["", "😤", "😕", "😐", "😊", "🤩"]
+const FEELING_LABELS = ["", "Mauvais", "Bof", "Neutre", "Bien", "Excellent"]
 
 export default function SessionDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -65,9 +67,9 @@ export default function SessionDetailPage() {
       <>
         <TopBar title="Séance" showBack />
         <PageWrapper>
-          <div className="text-center py-20">
-            <div className="text-4xl mb-4">🔍</div>
-            <div className="text-olive">Séance introuvable</div>
+          <div className="text-center py-20 flex flex-col items-center gap-3 text-olive">
+            <Search size={36} strokeWidth={1} />
+            <div>Séance introuvable</div>
           </div>
         </PageWrapper>
       </>
@@ -87,7 +89,7 @@ export default function SessionDetailPage() {
           {/* Header card */}
           <div className="p-5 border border-white/[0.08]" style={{ backgroundColor: `${color}20`, borderColor: `${color}40` }}>
             <div className="flex items-center gap-3 mb-3">
-              <span className="text-4xl">{SESSION_ICONS[session.session_type]}</span>
+              {(() => { const Icon = SESSION_ICON_MAP[session.session_type] || Disc; return <Icon size={36} strokeWidth={1.5} className="text-white/70" /> })()}
               <div>
                 <div className="font-display text-3xl text-white uppercase">{SESSION_LABELS[session.session_type]}</div>
                 <div className="text-olive text-sm capitalize">{dateStr}</div>
@@ -103,7 +105,9 @@ export default function SessionDetailPage() {
               {session.location && (
                 <div>
                   <div className="text-[10px] text-olive uppercase tracking-wider">Lieu</div>
-                  <div className="font-sans text-sm text-white">📍 {session.location}</div>
+                  <div className="font-sans text-sm text-white flex items-center gap-1">
+                    <MapPin size={12} strokeWidth={1.5} /> {session.location}
+                  </div>
                 </div>
               )}
             </div>
@@ -118,8 +122,8 @@ export default function SessionDetailPage() {
                   <div>
                     <div className="text-xs text-olive mb-1">Général</div>
                     <div className="flex items-center gap-2">
-                      <span className="text-2xl">{FEELING_ICONS[session.feeling]}</span>
                       <span className="font-display text-xl text-white">{session.feeling}/5</span>
+                      <span className="text-xs text-olive">{FEELING_LABELS[session.feeling]}</span>
                     </div>
                   </div>
                 )}
