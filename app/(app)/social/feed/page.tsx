@@ -53,7 +53,7 @@ export default function SocialFeedPage() {
             {DEMO_FRIENDS.map((f) => (
               <div key={f.id} className="flex flex-col items-center gap-1 flex-shrink-0">
                 <Avatar src={f.avatar_url} name={f.full_name} size="md" />
-                <span className="text-[10px] text-olive">{f.username}</span>
+                <span className="text-[10px] text-sage">{f.username}</span>
               </div>
             ))}
           </div>
@@ -73,28 +73,28 @@ export default function SocialFeedPage() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-semibold text-sm text-white">{item.friend.full_name}</span>
                     {isSession ? (
-                      <span className="text-[10px] font-semibold uppercase px-2 py-0.5 bg-kaki text-white">
+                      <span className="text-[10px] font-semibold uppercase px-2 py-0.5 bg-green text-white">
                         {SESSION_ICONS[s.session_type || ""]} {SESSION_LABELS[s.session_type || ""] || s.session_type}
                       </span>
                     ) : (
-                      <Badge label={m.result === "win" ? "Victoire" : "Défaite"} color={m.result === "win" ? "kaki" : "red"} />
+                      <Badge label={m.result === "win" ? "Victoire" : "Défaite"} color={m.result === "win" ? "green" : "red"} />
                     )}
                   </div>
-                  <div className="text-xs text-olive mt-0.5">{dateStr}</div>
+                  <div className="text-xs text-sage mt-0.5">{dateStr}</div>
 
                   {isSession && (
-                    <div className="flex gap-3 mt-2 text-xs text-olive">
+                    <div className="flex gap-3 mt-2 text-xs text-sage">
                       <span>{Math.round((s.duration_min || 0) / 60 * 10) / 10}h</span>
                       {s.feeling && <span>{"⭐".repeat(s.feeling)}</span>}
                     </div>
                   )}
                   {!isSession && (
-                    <div className="text-xs text-olive mt-2">
+                    <div className="text-xs text-sage mt-2">
                       vs {m.opponent_name} — {m.sets_won}-{m.sets_lost}
                     </div>
                   )}
                 </div>
-                <button className="text-[10px] text-olive border border-white/20 px-2 py-1 hover:border-white/40 transition-all uppercase">
+                <button className="text-[10px] text-sage border border-white/20 px-2 py-1 hover:border-white/40 transition-all uppercase">
                   ❤
                 </button>
               </Card>

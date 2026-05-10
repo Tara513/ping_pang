@@ -160,30 +160,30 @@ export default function MapPage() {
               key={f}
               onClick={() => setFilter(f)}
               className={`px-3 py-1.5 text-xs font-semibold uppercase tracking-wide border transition-all ${
-                filter === f ? "bg-white text-black border-white" : "border-white/20 text-olive hover:border-white/40"
+                filter === f ? "bg-white text-black border-white" : "border-white/20 text-sage hover:border-white/40"
               }`}
             >
               {f === "all" ? "Tous" : f === "session" ? "🏓 Séances" : "⚔️ Matchs"}
             </button>
           ))}
-          <span className="ml-auto text-xs text-olive self-center">{filteredCount} lieux</span>
+          <span className="ml-auto text-xs text-sage self-center">{filteredCount} lieux</span>
         </div>
 
         {!MAPBOX_TOKEN ? (
           <div className="flex items-center justify-center h-full flex-col gap-4 text-center px-8">
             <div className="text-5xl">🗺</div>
-            <div className="font-display text-3xl text-white uppercase">Carte</div>
-            <p className="text-olive text-sm">
-              Configure <code className="text-white bg-anthracite px-2 py-0.5">NEXT_PUBLIC_MAPBOX_TOKEN</code> pour activer la carte interactive.
+            <div className="font-display text-3xl font-light text-white">Carte</div>
+            <p className="text-sage text-sm">
+              Configure <code className="text-white bg-surface px-2 py-0.5">NEXT_PUBLIC_MAPBOX_TOKEN</code> pour activer la carte interactive.
             </p>
-            <div className="mt-4 border border-white/10 bg-anthracite p-4 text-left w-full max-w-sm">
-              <div className="text-[10px] text-olive uppercase tracking-wider mb-2">Tes lieux ({filteredCount})</div>
+            <div className="mt-4 border border-white/10 bg-surface p-4 text-left w-full max-w-sm">
+              <div className="text-[10px] text-sage uppercase tracking-wider mb-2">Tes lieux ({filteredCount})</div>
               <div className="flex flex-col gap-1 max-h-48 overflow-y-auto">
                 {points.filter((p) => filter === "all" || p.type === filter).map((p) => (
                   <div key={p.id} className="flex items-center gap-2 text-xs text-white/60">
                     <span>{p.type === "session" ? "🏓" : "⚔️"}</span>
                     <span>{p.label}</span>
-                    <span className="ml-auto text-olive">{p.date}</span>
+                    <span className="ml-auto text-sage">{p.date}</span>
                   </div>
                 ))}
               </div>
@@ -191,7 +191,7 @@ export default function MapPage() {
           </div>
         ) : loading ? (
           <div className="flex items-center justify-center h-full">
-            <div className="text-olive">Chargement de la carte...</div>
+            <div className="text-sage">Chargement de la carte...</div>
           </div>
         ) : (
           <div ref={mapContainer} className="w-full h-full" />

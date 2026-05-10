@@ -48,8 +48,8 @@ function SessionEndedModal({ onDescribe, onQuick, loading }: { onDescribe: () =>
         transition={{ delay: 0.1, type: "spring" }}
       >
         <div className="text-6xl mb-4">🏓</div>
-        <h2 className="font-display text-5xl text-white uppercase mb-2">Séance terminée !</h2>
-        <p className="text-olive text-sm mb-8">Tu veux décrire ta séance ?</p>
+        <h2 className="font-display text-5xl font-light text-white mb-2">Séance terminée !</h2>
+        <p className="text-sage text-sm mb-8">Tu veux décrire ta séance ?</p>
 
         <div className="flex flex-col gap-3 w-full max-w-xs">
           <Button onClick={onDescribe} size="lg" fullWidth>
@@ -144,7 +144,7 @@ export default function NewSessionPage() {
               className="flex flex-col gap-6 pt-4"
             >
               <div>
-                <p className="text-xs font-semibold text-olive uppercase tracking-wider mb-3">Type de séance</p>
+                <p className="text-xs font-semibold text-sage uppercase tracking-wider mb-3">Type de séance</p>
                 <div className="grid grid-cols-2 gap-2">
                   {SESSION_TYPES.map((t) => (
                     <button
@@ -152,8 +152,8 @@ export default function NewSessionPage() {
                       onClick={() => setSessionType(t.value)}
                       className={`flex items-center gap-3 p-4 border text-left transition-all ${
                         sessionType === t.value
-                          ? "border-kaki text-white"
-                          : "border-white/10 text-olive hover:border-white/30"
+                          ? "border-green text-white"
+                          : "border-white/10 text-sage hover:border-white/30"
                       }`}
                       style={sessionType === t.value ? { borderColor: t.color, backgroundColor: `${t.color}20` } : {}}
                     >
@@ -221,8 +221,8 @@ export default function NewSessionPage() {
               className="flex flex-col gap-6 pt-4"
             >
               <div>
-                <h3 className="font-display text-2xl text-white uppercase mb-1">Exercices</h3>
-                <p className="text-olive text-xs mb-4">Qu&apos;as-tu travaillé ?</p>
+                <h3 className="font-display text-2xl font-light text-white mb-1">Exercices</h3>
+                <p className="text-sage text-xs mb-4">Qu&apos;as-tu travaillé ?</p>
                 <div className="flex flex-wrap gap-2">
                   {EXERCISES_PRESETS.map((ex) => (
                     <button
@@ -230,8 +230,8 @@ export default function NewSessionPage() {
                       onClick={() => toggleExercise(ex)}
                       className={`text-xs px-3 py-1.5 border font-medium transition-all ${
                         selectedExercises.includes(ex)
-                          ? "bg-kaki border-kaki text-white"
-                          : "border-white/20 text-olive hover:border-white/40"
+                          ? "bg-green border-green text-white"
+                          : "border-white/20 text-sage hover:border-white/40"
                       }`}
                     >
                       {ex}
@@ -261,19 +261,19 @@ export default function NewSessionPage() {
               className="flex flex-col gap-6 pt-4"
             >
               <div>
-                <h3 className="font-display text-2xl text-white uppercase mb-1">Ressenti</h3>
-                <p className="text-olive text-xs mb-4">Comment tu te sens ?</p>
+                <h3 className="font-display text-2xl font-light text-white mb-1">Ressenti</h3>
+                <p className="text-sage text-xs mb-4">Comment tu te sens ?</p>
               </div>
 
               <div className="flex flex-col gap-2">
-                <p className="text-xs font-semibold text-olive uppercase tracking-wider">Ressenti général</p>
+                <p className="text-xs font-semibold text-sage uppercase tracking-wider">Ressenti général</p>
                 <div className="flex justify-between gap-2">
                   {[1, 2, 3, 4, 5].map((v) => (
                     <button
                       key={v}
                       onClick={() => setFeeling(v)}
                       className={`flex-1 py-3 text-2xl border transition-all ${
-                        feeling === v ? "border-kaki bg-kaki/20" : "border-white/10 hover:border-white/30"
+                        feeling === v ? "border-green bg-green/20" : "border-white/10 hover:border-white/30"
                       }`}
                       title={FEELING_LABELS[v]}
                     >

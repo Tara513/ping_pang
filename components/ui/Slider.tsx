@@ -26,7 +26,7 @@ export default function Slider({
   return (
     <div className={cn("flex flex-col gap-2", className)}>
       <div className="flex justify-between items-center">
-        <label className="text-xs font-semibold text-olive uppercase tracking-wider">{label}</label>
+        <label className="text-xs font-semibold text-sage uppercase tracking-wider">{label}</label>
         <span className="font-display text-2xl text-white leading-none">{value}</span>
       </div>
       <input
@@ -35,12 +35,12 @@ export default function Slider({
         max={max}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full accent-kaki h-1 bg-white/20 rounded-none cursor-pointer"
+        className="w-full accent-green h-1 bg-white/20 rounded-none cursor-pointer"
       />
       {(minLabel || maxLabel) && (
         <div className="flex justify-between">
-          <span className="text-[10px] text-olive">{minLabel}</span>
-          <span className="text-[10px] text-olive">{maxLabel}</span>
+          <span className="text-[10px] text-sage">{minLabel}</span>
+          <span className="text-[10px] text-sage">{maxLabel}</span>
         </div>
       )}
     </div>

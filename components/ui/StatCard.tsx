@@ -10,15 +10,15 @@ interface StatCardProps {
 
 export default function StatCard({ label, value, sub, color, className }: StatCardProps) {
   return (
-    <div className={cn("bg-anthracite border border-white/[0.08] p-4 flex flex-col gap-1", className)}>
-      <span className="text-[10px] font-semibold text-olive uppercase tracking-widest">{label}</span>
-      <span
-        className="font-display text-4xl leading-none"
-        style={color ? { color } : undefined}
+    <div className={cn("flex flex-col", className)}>
+      <div className="text-[9px] text-sage uppercase tracking-[0.3em]">{label}</div>
+      <div
+        className="font-display text-6xl font-light leading-none mt-1"
+        style={{ color: color || "#F0EDE6" }}
       >
         {value}
-      </span>
-      {sub && <span className="text-xs text-olive">{sub}</span>}
+      </div>
+      {sub && <div className="text-[11px] text-sage/60 mt-1">{sub}</div>}
     </div>
   )
 }

@@ -24,7 +24,7 @@ export default function Avatar({ src, name, size = "md", className }: AvatarProp
   return (
     <div
       className={cn(
-        "relative rounded-full overflow-hidden flex items-center justify-center bg-kaki flex-shrink-0",
+        "relative overflow-hidden flex items-center justify-center bg-green flex-shrink-0",
         sizes[size],
         className
       )}

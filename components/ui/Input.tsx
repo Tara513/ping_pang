@@ -1,7 +1,7 @@
 "use client"
 
-import { cn } from "@/lib/utils/cn"
 import { forwardRef, type InputHTMLAttributes } from "react"
+import { cn } from "@/lib/utils/cn"
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string
@@ -10,31 +10,27 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className, label, error, hint, id, ...props }, ref) => {
-    const inputId = id || label?.toLowerCase().replace(/\s+/g, "-")
-
+  ({ label, error, hint, className, ...props }, ref) => {
     return (
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col">
         {label && (
-          <label htmlFor={inputId} className="text-xs font-semibold text-olive uppercase tracking-wider">
+          <label className="text-[9px] text-sage uppercase tracking-[0.25em] mb-2">
             {label}
           </label>
         )}
         <input
           ref={ref}
-          id={inputId}
           className={cn(
-            "w-full bg-transparent border text-white font-sans text-sm px-4 py-3",
-            "placeholder:text-olive/50 outline-none transition-colors",
-            error
-              ? "border-red focus:border-red"
-              : "border-white/25 focus:border-olive",
+            "w-full bg-transparent border-b border-white/15 text-white py-3 text-sm outline-none",
+            "transition-colors duration-200",
+            "focus:border-white/50 placeholder:text-white/15",
+            error && "border-red focus:border-red",
             className
           )}
           {...props}
         />
-        {error && <p className="text-xs text-red">{error}</p>}
-        {hint && !error && <p className="text-xs text-olive">{hint}</p>}
+        {error && <span className="text-[10px] text-red mt-1.5">{error}</span>}
+        {hint && !error && <span className="text-[10px] text-sage/60 mt-1.5">{hint}</span>}
       </div>
     )
   }

@@ -98,7 +98,7 @@ function SpinChart({ topspin, backspin, sidespin, flat }: SpinChartProps) {
         {data.map((d, i) => (
           <div key={i} className="flex items-center gap-1">
             <div className="w-2 h-2" style={{ backgroundColor: SPIN_COLORS[i] }} />
-            <span className="text-[10px] text-olive">{d.name}</span>
+            <span className="text-[10px] text-sage">{d.name}</span>
           </div>
         ))}
       </div>
@@ -132,12 +132,12 @@ export default function BallTrackingSection({ data }: { data: BallData }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
-        <Badge label="Données capteur" color="kaki" size="md" />
+        <Badge label="Données capteur" color="green" size="md" />
       </div>
 
       {/* Speed + Spin */}
       <Card>
-        <div className="text-[10px] text-olive uppercase tracking-wider mb-3 font-semibold">Vitesse & Spin</div>
+        <div className="text-[10px] text-sage uppercase tracking-wider mb-3 font-semibold">Vitesse & Spin</div>
         <div className="grid grid-cols-2 gap-4">
           <SpeedGauge speed={summary.avg_speed_kmh} maxSpeed={summary.max_speed_kmh} />
           <SpinChart
@@ -159,8 +159,8 @@ export default function BallTrackingSection({ data }: { data: BallData }) {
           { label: "Moy. échange", value: `${summary.avg_rally_length} pts` },
           { label: "Précision service", value: `${summary.serve_accuracy_pct}%` },
         ].map((s) => (
-          <div key={s.label} className="bg-anthracite border border-white/[0.08] p-3">
-            <div className="text-[10px] text-olive uppercase tracking-wider">{s.label}</div>
+          <div key={s.label} className="bg-surface border border-white/[0.08] p-3">
+            <div className="text-[10px] text-sage uppercase tracking-wider">{s.label}</div>
             <div className="font-display text-2xl text-white mt-0.5">{s.value}</div>
           </div>
         ))}
@@ -169,7 +169,7 @@ export default function BallTrackingSection({ data }: { data: BallData }) {
       {/* Par set */}
       {by_set.length > 0 && (
         <Card>
-          <div className="text-[10px] text-olive uppercase tracking-wider mb-3 font-semibold">Par set — Vitesse & Échanges</div>
+          <div className="text-[10px] text-sage uppercase tracking-wider mb-3 font-semibold">Par set — Vitesse & Échanges</div>
           <SetBarChart sets={by_set} />
         </Card>
       )}

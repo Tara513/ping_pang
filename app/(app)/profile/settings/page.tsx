@@ -53,7 +53,7 @@ export default function SettingsPage() {
       <PageWrapper>
         <div className="flex flex-col gap-6 pt-4">
           <div className="flex flex-col gap-4">
-            <h2 className="font-display text-2xl text-white uppercase">Mon profil</h2>
+            <h2 className="font-display text-2xl font-light text-white">Mon profil</h2>
             <Input
               label="Nom complet"
               value={profile.full_name || ""}
@@ -81,6 +81,20 @@ export default function SettingsPage() {
               value={profile.club || ""}
               onChange={(e) => setProfile((p) => ({ ...p, club: e.target.value }))}
             />
+          </div>
+
+          {/* Mode coach */}
+          <div className="border border-white/[0.08] bg-surface p-4 flex items-center justify-between">
+            <div>
+              <div className="text-sm font-semibold text-white">Mode coach</div>
+              <div className="text-xs text-sage mt-0.5">Commenter les séances de tes joueurs</div>
+            </div>
+            <button
+              onClick={() => setProfile((p) => ({ ...p, is_coach: !p.is_coach }))}
+              className={`w-12 h-6 relative transition-colors ${profile.is_coach ? "bg-green" : "bg-white/20"}`}
+            >
+              <span className={`absolute top-0.5 w-5 h-5 bg-white transition-all ${profile.is_coach ? "left-6" : "left-0.5"}`} />
+            </button>
           </div>
 
           <Button onClick={save} loading={loading} fullWidth>

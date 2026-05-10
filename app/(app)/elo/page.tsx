@@ -24,7 +24,7 @@ function EloHistoryChart({ history, federation }: { history: typeof demoEloHisto
       delta: h.delta,
     }))
 
-  if (data.length === 0) return <div className="text-olive text-sm text-center py-8">Pas encore d&apos;historique</div>
+  if (data.length === 0) return <div className="text-sage text-sm text-center py-8">Pas encore d&apos;historique</div>
 
   return (
     <ResponsiveContainer width="100%" height={140}>
@@ -87,10 +87,10 @@ export default function EloPage() {
                 onClick={() => setSelectedFed(fed)}
                 className={`flex items-center gap-2 px-3 py-2 text-xs font-semibold uppercase tracking-wide flex-shrink-0 border transition-all ${
                   selectedFed === fed
-                    ? "bg-kaki border-kaki text-white"
+                    ? "bg-green border-green text-white"
                     : hasRating
                     ? "border-white/30 text-white"
-                    : "border-white/10 text-olive hover:border-white/30"
+                    : "border-white/10 text-sage hover:border-white/30"
                 }`}
               >
                 <span>{meta.flag}</span>
@@ -102,51 +102,51 @@ export default function EloPage() {
 
         {loading ? (
           <div className="animate-pulse space-y-4">
-            <div className="bg-anthracite h-40" />
-            <div className="bg-anthracite h-32" />
+            <div className="bg-surface h-40" />
+            <div className="bg-surface h-32" />
           </div>
         ) : (
           <div className="flex flex-col gap-4">
             {/* ELO principal */}
-            <div className="bg-kaki/10 border border-kaki/30 p-6 flex items-center justify-between">
+            <div className="bg-green/10 border border-green/30 p-6 flex items-center justify-between">
               <div>
-                <div className="text-[10px] text-olive uppercase tracking-widest mb-1">
+                <div className="text-[10px] text-sage uppercase tracking-widest mb-1">
                   {FEDERATION_META[selectedFed].flag} {FEDERATION_META[selectedFed].name}
                 </div>
                 <div className="font-display text-7xl text-white leading-none">
                   {currentRating?.elo ?? config.baseRating}
                 </div>
-                <div className="text-olive text-sm mt-1">
+                <div className="text-sage text-sm mt-1">
                   {currentRating ? estimateRankPercentile(currentRating.elo!, selectedFed) : "Non classé"}
                 </div>
               </div>
               <div className="text-right">
                 {lastDelta !== 0 && (
-                  <div className={`font-display text-3xl leading-none ${lastDelta > 0 ? "text-kaki" : "text-red"}`}>
+                  <div className={`font-display text-3xl leading-none ${lastDelta > 0 ? "text-green-light" : "text-red"}`}>
                     {lastDelta > 0 ? "+" : ""}{lastDelta}
                   </div>
                 )}
                 {!currentRating && (
-                  <div className="text-xs text-olive">Pas encore de données</div>
+                  <div className="text-xs text-sage">Pas encore de données</div>
                 )}
               </div>
             </div>
 
             {/* History chart */}
             <Card>
-              <div className="text-[10px] text-olive uppercase tracking-wider mb-3 font-semibold">Évolution ELO</div>
+              <div className="text-[10px] text-sage uppercase tracking-wider mb-3 font-semibold">Évolution ELO</div>
               <EloHistoryChart history={history} federation={selectedFed} />
             </Card>
 
             {/* Recent matches */}
             {fedHistory.length > 0 && (
               <Card>
-                <div className="text-[10px] text-olive uppercase tracking-wider mb-3 font-semibold">Derniers matchs</div>
+                <div className="text-[10px] text-sage uppercase tracking-wider mb-3 font-semibold">Derniers matchs</div>
                 <div className="flex flex-col gap-2">
                   {fedHistory.slice(-5).reverse().map((h, i) => (
                     <div key={i} className="flex items-center justify-between py-2 border-b border-white/[0.06] last:border-0">
                       <div className="text-sm text-white">Match #{fedHistory.length - i}</div>
-                      <div className={`font-display text-xl ${h.delta > 0 ? "text-kaki" : "text-red"}`}>
+                      <div className={`font-display text-xl ${h.delta > 0 ? "text-green-light" : "text-red"}`}>
                         {h.delta > 0 ? "+" : ""}{h.delta}
                       </div>
                     </div>
@@ -158,7 +158,7 @@ export default function EloPage() {
             {/* All federations overview */}
             {ratings.length > 1 && (
               <Card>
-                <div className="text-[10px] text-olive uppercase tracking-wider mb-3 font-semibold">Tous mes ELO</div>
+                <div className="text-[10px] text-sage uppercase tracking-wider mb-3 font-semibold">Tous mes ELO</div>
                 <div className="flex flex-col gap-2">
                   {ratings.map((r) => {
                     const meta = FEDERATION_META[r.federation as Federation]

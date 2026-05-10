@@ -44,7 +44,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               exit={{ opacity: 0, y: -20 }}
               className={`flex items-center gap-3 p-4 pointer-events-auto border ${
                 t.type === "success"
-                  ? "bg-kaki border-kaki/50 text-white"
+                  ? "bg-green border-green/50 text-white"
                   : "bg-red border-red/50 text-white"
               }`}
             >

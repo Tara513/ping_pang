@@ -2,36 +2,33 @@
 
 export const dynamic = "force-dynamic"
 
-
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { createClient } from "@/lib/supabase/client"
-import { useForm, Controller } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
 import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
 import Slider from "@/components/ui/Slider"
 import type { PlayStyle, DominantHand, PlayerLevel, Federation } from "@/types/database"
 import { FEDERATION_META } from "@/lib/elo/calculator"
+import { cn } from "@/lib/utils/cn"
 
 const TOTAL_STEPS = 5
 
-const LEVELS: { value: PlayerLevel; label: string; icon: string }[] = [
-  { value: "beginner", label: "Débutant", icon: "🌱" },
-  { value: "intermediate", label: "Intermédiaire", icon: "🏓" },
-  { value: "advanced", label: "Avancé", icon: "⚡" },
-  { value: "competitive", label: "Compétiteur", icon: "🥇" },
-  { value: "elite", label: "Elite", icon: "👑" },
+const LEVELS: { value: PlayerLevel; label: string; sub: string }[] = [
+  { value: "beginner",     label: "Débutant",       sub: "Je découvre le jeu" },
+  { value: "intermediate", label: "Intermédiaire",   sub: "Je joue régulièrement" },
+  { value: "advanced",     label: "Avancé",          sub: "Bon niveau de club" },
+  { value: "competitive",  label: "Compétiteur",     sub: "Je joue en championnat" },
+  { value: "elite",        label: "Elite",           sub: "Niveau national ou plus" },
 ]
 
-const PLAY_STYLES: { value: PlayStyle; label: string; icon: string }[] = [
-  { value: "attacker", label: "Attaquant", icon: "🔥" },
-  { value: "defender", label: "Défenseur", icon: "🛡" },
-  { value: "allround", label: "Polyvalent", icon: "⚖️" },
-  { value: "penhold", label: "Penholder", icon: "✏️" },
-  { value: "other", label: "Autre", icon: "🌀" },
+const PLAY_STYLES: { value: PlayStyle; label: string; sub: string }[] = [
+  { value: "attacker",  label: "Attaquant",  sub: "Jeu offensif" },
+  { value: "defender",  label: "Défenseur",  sub: "Jeu défensif" },
+  { value: "allround",  label: "Polyvalent", sub: "Équilibré" },
+  { value: "penhold",   label: "Penholder",  sub: "Prise porte-plume" },
+  { value: "other",     label: "Autre",      sub: "Style libre" },
 ]
 
 const FEDERATIONS = Object.keys(FEDERATION_META) as Federation[]
@@ -59,14 +56,50 @@ interface OnboardingData {
 
 function ProgressBar({ step }: { step: number }) {
   return (
-    <div className="flex gap-1 px-4 py-3">
+    <div className="flex gap-[3px] px-4 pt-4 pb-2 flex-shrink-0">
       {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
         <div
           key={i}
-          className={`flex-1 h-0.5 transition-all duration-300 ${i < step ? "bg-white" : "bg-white/20"}`}
+          className={cn(
+            "flex-1 h-[2px] transition-all duration-300",
+            i < step ? "bg-white" : "bg-white/15"
+          )}
         />
       ))}
     </div>
+  )
+}
+
+function SelectionRow({
+  selected,
+  onClick,
+  label,
+  sub,
+}: {
+  selected: boolean
+  onClick: () => void
+  label: string
+  sub?: string
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "w-full flex items-center text-left py-4 border-b border-white/[0.05] transition-all",
+        "border-l-2 pl-4",
+        selected
+          ? "border-l-green-light text-white"
+          : "border-l-transparent text-sage hover:text-white hover:border-l-white/20"
+      )}
+    >
+      <div className="flex-1">
+        <div className="font-sans text-sm font-medium">{label}</div>
+        {sub && <div className="text-[10px] text-sage/60 mt-0.5">{sub}</div>}
+      </div>
+      {selected && (
+        <div className="w-1.5 h-1.5 bg-green-light flex-shrink-0 mr-2" />
+      )}
+    </button>
   )
 }
 
@@ -149,38 +182,46 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black flex flex-col">
+    <div className="h-screen bg-black flex flex-col overflow-hidden">
       <ProgressBar step={step} />
 
-      <div className="flex items-center justify-between px-4 py-2">
-        <span className="text-[10px] text-olive uppercase tracking-wider">
-          Étape {step} sur {TOTAL_STEPS}
+      {/* Step counter + skip */}
+      <div className="flex items-center justify-between px-4 py-2 flex-shrink-0">
+        <span className="text-[9px] text-sage uppercase tracking-[0.25em]">
+          {step} / {TOTAL_STEPS}
         </span>
         {step < TOTAL_STEPS && (
-          <button onClick={next} className="text-xs text-olive hover:text-white transition-colors uppercase tracking-wide">
-            Passer
+          <button
+            onClick={next}
+            className="text-[10px] text-sage hover:text-white transition-colors uppercase tracking-[0.2em]"
+          >
+            Passer →
           </button>
         )}
       </div>
 
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={step}
-          initial={{ opacity: 0, x: 30 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -30 }}
-          transition={{ duration: 0.2 }}
-          className="flex-1 flex flex-col px-4 pb-8"
-        >
-          {step === 1 && <Step1 data={data} update={update} />}
-          {step === 2 && <Step2 data={data} update={update} />}
-          {step === 3 && <Step3 data={data} update={update} />}
-          {step === 4 && <Step4 data={data} update={update} />}
-          {step === 5 && <Step5 data={data} update={update} />}
-        </motion.div>
-      </AnimatePresence>
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={step}
+            initial={{ opacity: 0, x: 24 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -24 }}
+            transition={{ duration: 0.18 }}
+            className="flex flex-col px-4 pb-6 pt-2"
+          >
+            {step === 1 && <Step1 data={data} update={update} />}
+            {step === 2 && <Step2 data={data} update={update} />}
+            {step === 3 && <Step3 data={data} update={update} />}
+            {step === 4 && <Step4 data={data} update={update} />}
+            {step === 5 && <Step5 data={data} update={update} />}
+          </motion.div>
+        </AnimatePresence>
+      </div>
 
-      <div className="px-4 pb-8 flex gap-3">
+      {/* Sticky bottom actions */}
+      <div className="flex-shrink-0 px-4 py-4 border-t border-white/[0.06] bg-black flex gap-3">
         {step > 1 && (
           <Button variant="outline" onClick={prev} className="flex-1">
             Retour
@@ -190,10 +231,20 @@ export default function OnboardingPage() {
           onClick={step === TOTAL_STEPS ? finish : next}
           loading={loading}
           className="flex-1"
+          size="lg"
         >
-          {step === TOTAL_STEPS ? "Commencer" : "Suivant"}
+          {step === TOTAL_STEPS ? "Commencer" : "Suivant →"}
         </Button>
       </div>
+    </div>
+  )
+}
+
+function StepHeading({ title, sub }: { title: string; sub?: string }) {
+  return (
+    <div className="mb-8">
+      <h2 className="font-display text-4xl font-light text-white leading-tight">{title}</h2>
+      {sub && <p className="text-sage text-xs mt-2 tracking-[0.05em]">{sub}</p>}
     </div>
   )
 }
@@ -201,11 +252,8 @@ export default function OnboardingPage() {
 function Step1({ data, update }: { data: Partial<OnboardingData>; update: (p: Partial<OnboardingData>) => void }) {
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h2 className="font-display text-4xl text-white uppercase">Mon identité</h2>
-        <p className="text-olive text-sm mt-1">Présentons-nous d&apos;abord</p>
-      </div>
-      <div className="flex flex-col gap-4">
+      <StepHeading title="Mon identité" sub="Présentons-nous d'abord" />
+      <div className="flex flex-col gap-5">
         <Input
           label="Prénom & Nom"
           placeholder="Timo Boll"
@@ -244,65 +292,49 @@ function Step1({ data, update }: { data: Partial<OnboardingData>; update: (p: Pa
 function Step2({ data, update }: { data: Partial<OnboardingData>; update: (p: Partial<OnboardingData>) => void }) {
   return (
     <div className="flex flex-col gap-6">
+      <StepHeading title="Mon niveau" sub="Évalue honnêtement ton niveau" />
+
       <div>
-        <h2 className="font-display text-4xl text-white uppercase">Mon niveau</h2>
-        <p className="text-olive text-sm mt-1">Évalue honnêtement ton niveau</p>
+        <div className="text-[9px] text-sage uppercase tracking-[0.25em] mb-4">Niveau de jeu</div>
+        {LEVELS.map((l) => (
+          <SelectionRow
+            key={l.value}
+            selected={data.level === l.value}
+            onClick={() => update({ level: l.value })}
+            label={l.label}
+            sub={l.sub}
+          />
+        ))}
       </div>
 
       <div>
-        <p className="text-xs font-semibold text-olive uppercase tracking-wider mb-3">Niveau de jeu</p>
-        <div className="grid grid-cols-1 gap-2">
-          {LEVELS.map((l) => (
-            <button
-              key={l.value}
-              onClick={() => update({ level: l.value })}
-              className={`flex items-center gap-4 p-4 border text-left transition-all ${
-                data.level === l.value
-                  ? "border-kaki bg-kaki/20 text-white"
-                  : "border-white/10 text-olive hover:border-white/30"
-              }`}
-            >
-              <span className="text-2xl">{l.icon}</span>
-              <span className="font-sans font-semibold">{l.label}</span>
-            </button>
-          ))}
-        </div>
+        <div className="text-[9px] text-sage uppercase tracking-[0.25em] mb-4">Style de jeu</div>
+        {PLAY_STYLES.map((s) => (
+          <SelectionRow
+            key={s.value}
+            selected={data.play_style === s.value}
+            onClick={() => update({ play_style: s.value })}
+            label={s.label}
+            sub={s.sub}
+          />
+        ))}
       </div>
 
       <div>
-        <p className="text-xs font-semibold text-olive uppercase tracking-wider mb-3">Style de jeu</p>
-        <div className="grid grid-cols-2 gap-2">
-          {PLAY_STYLES.map((s) => (
-            <button
-              key={s.value}
-              onClick={() => update({ play_style: s.value })}
-              className={`flex items-center gap-2 p-3 border text-left transition-all ${
-                data.play_style === s.value
-                  ? "border-kaki bg-kaki/20 text-white"
-                  : "border-white/10 text-olive hover:border-white/30"
-              }`}
-            >
-              <span>{s.icon}</span>
-              <span className="font-sans text-sm font-medium">{s.label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <p className="text-xs font-semibold text-olive uppercase tracking-wider mb-3">Main dominante</p>
-        <div className="flex gap-2">
+        <div className="text-[9px] text-sage uppercase tracking-[0.25em] mb-4">Main dominante</div>
+        <div className="flex gap-0">
           {(["right", "left"] as DominantHand[]).map((h) => (
             <button
               key={h}
               onClick={() => update({ dominant_hand: h })}
-              className={`flex-1 py-3 border text-sm font-semibold uppercase transition-all ${
+              className={cn(
+                "flex-1 py-4 border-b-2 text-xs uppercase tracking-[0.15em] transition-all font-sans",
                 data.dominant_hand === h
-                  ? "border-kaki bg-kaki text-white"
-                  : "border-white/10 text-olive hover:border-white/30"
-              }`}
+                  ? "border-b-green-light text-white"
+                  : "border-b-white/10 text-sage hover:text-white"
+              )}
             >
-              {h === "right" ? "🤜 Droite" : "🤛 Gauche"}
+              {h === "right" ? "Droite" : "Gauche"}
             </button>
           ))}
         </div>
@@ -314,12 +346,13 @@ function Step2({ data, update }: { data: Partial<OnboardingData>; update: (p: Pa
 function Step3({ data, update }: { data: Partial<OnboardingData>; update: (p: Partial<OnboardingData>) => void }) {
   if (data.skip_equipment) {
     return (
-      <div className="flex flex-col gap-6 items-center justify-center flex-1 text-center">
-        <span className="text-6xl">🏓</span>
-        <h2 className="font-display text-3xl text-white uppercase">Matériel ignoré</h2>
-        <p className="text-olive text-sm">Tu pourras renseigner ton matériel plus tard depuis ton profil.</p>
-        <button onClick={() => update({ skip_equipment: false })} className="text-xs text-olive underline hover:text-white">
-          Renseigner quand même
+      <div className="flex flex-col gap-6 items-start justify-center py-8">
+        <StepHeading title="Matériel ignoré" sub="Tu pourras renseigner ton matériel plus tard depuis ton profil." />
+        <button
+          onClick={() => update({ skip_equipment: false })}
+          className="text-[10px] text-sage underline hover:text-white uppercase tracking-[0.15em] transition-colors"
+        >
+          Renseigner quand même →
         </button>
       </div>
     )
@@ -327,59 +360,52 @@ function Step3({ data, update }: { data: Partial<OnboardingData>; update: (p: Pa
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h2 className="font-display text-4xl text-white uppercase">Mon matériel</h2>
-        <p className="text-olive text-sm mt-1">Ton équipement actuel</p>
-      </div>
-      <div className="flex flex-col gap-4">
+      <StepHeading title="Mon matériel" sub="Ton équipement actuel" />
+      <div className="flex flex-col gap-5">
         <Input
           label="Bois (Blade)"
-          placeholder="ex: Butterfly Innerforce ALC"
+          placeholder="Butterfly Innerforce ALC"
           value={data.blade || ""}
           onChange={(e) => update({ blade: e.target.value })}
         />
-        <div className="flex flex-col gap-2">
-          <Input
-            label="Revêtement coup droit"
-            placeholder="ex: Tenergy 05"
-            value={data.rubber_fh || ""}
-            onChange={(e) => update({ rubber_fh: e.target.value })}
-          />
-          <Input
-            label="Épaisseur FH (mm)"
-            type="number"
-            step="0.1"
-            min="1.0"
-            max="2.5"
-            placeholder="2.1"
-            value={data.thickness_fh || ""}
-            onChange={(e) => update({ thickness_fh: parseFloat(e.target.value) })}
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <Input
-            label="Revêtement revers"
-            placeholder="ex: Tenergy 64"
-            value={data.rubber_bh || ""}
-            onChange={(e) => update({ rubber_bh: e.target.value })}
-          />
-          <Input
-            label="Épaisseur BH (mm)"
-            type="number"
-            step="0.1"
-            min="1.0"
-            max="2.5"
-            placeholder="1.9"
-            value={data.thickness_bh || ""}
-            onChange={(e) => update({ thickness_bh: parseFloat(e.target.value) })}
-          />
-        </div>
+        <Input
+          label="Revêtement coup droit"
+          placeholder="Tenergy 05"
+          value={data.rubber_fh || ""}
+          onChange={(e) => update({ rubber_fh: e.target.value })}
+        />
+        <Input
+          label="Épaisseur FH (mm)"
+          type="number"
+          step="0.1"
+          min="1.0"
+          max="2.5"
+          placeholder="2.1"
+          value={data.thickness_fh || ""}
+          onChange={(e) => update({ thickness_fh: parseFloat(e.target.value) })}
+        />
+        <Input
+          label="Revêtement revers"
+          placeholder="Tenergy 64"
+          value={data.rubber_bh || ""}
+          onChange={(e) => update({ rubber_bh: e.target.value })}
+        />
+        <Input
+          label="Épaisseur BH (mm)"
+          type="number"
+          step="0.1"
+          min="1.0"
+          max="2.5"
+          placeholder="1.9"
+          value={data.thickness_bh || ""}
+          onChange={(e) => update({ thickness_bh: parseFloat(e.target.value) })}
+        />
       </div>
       <button
         onClick={() => update({ skip_equipment: true })}
-        className="text-xs text-olive hover:text-white transition-colors underline text-center"
+        className="text-[10px] text-sage hover:text-white transition-colors underline text-center uppercase tracking-[0.1em]"
       >
-        Je ne sais pas encore → Passer cette étape
+        Passer cette étape →
       </button>
     </div>
   )
@@ -397,37 +423,34 @@ function Step4({ data, update }: { data: Partial<OnboardingData>; update: (p: Pa
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h2 className="font-display text-4xl text-white uppercase">ELO & Fédérations</h2>
-        <p className="text-olive text-sm mt-1">Sélectionne tes fédérations actives</p>
-      </div>
+      <StepHeading title="ELO & Fédérations" sub="Sélectionne tes fédérations actives" />
 
-      <div className="flex flex-col gap-2">
+      <div>
         {FEDERATIONS.map((fed) => {
           const meta = FEDERATION_META[fed]
           const isSelected = data.federations?.includes(fed)
           return (
-            <div key={fed} className="flex flex-col gap-2">
+            <div key={fed}>
               <button
                 onClick={() => toggleFed(fed)}
-                className={`flex items-center gap-4 p-4 border text-left transition-all ${
+                className={cn(
+                  "w-full flex items-center text-left py-4 border-b border-white/[0.05] transition-all",
+                  "border-l-2 pl-4",
                   isSelected
-                    ? "border-kaki bg-kaki/20 text-white"
-                    : "border-white/10 text-olive hover:border-white/30"
-                }`}
+                    ? "border-l-green-light text-white"
+                    : "border-l-transparent text-sage hover:text-white"
+                )}
               >
-                <span className="text-2xl">{meta.flag}</span>
-                <div>
-                  <div className="font-semibold text-sm">{meta.name}</div>
-                  <div className="text-xs opacity-60">{meta.country}</div>
+                <span className="text-xl mr-4">{meta.flag}</span>
+                <div className="flex-1">
+                  <div className="font-sans text-sm font-medium">{meta.name}</div>
+                  <div className="text-[10px] text-sage/60">{meta.country}</div>
                 </div>
-                <div className={`ml-auto w-5 h-5 border flex items-center justify-center transition-all ${isSelected ? "bg-kaki border-kaki" : "border-white/30"}`}>
-                  {isSelected && <span className="text-white text-xs">✓</span>}
-                </div>
+                {isSelected && <div className="w-1.5 h-1.5 bg-green-light mr-2 flex-shrink-0" />}
               </button>
 
               {isSelected && (
-                <div className="pl-4">
+                <div className="pl-4 pb-4 border-b border-white/[0.05]">
                   <Input
                     label={`Classement ${meta.name} actuel`}
                     type="number"
@@ -452,19 +475,16 @@ function Step4({ data, update }: { data: Partial<OnboardingData>; update: (p: Pa
 
 function Step5({ data, update }: { data: Partial<OnboardingData>; update: (p: Partial<OnboardingData>) => void }) {
   const GOALS = [
-    { value: "progress", label: "Progresser", icon: "📈" },
-    { value: "fun", label: "Me défouler", icon: "🎉" },
-    { value: "competition", label: "Compétition", icon: "🏆" },
-    { value: "coaching", label: "Coaching", icon: "🎯" },
-    { value: "discovery", label: "Découverte", icon: "🌱" },
+    { value: "progress",    label: "Progresser",    sub: "Améliorer mon niveau" },
+    { value: "fun",         label: "Me défouler",   sub: "Jouer pour le plaisir" },
+    { value: "competition", label: "Compétition",   sub: "Performer en tournoi" },
+    { value: "coaching",    label: "Coaching",      sub: "Progresser avec un coach" },
+    { value: "discovery",   label: "Découverte",    sub: "Explorer le tennis de table" },
   ]
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h2 className="font-display text-4xl text-white uppercase">Mes objectifs</h2>
-        <p className="text-olive text-sm mt-1">On personnalise ton expérience</p>
-      </div>
+      <StepHeading title="Mes objectifs" sub="On personnalise ton expérience" />
 
       <Slider
         label="Heures par semaine"
@@ -477,28 +497,23 @@ function Step5({ data, update }: { data: Partial<OnboardingData>; update: (p: Pa
       />
 
       <div>
-        <p className="text-xs font-semibold text-olive uppercase tracking-wider mb-3">Objectif principal</p>
-        <div className="grid grid-cols-1 gap-2">
-          {GOALS.map((g) => (
-            <button
-              key={g.value}
-              onClick={() => update({ main_goal: g.value })}
-              className={`flex items-center gap-4 p-4 border text-left transition-all ${
-                data.main_goal === g.value
-                  ? "border-kaki bg-kaki/20 text-white"
-                  : "border-white/10 text-olive hover:border-white/30"
-              }`}
-            >
-              <span className="text-2xl">{g.icon}</span>
-              <span className="font-sans font-semibold">{g.label}</span>
-            </button>
-          ))}
-        </div>
+        <div className="text-[9px] text-sage uppercase tracking-[0.25em] mb-4">Objectif principal</div>
+        {GOALS.map((g) => (
+          <SelectionRow
+            key={g.value}
+            selected={data.main_goal === g.value}
+            onClick={() => update({ main_goal: g.value })}
+            label={g.label}
+            sub={g.sub}
+          />
+        ))}
       </div>
 
-      <div className="bg-kaki/10 border border-kaki/30 p-4 text-center">
-        <p className="font-display text-2xl text-white uppercase mb-1">Prêt à tracker !</p>
-        <p className="text-sm text-olive">Ton profil est configuré. Let&apos;s play. 🏓</p>
+      <div className="border-l-[3px] border-green-light pl-4 py-4 mt-2">
+        <div className="font-display text-2xl font-light text-white leading-tight">
+          Prêt à tracker
+        </div>
+        <div className="text-xs text-sage mt-1">Ton profil est configuré.</div>
       </div>
     </div>
   )

@@ -2,7 +2,6 @@
 
 export const dynamic = "force-dynamic"
 
-
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -43,33 +42,34 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-black px-6">
-      {/* Logo */}
+    <div className="flex flex-col min-h-screen bg-black">
+      {/* TOP — hero 55% */}
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="pt-16 pb-12"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.7 }}
+        className="flex flex-col justify-end px-6 pt-16 pb-10"
+        style={{ minHeight: "55vh" }}
       >
-        <div className="inline-flex items-center gap-3">
-          <div className="w-10 h-10 bg-kaki flex items-center justify-center">
-            <span className="text-white text-lg">🏓</span>
-          </div>
-          <div>
-            <div className="font-display text-3xl text-white uppercase leading-none">PingTrack</div>
-            <div className="text-[10px] text-olive uppercase tracking-widest">Track your game</div>
-          </div>
+        <div className="font-display font-light text-white leading-[0.82]" style={{ fontSize: "88px" }}>
+          PING<br />TRACK
+        </div>
+        <div className="w-12 h-[2px] bg-green-light mt-8 mb-5" />
+        <div className="text-[10px] text-sage uppercase tracking-[0.3em]">
+          Performance · Progression · Analyse
         </div>
       </motion.div>
 
+      {/* BOTTOM — form */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="flex-1 flex flex-col"
+        transition={{ delay: 0.25, duration: 0.5 }}
+        className="flex-1 flex flex-col px-6 border-t border-white/[0.06] pt-10 pb-12"
       >
-        <h1 className="font-display text-4xl text-white uppercase mb-8">Connexion</h1>
+        <div className="text-[9px] text-sage uppercase tracking-[0.3em] mb-8">Connexion</div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-7">
           <Input
             label="Email"
             type="email"
@@ -88,24 +88,31 @@ export default function LoginPage() {
           />
 
           {error && (
-            <p className="text-sm text-red bg-red/10 border border-red/20 px-4 py-3">{error}</p>
+            <p className="text-[11px] text-red border-l-2 border-red pl-3 py-1">{error}</p>
           )}
 
-          <div className="flex justify-end">
-            <Link href="/forgot-password" className="text-xs text-olive hover:text-white transition-colors">
+          <div className="flex justify-end -mt-3">
+            <Link
+              href="/forgot-password"
+              className="text-[10px] text-sage hover:text-white transition-colors tracking-[0.1em] uppercase"
+            >
               Mot de passe oublié ?
             </Link>
           </div>
 
-          <Button type="submit" loading={isSubmitting} fullWidth size="lg" className="mt-2">
+          <Button type="submit" loading={isSubmitting} fullWidth size="lg" className="mt-1">
             Se connecter
           </Button>
         </form>
 
-        <div className="mt-auto pb-10 pt-8">
-          <p className="text-center text-sm text-olive">
+        <div className="mt-auto pt-12">
+          <div className="h-px bg-white/[0.06] mb-8" />
+          <p className="text-center text-[11px] text-sage tracking-[0.05em]">
             Pas encore de compte ?{" "}
-            <Link href="/register" className="text-white font-semibold hover:text-kaki transition-colors underline underline-offset-2">
+            <Link
+              href="/register"
+              className="text-white hover:text-sage transition-colors underline underline-offset-4"
+            >
               Créer un compte
             </Link>
           </p>

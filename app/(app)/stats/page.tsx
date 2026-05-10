@@ -132,7 +132,7 @@ function MatchResultsPie({ matches }: { matches: Partial<Match>[] }) {
       </PieChart>
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-kaki" />
+          <div className="w-3 h-3 bg-green" />
           <span className="text-sm text-white">{wins} victoires</span>
         </div>
         <div className="flex items-center gap-2">
@@ -208,7 +208,7 @@ export default function StatsPage() {
               className={`px-4 py-2 text-xs font-semibold uppercase tracking-wide flex-shrink-0 border transition-all ${
                 filter === f.value
                   ? "bg-white text-black border-white"
-                  : "border-white/20 text-olive hover:border-white/40"
+                  : "border-white/20 text-sage hover:border-white/40"
               }`}
             >
               {f.label}
@@ -219,7 +219,7 @@ export default function StatsPage() {
         {loading ? (
           <div className="grid grid-cols-2 gap-2 animate-pulse">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="bg-anthracite border border-white/[0.08] h-24" />
+              <div key={i} className="bg-surface border border-white/[0.08] h-24" />
             ))}
           </div>
         ) : (
@@ -234,21 +234,21 @@ export default function StatsPage() {
 
             {/* Charts */}
             <Card>
-              <div className="text-[10px] text-olive uppercase tracking-wider mb-3 font-semibold">Heures par semaine</div>
+              <div className="text-[10px] text-sage uppercase tracking-wider mb-3 font-semibold">Heures par semaine</div>
               <WeeklyHoursChart sessions={sessions} />
             </Card>
 
             <Card>
-              <div className="text-[10px] text-olive uppercase tracking-wider mb-3 font-semibold">Répartition des séances</div>
+              <div className="text-[10px] text-sage uppercase tracking-wider mb-3 font-semibold">Répartition des séances</div>
               <SessionTypeRadar sessions={filteredSessions} />
             </Card>
 
             {filteredSessions.some((s) => s.feeling) && (
               <Card>
                 <div className="flex gap-4 mb-2">
-                  <span className="flex items-center gap-1 text-[10px] text-kaki uppercase">● Ressenti</span>
-                  <span className="flex items-center gap-1 text-[10px] text-yellow uppercase">● Motivation</span>
-                  <span className="flex items-center gap-1 text-[10px] text-olive uppercase">● Confiance</span>
+                  <span className="flex items-center gap-1 text-[10px] text-green-light uppercase">● Ressenti</span>
+                  <span className="flex items-center gap-1 text-[10px] text-sand uppercase">● Motivation</span>
+                  <span className="flex items-center gap-1 text-[10px] text-sage uppercase">● Confiance</span>
                 </div>
                 <FeelingChart sessions={filteredSessions} />
               </Card>
@@ -256,22 +256,22 @@ export default function StatsPage() {
 
             {filteredMatches.length > 0 && (
               <Card>
-                <div className="text-[10px] text-olive uppercase tracking-wider mb-3 font-semibold">Résultats matchs</div>
+                <div className="text-[10px] text-sage uppercase tracking-wider mb-3 font-semibold">Résultats matchs</div>
                 <MatchResultsPie matches={filteredMatches} />
               </Card>
             )}
 
             {/* Résumé textuel */}
-            <Card className="border-kaki/30">
-              <div className="text-[10px] text-kaki uppercase tracking-wider mb-2 font-semibold">Bilan de période</div>
+            <Card className="border-green/30">
+              <div className="text-[10px] text-green-light uppercase tracking-wider mb-2 font-semibold">Bilan de période</div>
               <p className="text-sm text-white/80 leading-relaxed">
                 {filter === "week" ? "Cette semaine" : filter === "month" ? "Ce mois" : filter === "season" ? "Cette saison" : "Au total"}, tu as joué{" "}
                 <span className="text-white font-semibold">{totalHours}h</span> en{" "}
                 <span className="text-white font-semibold">{filteredSessions.length} séances</span>.{" "}
                 {filteredMatches.length > 0 && (
-                  <>Ton win rate est de <span className={`font-semibold ${winRate >= 50 ? "text-kaki" : "text-red"}`}>{winRate}%</span> sur {filteredMatches.length} matchs. </>
+                  <>Ton win rate est de <span className={`font-semibold ${winRate >= 50 ? "text-green-light" : "text-red"}`}>{winRate}%</span> sur {filteredMatches.length} matchs. </>
                 )}
-                {streak > 2 && <span className="text-yellow">🔥 Tu es sur une série de {streak} jours !</span>}
+                {streak > 2 && <span className="text-sand">🔥 Tu es sur une série de {streak} jours !</span>}
               </p>
             </Card>
           </div>
