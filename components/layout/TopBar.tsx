@@ -12,60 +12,34 @@ interface TopBarProps {
   onBack?: () => void
   actions?: ReactNode
   className?: string
-  /** Affiche le titre centré, style brand PPP */
-  centered?: boolean
 }
 
-export default function TopBar({
-  title,
-  showBack,
-  backHref,
-  onBack,
-  actions,
-  className,
-  centered,
-}: TopBarProps) {
+export default function TopBar({ title, showBack, backHref, onBack, actions, className }: TopBarProps) {
   const router = useRouter()
 
   const handleBack = () => {
-    if (onBack) {
-      onBack()
-    } else if (backHref) {
-      router.push(backHref)
-    } else {
-      router.back()
-    }
+    if (onBack) return onBack()
+    if (backHref) return router.push(backHref)
+    router.back()
   }
 
   return (
-    <header className={cn("sticky top-0 z-20 bg-ppp-white border-b border-ppp-border safe-top", className)}>
-      <div className={cn("flex items-center h-14 px-5 gap-3", centered && "justify-center relative")}>
+    <header className={cn("sticky top-0 z-20 bg-white border-b border-gray-100", className)}>
+      <div className="flex items-center h-14 px-4 gap-3 max-w-2xl mx-auto">
         {showBack && (
           <button
             onClick={handleBack}
-            className={cn(
-              "text-ppp-muted hover:text-ppp-text transition-colors p-1",
-              centered ? "absolute left-5" : "-ml-1"
-            )}
+            className="text-gray-400 hover:text-ppp-text transition-colors p-1.5 rounded-full hover:bg-gray-50 -ml-1"
             aria-label="Retour"
           >
             <ArrowLeft size={18} strokeWidth={1.5} />
           </button>
         )}
-
-        <h1
-          className={cn(
-            "font-serif font-bold uppercase leading-none",
-            centered
-              ? "text-base tracking-[0.15em] text-ppp-text"
-              : "text-xl tracking-[0.06em] text-ppp-text flex-1"
-          )}
-        >
+        <h1 className="font-serif font-bold text-lg uppercase tracking-[0.06em] text-ppp-text flex-1 leading-none">
           {title}
         </h1>
-
         {actions && (
-          <div className={cn("flex items-center gap-2", centered && "absolute right-5")}>
+          <div className="flex items-center gap-2">
             {actions}
           </div>
         )}

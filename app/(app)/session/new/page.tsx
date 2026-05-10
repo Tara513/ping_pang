@@ -144,18 +144,18 @@ export default function NewSessionPage() {
               className="flex flex-col gap-6 pt-4"
             >
               <div>
-                <p className="text-xs font-semibold font-serif text-ppp-muted uppercase tracking-wider mb-3">Type de séance</p>
-                <div className="grid grid-cols-2 gap-2">
+                <p className="text-[10px] font-serif uppercase tracking-[0.14em] text-ppp-muted mb-3">Type de séance</p>
+                <div className="grid grid-cols-2 gap-2.5">
                   {SESSION_TYPES.map((t) => (
                     <button
                       key={t.value}
                       onClick={() => setSessionType(t.value)}
-                      className={`flex items-center gap-3 p-4 border text-left transition-all rounded-sm ${
+                      className={`flex items-center gap-3 p-4 border rounded-2xl text-left transition-all ${
                         sessionType === t.value
-                          ? "border-ppp-forest text-ppp-text"
-                          : "border-ppp-border text-ppp-muted hover:border-ppp-text"
+                          ? "text-ppp-text shadow-sm"
+                          : "border-gray-100 bg-white text-ppp-muted hover:border-gray-200 shadow-sm"
                       }`}
-                      style={sessionType === t.value ? { borderColor: t.color, backgroundColor: `${t.color}15` } : {}}
+                      style={sessionType === t.value ? { borderColor: t.color, backgroundColor: `${t.color}12` } : {}}
                     >
                       <span className="text-2xl">{t.icon}</span>
                       <span className="font-semibold text-sm font-serif">{t.label}</span>

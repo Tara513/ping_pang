@@ -1,7 +1,6 @@
 @import "tailwindcss";
 
 @theme {
-  /* PPP — Ping Pang Paris color palette */
   --color-ppp-bg:           #F0EDE6;
   --color-ppp-card:         #E8E4DC;
   --color-ppp-forest:       #2D4A3E;
@@ -12,48 +11,20 @@
   --color-ppp-border:       #D4D0C8;
   --color-ppp-gold:         #B5985A;
   --color-ppp-silver:       #8A8A8A;
-
-  /* Legacy auth palette */
-  --color-kaki:  #2D4A3E;
-  --color-olive: #A8A89A;
-
-  /* Semantic / status */
-  --color-red:    #C8352A;
-  --color-yellow: #E8C840;
-
-  /* Override Tailwind defaults */
-  --color-black: #1A1A1A;
-  --color-white: #FFFFFF;
-
-  /* Typography */
-  --font-serif:   'Cormorant Garamond', Georgia, serif;
-  --font-display: 'Cormorant Garamond', Georgia, serif;
-
-  /* Border radius — PPP spec */
-  --radius:      0px;
-  --radius-sm:   2px;
-  --radius-md:   8px;
-  --radius-lg:   8px;
-  --radius-pill: 20px;
-  --radius-full: 9999px;
-
-  /* Transitions */
-  --ease-fast: 0.15s ease;
-  --ease-base: 0.25s ease;
-  --ease-slow: 0.4s ease;
-}
-
-:root {
-  --font-cormorant: 'Cormorant Garamond', Georgia, serif;
-  --color-bg:          #F0EDE6;
-  --color-bg-card:     #E8E4DC;
-  --color-forest:      #2D4A3E;
-  --color-forest-dark: #1E3329;
-  --color-text:        #1A1A1A;
-  --color-text-muted:  #6B6B6B;
-  --color-border:      #D4D0C8;
-  --color-gold:        #B5985A;
-  --color-silver:      #8A8A8A;
+  --color-kaki:             #2D4A3E;
+  --color-olive:            #A8A89A;
+  --color-red:              #C8352A;
+  --color-yellow:           #E8C840;
+  --color-black:            #1A1A1A;
+  --color-white:            #FFFFFF;
+  --font-serif:             'Cormorant Garamond', Georgia, serif;
+  --font-display:           'Cormorant Garamond', Georgia, serif;
+  --radius:                 0px;
+  --radius-sm:              2px;
+  --radius-md:              8px;
+  --radius-lg:              8px;
+  --radius-pill:            20px;
+  --radius-full:            9999px;
 }
 
 * {
@@ -74,55 +45,15 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-.safe-bottom {
-  padding-bottom: max(env(safe-area-inset-bottom, 0px), 16px);
-}
-.safe-top {
-  padding-top: env(safe-area-inset-top, 0px);
-}
-
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: #F0EDE6; }
-::-webkit-scrollbar-thumb { background: #2D4A3E; }
+::-webkit-scrollbar-thumb { background: #2D4A3E; border-radius: 99px; }
 
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
 @layer base {
-  button {
-    cursor: pointer;
-    border: none;
-    background: none;
-    font-family: inherit;
-  }
-}
-
-/* PPP utility classes */
-.ppp-section-title {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-weight: 700;
-  font-size: 1.5rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #1A1A1A;
-  line-height: 1;
-}
-
-.ppp-label {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 0.6rem;
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
-  color: #6B6B6B;
-}
-
-.ppp-divider {
-  height: 1px;
-  background-color: #D4D0C8;
-}
-
-.pb-safe {
-  padding-bottom: max(env(safe-area-inset-bottom, 0px), 2rem);
+  button { cursor: pointer; border: none; background: none; font-family: inherit; }
 }
 
 .mapboxgl-popup-content {
@@ -131,11 +62,6 @@ html, body {
   border-radius: 8px !important;
   padding: 12px !important;
   border: 1px solid #D4D0C8 !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important;
-}
-.mapboxgl-popup-tip {
-  border-top-color: #E8E4DC !important;
-  border-bottom-color: #E8E4DC !important;
 }
 
 input:-webkit-autofill,

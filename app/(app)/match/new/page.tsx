@@ -135,19 +135,19 @@ export default function NewMatchPage() {
           />
 
           <div>
-            <p className="text-xs font-semibold font-serif text-ppp-muted uppercase tracking-wider mb-3">Type de match</p>
-            <div className="grid grid-cols-2 gap-2">
+            <p className="text-[10px] font-serif uppercase tracking-[0.14em] text-ppp-muted mb-3">Type de match</p>
+            <div className="grid grid-cols-2 gap-2.5">
               {MATCH_TYPES.map((t) => (
                 <button
                   key={t.value}
                   onClick={() => setMatchType(t.value)}
-                  className={`flex items-center gap-3 p-3 border text-left transition-all rounded-sm ${
+                  className={`flex items-center gap-3 p-4 border rounded-2xl text-left transition-all shadow-sm ${
                     matchType === t.value
-                      ? "border-ppp-forest bg-ppp-forest/10 text-ppp-text"
-                      : "border-ppp-border text-ppp-muted hover:border-ppp-text"
+                      ? "border-ppp-forest bg-ppp-forest/8 text-ppp-text"
+                      : "border-gray-100 bg-white text-ppp-muted hover:border-gray-200"
                   }`}
                 >
-                  <span>{t.icon}</span>
+                  <span className="text-xl">{t.icon}</span>
                   <span className="font-semibold text-sm font-serif">{t.label}</span>
                 </button>
               ))}
@@ -191,7 +191,7 @@ export default function NewMatchPage() {
                       placeholder="11"
                       value={s.player}
                       onChange={(e) => updateSet(i, "player", e.target.value)}
-                      className="w-full bg-transparent border border-ppp-border text-ppp-text text-center font-serif text-2xl py-2 outline-none focus:border-ppp-forest transition-colors rounded-sm"
+                      className="w-full bg-white border border-gray-200 text-ppp-text text-center font-serif text-2xl py-2.5 outline-none focus:border-ppp-forest transition-all rounded-xl shadow-sm"
                     />
                     <span className="text-ppp-muted font-serif text-xl">—</span>
                     <input
@@ -201,7 +201,7 @@ export default function NewMatchPage() {
                       placeholder="9"
                       value={s.opponent}
                       onChange={(e) => updateSet(i, "opponent", e.target.value)}
-                      className="w-full bg-transparent border border-ppp-border text-ppp-text text-center font-serif text-2xl py-2 outline-none focus:border-ppp-forest transition-colors rounded-sm"
+                      className="w-full bg-white border border-gray-200 text-ppp-text text-center font-serif text-2xl py-2.5 outline-none focus:border-ppp-forest transition-all rounded-xl shadow-sm"
                     />
                   </div>
                   {sets.length > 1 && (

@@ -5,20 +5,29 @@ interface StatCardProps {
   value: string | number
   sub?: string
   color?: string
+  icon?: string
   className?: string
 }
 
-export default function StatCard({ label, value, sub, color, className }: StatCardProps) {
+export default function StatCard({ label, value, sub, color, icon, className }: StatCardProps) {
   return (
-    <div className={cn("bg-ppp-card border border-ppp-border rounded-md p-4 flex flex-col gap-1", className)}>
-      <span className="text-[0.7rem] font-serif uppercase tracking-widest text-ppp-muted">{label}</span>
+    <div className={cn(
+      "bg-white border border-gray-100 rounded-2xl p-5 flex flex-col shadow-sm",
+      className
+    )}>
+      {icon && <span className="text-2xl mb-2">{icon}</span>}
       <span
-        className="font-serif font-bold text-4xl leading-none text-ppp-text"
-        style={color ? { color } : undefined}
+        className="font-serif font-bold text-4xl leading-none"
+        style={color ? { color } : { color: "#1A1A1A" }}
       >
         {value}
       </span>
-      {sub && <span className="text-xs font-serif text-ppp-muted">{sub}</span>}
+      <span className="text-[10px] font-serif uppercase tracking-[0.12em] text-ppp-muted mt-2">
+        {label}
+      </span>
+      {sub && (
+        <span className="text-xs font-serif text-ppp-muted mt-0.5">{sub}</span>
+      )}
     </div>
   )
 }
