@@ -12,20 +12,26 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "primary", size = "md", loading, fullWidth, children, disabled, ...props }, ref) => {
-    const base = "inline-flex items-center justify-center font-sans font-semibold transition-all duration-150 tracking-wide uppercase text-sm no-select"
+    const base =
+      "inline-flex items-center justify-center font-serif tracking-[0.06em] uppercase transition-all duration-200 cursor-pointer select-none"
 
     const variants = {
-      primary: "bg-white text-black hover:bg-kaki hover:text-white active:scale-95",
-      secondary: "bg-kaki text-white hover:bg-olive active:scale-95",
-      ghost: "bg-transparent text-white hover:bg-anthracite active:scale-95",
-      danger: "bg-red text-white hover:opacity-90 active:scale-95",
-      outline: "bg-transparent border border-white/25 text-white hover:border-white/60 active:scale-95",
+      primary:
+        "bg-ppp-forest text-ppp-white border border-ppp-forest hover:bg-ppp-forest-dark hover:border-ppp-forest-dark active:scale-95",
+      secondary:
+        "bg-ppp-white text-ppp-text border border-ppp-text hover:bg-transparent hover:text-ppp-text active:scale-95",
+      ghost:
+        "bg-transparent text-ppp-text hover:opacity-60 active:scale-95",
+      danger:
+        "bg-red text-ppp-white border border-red hover:opacity-90 active:scale-95",
+      outline:
+        "bg-transparent border border-ppp-border text-ppp-text hover:border-ppp-text active:scale-95",
     }
 
     const sizes = {
-      sm: "px-3 py-1.5 text-xs",
-      md: "px-5 py-3",
-      lg: "px-8 py-4 text-base",
+      sm: "px-4 py-2 text-xs",
+      md: "px-7 py-3.5 text-sm",
+      lg: "px-10 py-4 text-base",
     }
 
     return (

@@ -15,7 +15,7 @@ import StatCard from "@/components/ui/StatCard"
 import Card from "@/components/ui/Card"
 import type { Session, Match } from "@/types/database"
 import { demoSessions, demoMatches } from "@/lib/seeds/demoData"
-import { format, startOfWeek, eachWeekOfInterval, subMonths } from "date-fns"
+import { format, eachWeekOfInterval, subMonths } from "date-fns"
 import { fr } from "date-fns/locale"
 
 const FILTER_OPTIONS = [
@@ -24,11 +24,6 @@ const FILTER_OPTIONS = [
   { value: "season", label: "Saison" },
   { value: "all", label: "Tout" },
 ]
-
-const SESSION_TYPE_COLORS: Record<string, string> = {
-  technique: "#4A5240", physique: "#8A9178", match: "#C8352A",
-  service: "#E8C840", competition: "#E8C840", chill: "#2A2A2A"
-}
 
 function WeeklyHoursChart({ sessions }: { sessions: Partial<Session>[] }) {
   const weeks = eachWeekOfInterval({
@@ -53,13 +48,13 @@ function WeeklyHoursChart({ sessions }: { sessions: Partial<Session>[] }) {
   return (
     <ResponsiveContainer width="100%" height={160}>
       <BarChart data={data} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-        <XAxis dataKey="week" tick={{ fill: "#8A9178", fontSize: 9 }} />
-        <YAxis tick={{ fill: "#8A9178", fontSize: 9 }} />
+        <XAxis dataKey="week" tick={{ fill: "#6B6B6B", fontSize: 9 }} />
+        <YAxis tick={{ fill: "#6B6B6B", fontSize: 9 }} />
         <Tooltip
-          contentStyle={{ background: "#2A2A2A", border: "none", color: "#F5F2EC", fontSize: 11 }}
-          cursor={{ fill: "rgba(255,255,255,0.05)" }}
+          contentStyle={{ background: "#E8E4DC", border: "1px solid #D4D0C8", color: "#1A1A1A", fontSize: 11 }}
+          cursor={{ fill: "rgba(0,0,0,0.04)" }}
         />
-        <Bar dataKey="heures" fill="#4A5240" name="Heures" radius={[0, 0, 0, 0]} />
+        <Bar dataKey="heures" fill="#2D4A3E" name="Heures" radius={[2, 2, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   )
@@ -78,9 +73,9 @@ function SessionTypeRadar({ sessions }: { sessions: Partial<Session>[] }) {
   return (
     <ResponsiveContainer width="100%" height={200}>
       <RadarChart data={data}>
-        <PolarGrid stroke="rgba(255,255,255,0.1)" />
-        <PolarAngleAxis dataKey="subject" tick={{ fill: "#8A9178", fontSize: 10 }} />
-        <Radar dataKey="A" stroke="#4A5240" fill="#4A5240" fillOpacity={0.4} />
+        <PolarGrid stroke="rgba(0,0,0,0.08)" />
+        <PolarAngleAxis dataKey="subject" tick={{ fill: "#6B6B6B", fontSize: 10 }} />
+        <Radar dataKey="A" stroke="#2D4A3E" fill="#2D4A3E" fillOpacity={0.25} />
       </RadarChart>
     </ResponsiveContainer>
   )
@@ -100,15 +95,15 @@ function FeelingChart({ sessions }: { sessions: Partial<Session>[] }) {
   return (
     <ResponsiveContainer width="100%" height={160}>
       <LineChart data={data} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-        <CartesianGrid stroke="rgba(255,255,255,0.05)" />
-        <XAxis dataKey="date" tick={{ fill: "#8A9178", fontSize: 9 }} />
-        <YAxis domain={[1, 5]} tick={{ fill: "#8A9178", fontSize: 9 }} />
+        <CartesianGrid stroke="rgba(0,0,0,0.06)" />
+        <XAxis dataKey="date" tick={{ fill: "#6B6B6B", fontSize: 9 }} />
+        <YAxis domain={[1, 5]} tick={{ fill: "#6B6B6B", fontSize: 9 }} />
         <Tooltip
-          contentStyle={{ background: "#2A2A2A", border: "none", color: "#F5F2EC", fontSize: 11 }}
+          contentStyle={{ background: "#E8E4DC", border: "1px solid #D4D0C8", color: "#1A1A1A", fontSize: 11 }}
         />
-        <Line dataKey="feeling" stroke="#4A5240" strokeWidth={2} dot={false} name="Ressenti" />
+        <Line dataKey="feeling" stroke="#2D4A3E" strokeWidth={2} dot={false} name="Ressenti" />
         <Line dataKey="motivation" stroke="#E8C840" strokeWidth={2} dot={false} name="Motivation" />
-        <Line dataKey="confiance" stroke="#8A9178" strokeWidth={2} dot={false} name="Confiance" />
+        <Line dataKey="confiance" stroke="#6B6B6B" strokeWidth={2} dot={false} name="Confiance" />
       </LineChart>
     </ResponsiveContainer>
   )
@@ -126,18 +121,18 @@ function MatchResultsPie({ matches }: { matches: Partial<Match>[] }) {
     <div className="flex items-center gap-4">
       <PieChart width={100} height={100}>
         <Pie data={data} cx={45} cy={45} innerRadius={25} outerRadius={45} dataKey="value" strokeWidth={0}>
-          <Cell fill="#4A5240" />
+          <Cell fill="#2D4A3E" />
           <Cell fill="#C8352A" />
         </Pie>
       </PieChart>
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-kaki" />
-          <span className="text-sm text-white">{wins} victoires</span>
+          <div className="w-3 h-3 rounded-sm bg-ppp-forest" />
+          <span className="text-sm text-ppp-text">{wins} victoires</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-red" />
-          <span className="text-sm text-white">{losses} défaites</span>
+          <div className="w-3 h-3 rounded-sm bg-red" />
+          <span className="text-sm text-ppp-text">{losses} défaites</span>
         </div>
       </div>
     </div>
@@ -205,10 +200,10 @@ export default function StatsPage() {
             <button
               key={f.value}
               onClick={() => setFilter(f.value)}
-              className={`px-4 py-2 text-xs font-semibold uppercase tracking-wide flex-shrink-0 border transition-all ${
+              className={`px-4 py-2 text-xs font-semibold font-serif uppercase tracking-wide flex-shrink-0 border transition-all rounded-sm ${
                 filter === f.value
-                  ? "bg-white text-black border-white"
-                  : "border-white/20 text-olive hover:border-white/40"
+                  ? "bg-ppp-forest text-ppp-white border-ppp-forest"
+                  : "border-ppp-border text-ppp-muted hover:border-ppp-text hover:text-ppp-text"
               }`}
             >
               {f.label}
@@ -219,7 +214,7 @@ export default function StatsPage() {
         {loading ? (
           <div className="grid grid-cols-2 gap-2 animate-pulse">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="bg-anthracite border border-white/[0.08] h-24" />
+              <div key={i} className="bg-ppp-card border border-ppp-border h-24 rounded-md" />
             ))}
           </div>
         ) : (
@@ -227,28 +222,28 @@ export default function StatsPage() {
             {/* Stats cards */}
             <div className="grid grid-cols-2 gap-2">
               <StatCard label="Heures totales" value={`${totalHours}h`} sub={`${filteredSessions.length} séances`} />
-              <StatCard label="Win rate" value={`${winRate}%`} sub={`${filteredMatches.length} matchs`} color={winRate >= 50 ? "#4A5240" : "#C8352A"} />
+              <StatCard label="Win rate" value={`${winRate}%`} sub={`${filteredMatches.length} matchs`} color={winRate >= 50 ? "#2D4A3E" : "#C8352A"} />
               <StatCard label="Séances" value={filteredSessions.length} />
               <StatCard label="Série" value={`${streak}j`} color="#E8C840" />
             </div>
 
             {/* Charts */}
             <Card>
-              <div className="text-[10px] text-olive uppercase tracking-wider mb-3 font-semibold">Heures par semaine</div>
+              <div className="text-[10px] text-ppp-muted uppercase tracking-wider mb-3 font-semibold">Heures par semaine</div>
               <WeeklyHoursChart sessions={sessions} />
             </Card>
 
             <Card>
-              <div className="text-[10px] text-olive uppercase tracking-wider mb-3 font-semibold">Répartition des séances</div>
+              <div className="text-[10px] text-ppp-muted uppercase tracking-wider mb-3 font-semibold">Répartition des séances</div>
               <SessionTypeRadar sessions={filteredSessions} />
             </Card>
 
             {filteredSessions.some((s) => s.feeling) && (
               <Card>
                 <div className="flex gap-4 mb-2">
-                  <span className="flex items-center gap-1 text-[10px] text-kaki uppercase">● Ressenti</span>
+                  <span className="flex items-center gap-1 text-[10px] text-ppp-forest uppercase">● Ressenti</span>
                   <span className="flex items-center gap-1 text-[10px] text-yellow uppercase">● Motivation</span>
-                  <span className="flex items-center gap-1 text-[10px] text-olive uppercase">● Confiance</span>
+                  <span className="flex items-center gap-1 text-[10px] text-ppp-muted uppercase">● Confiance</span>
                 </div>
                 <FeelingChart sessions={filteredSessions} />
               </Card>
@@ -256,20 +251,20 @@ export default function StatsPage() {
 
             {filteredMatches.length > 0 && (
               <Card>
-                <div className="text-[10px] text-olive uppercase tracking-wider mb-3 font-semibold">Résultats matchs</div>
+                <div className="text-[10px] text-ppp-muted uppercase tracking-wider mb-3 font-semibold">Résultats matchs</div>
                 <MatchResultsPie matches={filteredMatches} />
               </Card>
             )}
 
             {/* Résumé textuel */}
-            <Card className="border-kaki/30">
-              <div className="text-[10px] text-kaki uppercase tracking-wider mb-2 font-semibold">Bilan de période</div>
-              <p className="text-sm text-white/80 leading-relaxed">
+            <Card className="border-ppp-forest/20">
+              <div className="text-[10px] text-ppp-forest uppercase tracking-wider mb-2 font-semibold">Bilan de période</div>
+              <p className="text-sm text-ppp-text/80 font-serif leading-relaxed">
                 {filter === "week" ? "Cette semaine" : filter === "month" ? "Ce mois" : filter === "season" ? "Cette saison" : "Au total"}, tu as joué{" "}
-                <span className="text-white font-semibold">{totalHours}h</span> en{" "}
-                <span className="text-white font-semibold">{filteredSessions.length} séances</span>.{" "}
+                <span className="text-ppp-text font-semibold">{totalHours}h</span> en{" "}
+                <span className="text-ppp-text font-semibold">{filteredSessions.length} séances</span>.{" "}
                 {filteredMatches.length > 0 && (
-                  <>Ton win rate est de <span className={`font-semibold ${winRate >= 50 ? "text-kaki" : "text-red"}`}>{winRate}%</span> sur {filteredMatches.length} matchs. </>
+                  <>Ton win rate est de <span className={`font-semibold ${winRate >= 50 ? "text-ppp-forest" : "text-red"}`}>{winRate}%</span> sur {filteredMatches.length} matchs. </>
                 )}
                 {streak > 2 && <span className="text-yellow">🔥 Tu es sur une série de {streak} jours !</span>}
               </p>

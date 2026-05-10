@@ -47,7 +47,7 @@ export default function MatchDetailPage() {
         <PageWrapper>
           <div className="flex flex-col gap-4 pt-4 animate-pulse">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="bg-anthracite border border-white/[0.08] h-28" />
+              <div key={i} className="bg-ppp-card border border-ppp-border h-28 rounded-md" />
             ))}
           </div>
         </PageWrapper>
@@ -59,7 +59,9 @@ export default function MatchDetailPage() {
     return (
       <>
         <TopBar title="Match" showBack />
-        <PageWrapper><div className="text-center py-20 text-olive">Match introuvable</div></PageWrapper>
+        <PageWrapper>
+          <div className="text-center py-20 text-ppp-muted font-serif">Match introuvable</div>
+        </PageWrapper>
       </>
     )
   }
@@ -73,32 +75,34 @@ export default function MatchDetailPage() {
       <PageWrapper>
         <div className="pt-4 flex flex-col gap-4">
           {/* Result header */}
-          <div className={`p-5 border ${isWin ? "bg-kaki/10 border-kaki/30" : "bg-red/10 border-red/30"}`}>
+          <div className={`p-5 rounded-md ${isWin ? "bg-ppp-forest" : "bg-red/90"}`}>
             <div className="flex items-center justify-between mb-3">
               <div>
                 <Badge
                   label={isWin ? "Victoire" : "Défaite"}
-                  color={isWin ? "kaki" : "red"}
+                  color={isWin ? "muted" : "muted"}
                   size="md"
                 />
-                <div className="text-olive text-sm mt-1 capitalize">{dateStr}</div>
+                <div className="text-ppp-white/60 text-sm mt-1 capitalize font-serif">{dateStr}</div>
               </div>
               <div className="text-right">
-                <Badge label={MATCH_LABELS[match.match_type] || match.match_type} color="anthracite" />
+                <span className="text-xs font-serif font-semibold uppercase tracking-wide text-ppp-white/70">
+                  {MATCH_LABELS[match.match_type] || match.match_type}
+                </span>
               </div>
             </div>
 
             <div className="flex items-center gap-4">
               <div className="flex-1 text-center">
-                <div className="text-xs text-olive uppercase tracking-wider mb-1">Toi</div>
-                <div className={`font-display text-6xl leading-none ${isWin ? "text-kaki" : "text-white"}`}>
+                <div className="text-xs text-ppp-white/50 uppercase tracking-wider mb-1 font-serif">Toi</div>
+                <div className="font-serif font-bold text-6xl leading-none text-ppp-white">
                   {match.sets_won}
                 </div>
               </div>
-              <div className="text-white/30 font-display text-3xl">—</div>
+              <div className="text-ppp-white/30 font-serif text-3xl">—</div>
               <div className="flex-1 text-center">
-                <div className="text-xs text-olive uppercase tracking-wider mb-1">{match.opponent_name}</div>
-                <div className={`font-display text-6xl leading-none ${!isWin ? "text-red" : "text-white"}`}>
+                <div className="text-xs text-ppp-white/50 uppercase tracking-wider mb-1 font-serif">{match.opponent_name}</div>
+                <div className="font-serif font-bold text-6xl leading-none text-ppp-white">
                   {match.sets_lost}
                 </div>
               </div>
@@ -108,20 +112,20 @@ export default function MatchDetailPage() {
           {/* Score par set */}
           {match.score_player?.length > 0 && (
             <Card>
-              <div className="text-[10px] text-olive uppercase tracking-wider mb-3 font-semibold">Score par set</div>
+              <div className="text-[10px] text-ppp-muted uppercase tracking-wider mb-3 font-semibold">Score par set</div>
               <div className="flex flex-col gap-2">
                 {match.score_player.map((p, i) => {
                   const o = match.score_opponent[i] || 0
                   const setWon = p > o
                   return (
                     <div key={i} className="flex items-center gap-3">
-                      <div className="text-xs text-olive w-8">Set {i + 1}</div>
+                      <div className="text-xs text-ppp-muted font-serif w-8">Set {i + 1}</div>
                       <div className="flex-1 flex items-center gap-2">
-                        <span className={`font-display text-2xl ${setWon ? "text-kaki" : "text-white"}`}>{p}</span>
-                        <span className="text-olive">—</span>
-                        <span className={`font-display text-2xl ${!setWon ? "text-red" : "text-white"}`}>{o}</span>
+                        <span className={`font-serif font-bold text-2xl ${setWon ? "text-ppp-forest" : "text-ppp-text"}`}>{p}</span>
+                        <span className="text-ppp-muted">—</span>
+                        <span className={`font-serif font-bold text-2xl ${!setWon ? "text-red" : "text-ppp-text"}`}>{o}</span>
                       </div>
-                      <Badge label={setWon ? "✓" : "✗"} color={setWon ? "kaki" : "red"} />
+                      <Badge label={setWon ? "✓" : "✗"} color={setWon ? "forest" : "red"} />
                     </div>
                   )
                 })}
@@ -132,16 +136,16 @@ export default function MatchDetailPage() {
           {/* Info */}
           {match.location && (
             <Card>
-              <div className="text-[10px] text-olive uppercase tracking-wider mb-1 font-semibold">Lieu</div>
-              <div className="text-sm text-white">📍 {match.location}</div>
+              <div className="text-[10px] text-ppp-muted uppercase tracking-wider mb-1 font-semibold">Lieu</div>
+              <div className="text-sm text-ppp-text font-serif">📍 {match.location}</div>
             </Card>
           )}
 
           {/* Notes */}
           {match.notes && (
             <Card>
-              <div className="text-[10px] text-olive uppercase tracking-wider mb-2 font-semibold">Notes</div>
-              <p className="text-sm text-white/80 leading-relaxed">{match.notes}</p>
+              <div className="text-[10px] text-ppp-muted uppercase tracking-wider mb-2 font-semibold">Notes</div>
+              <p className="text-sm text-ppp-text/80 font-serif leading-relaxed">{match.notes}</p>
             </Card>
           )}
 

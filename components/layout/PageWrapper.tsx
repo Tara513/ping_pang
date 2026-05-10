@@ -12,7 +12,7 @@ export default function PageWrapper({ children, className, hasBottomNav = true, 
   return (
     <main
       className={cn(
-        "min-h-screen bg-black",
+        "min-h-screen bg-ppp-bg",
         hasBottomNav && "pb-24",
         !noPadding && "px-4",
         className

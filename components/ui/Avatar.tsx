@@ -9,11 +9,11 @@ interface AvatarProps {
 }
 
 const sizes = {
-  xs: "w-7 h-7 text-xs",
-  sm: "w-9 h-9 text-sm",
-  md: "w-12 h-12 text-base",
-  lg: "w-16 h-16 text-xl",
-  xl: "w-24 h-24 text-3xl",
+  xs: "w-7 h-7 text-sm",
+  sm: "w-9 h-9 text-base",
+  md: "w-12 h-12 text-lg",
+  lg: "w-16 h-16 text-2xl",
+  xl: "w-24 h-24 text-4xl",
 }
 
 const pxSizes = { xs: 28, sm: 36, md: 48, lg: 64, xl: 96 }
@@ -24,7 +24,7 @@ export default function Avatar({ src, name, size = "md", className }: AvatarProp
   return (
     <div
       className={cn(
-        "relative rounded-full overflow-hidden flex items-center justify-center bg-kaki flex-shrink-0",
+        "relative rounded-full overflow-hidden flex items-center justify-center bg-ppp-forest flex-shrink-0",
         sizes[size],
         className
       )}
@@ -38,7 +38,7 @@ export default function Avatar({ src, name, size = "md", className }: AvatarProp
           sizes={`${pxSizes[size]}px`}
         />
       ) : (
-        <span className="font-display text-white">{initial}</span>
+        <span className="font-serif text-ppp-white">{initial}</span>
       )}
     </div>
   )
