@@ -14,37 +14,34 @@ const navItems = [
   { href: "/profile", icon: User, label: "Profil" },
 ]
 
-interface QuickActionMenuProps {
-  onClose: () => void
-}
-
-function QuickActionMenu({ onClose }: QuickActionMenuProps) {
+function QuickActionMenu({ onClose }: { onClose: () => void }) {
   return (
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-40 bg-ppp-text/40"
+        className="fixed inset-0 z-40 bg-ppp-text/40 backdrop-blur-sm"
         onClick={onClose}
       />
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 20 }}
-        className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-3 items-center"
+        exit={{ opacity: 0, y: 24 }}
+        transition={{ type: "spring", damping: 22, stiffness: 300 }}
+        className="fixed bottom-28 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-3 items-center w-full max-w-[480px] px-8"
       >
         <Link
           href="/session/new"
           onClick={onClose}
-          className="bg-ppp-forest text-ppp-white border border-ppp-forest px-8 py-3 font-serif text-sm tracking-[0.03em] flex items-center gap-3 min-w-[220px] justify-center transition-colors hover:bg-ppp-forest-dark rounded-sm"
+          className="bg-ppp-forest text-ppp-white px-8 py-3.5 font-serif text-sm tracking-[0.08em] uppercase flex items-center gap-3 w-full justify-center transition-all hover:bg-ppp-forest-dark active:scale-[0.98] shadow-lg"
         >
           <span>🏓</span> Logger une séance
         </Link>
         <Link
           href="/match/new"
           onClick={onClose}
-          className="bg-ppp-white text-ppp-text border border-ppp-border px-8 py-3 font-serif text-sm tracking-[0.03em] flex items-center gap-3 min-w-[220px] justify-center transition-colors hover:border-ppp-text rounded-sm"
+          className="bg-ppp-white text-ppp-text border border-ppp-border px-8 py-3.5 font-serif text-sm tracking-[0.08em] uppercase flex items-center gap-3 w-full justify-center transition-all hover:border-ppp-text active:scale-[0.98] shadow-lg"
         >
           <span>⚔️</span> Logger un match
         </Link>
@@ -60,8 +57,10 @@ export default function BottomNav() {
   return (
     <>
       {showQuickMenu && <QuickActionMenu onClose={() => setShowQuickMenu(false)} />}
+
+      {/* Nav fixée en bas, contenu centré dans max-w-[480px] */}
       <nav className="fixed bottom-0 left-0 right-0 z-30 bg-ppp-white border-t border-ppp-border safe-bottom">
-        <div className="flex items-center h-16">
+        <div className="flex items-center h-16 max-w-[480px] mx-auto px-2">
           {navItems.slice(0, 2).map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
             return (
@@ -79,15 +78,15 @@ export default function BottomNav() {
             )
           })}
 
-          {/* FAB central — vert forêt PPP */}
+          {/* FAB central */}
           <button
             onClick={() => setShowQuickMenu((v) => !v)}
             aria-label="Ajouter"
             className={cn(
-              "flex items-center justify-center w-13 h-13 mx-2 rounded-full transition-all duration-200",
+              "flex items-center justify-center mx-4 rounded-full transition-all duration-200 shadow-md",
               showQuickMenu
-                ? "bg-ppp-forest-dark rotate-45"
-                : "bg-ppp-forest hover:bg-ppp-forest-dark active:scale-95"
+                ? "bg-ppp-forest-dark rotate-45 scale-95"
+                : "bg-ppp-forest hover:bg-ppp-forest-dark active:scale-90"
             )}
             style={{ width: 52, height: 52 }}
           >
