@@ -4,20 +4,12 @@ import type { ReactNode } from "react"
 interface PageWrapperProps {
   children: ReactNode
   className?: string
-  hasBottomNav?: boolean
   noPadding?: boolean
 }
 
-export default function PageWrapper({ children, className, hasBottomNav = true, noPadding }: PageWrapperProps) {
+export default function PageWrapper({ children, className, noPadding }: PageWrapperProps) {
   return (
-    <main
-      className={cn(
-        "min-h-screen bg-black",
-        hasBottomNav && "pb-24",
-        !noPadding && "px-4",
-        className
-      )}
-    >
+    <main className={cn("bg-ppp-bg w-full max-w-2xl mx-auto", !noPadding && "px-4", className)}>
       {children}
     </main>
   )

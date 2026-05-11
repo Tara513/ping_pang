@@ -37,22 +37,22 @@ function ScoreDisplay({ sets }: { sets: SetScore[] }) {
   if (sets.length === 0) return null
 
   return (
-    <div className="flex items-center gap-4 p-4 bg-surface border border-white/[0.08]">
+    <div className="flex items-center gap-4 p-4 bg-ppp-card border border-ppp-border rounded-md">
       <div className="flex flex-col items-center">
-        <div className={`font-display text-4xl leading-none ${isWin ? "text-green-light" : setsLost > setsWon ? "text-red" : "text-white"}`}>
+        <div className={`font-serif font-bold text-4xl leading-none ${isWin ? "text-ppp-forest" : setsLost > setsWon ? "text-red" : "text-ppp-text"}`}>
           {setsWon}
         </div>
-        <div className="text-[10px] text-sage">SETS</div>
+        <div className="text-[10px] text-ppp-muted uppercase">SETS</div>
       </div>
-      <div className="text-white/30 font-display text-2xl">—</div>
+      <div className="text-ppp-text/20 font-serif text-2xl">—</div>
       <div className="flex flex-col items-center">
-        <div className={`font-display text-4xl leading-none ${setsLost > setsWon ? "text-red" : "text-white"}`}>
+        <div className={`font-serif font-bold text-4xl leading-none ${setsLost > setsWon ? "text-red" : "text-ppp-text"}`}>
           {setsLost}
         </div>
-        <div className="text-[10px] text-sage">SETS</div>
+        <div className="text-[10px] text-ppp-muted uppercase">SETS</div>
       </div>
       {sets.length >= 3 && (
-        <div className={`ml-auto text-xs font-semibold uppercase px-3 py-1 ${isWin ? "bg-green text-white" : "bg-red text-white"}`}>
+        <div className={`ml-auto text-xs font-semibold font-serif uppercase px-3 py-1 rounded-sm ${isWin ? "bg-ppp-forest text-ppp-white" : "bg-red text-ppp-white"}`}>
           {isWin ? "Victoire" : "Défaite"}
         </div>
       )}
@@ -135,20 +135,20 @@ export default function NewMatchPage() {
           />
 
           <div>
-            <p className="text-xs font-semibold text-sage uppercase tracking-wider mb-3">Type de match</p>
-            <div className="grid grid-cols-2 gap-2">
+            <p className="text-[10px] font-serif uppercase tracking-[0.14em] text-ppp-muted mb-3">Type de match</p>
+            <div className="grid grid-cols-2 gap-2.5">
               {MATCH_TYPES.map((t) => (
                 <button
                   key={t.value}
                   onClick={() => setMatchType(t.value)}
-                  className={`flex items-center gap-3 p-3 border text-left transition-all ${
+                  className={`flex items-center gap-3 p-4 border rounded-2xl text-left transition-all shadow-sm ${
                     matchType === t.value
-                      ? "border-green bg-green/20 text-white"
-                      : "border-white/10 text-sage hover:border-white/30"
+                      ? "border-ppp-forest bg-ppp-forest/8 text-ppp-text"
+                      : "border-gray-100 bg-white text-ppp-muted hover:border-gray-200"
                   }`}
                 >
-                  <span>{t.icon}</span>
-                  <span className="font-semibold text-sm">{t.label}</span>
+                  <span className="text-xl">{t.icon}</span>
+                  <span className="font-semibold text-sm font-serif">{t.label}</span>
                 </button>
               ))}
             </div>
@@ -166,8 +166,8 @@ export default function NewMatchPage() {
           {/* Score par set */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-semibold text-sage uppercase tracking-wider">Score par set</p>
-              <button onClick={addSet} className="flex items-center gap-1 text-xs text-sage hover:text-white transition-colors">
+              <p className="text-xs font-semibold font-serif text-ppp-muted uppercase tracking-wider">Score par set</p>
+              <button onClick={addSet} className="flex items-center gap-1 text-xs text-ppp-muted hover:text-ppp-text transition-colors font-serif">
                 <Plus size={14} /> Ajouter set
               </button>
             </div>
@@ -182,7 +182,7 @@ export default function NewMatchPage() {
                   animate={{ opacity: 1, y: 0 }}
                   className="flex items-center gap-3"
                 >
-                  <div className="text-xs text-sage uppercase tracking-wider w-8">S{i + 1}</div>
+                  <div className="text-xs text-ppp-muted font-serif uppercase tracking-wider w-8">S{i + 1}</div>
                   <div className="flex items-center gap-2 flex-1">
                     <input
                       type="number"
@@ -191,9 +191,9 @@ export default function NewMatchPage() {
                       placeholder="11"
                       value={s.player}
                       onChange={(e) => updateSet(i, "player", e.target.value)}
-                      className="w-full bg-transparent border border-white/25 text-white text-center font-display text-2xl py-2 outline-none focus:border-green transition-colors"
+                      className="w-full bg-white border border-gray-200 text-ppp-text text-center font-serif text-2xl py-2.5 outline-none focus:border-ppp-forest transition-all rounded-xl shadow-sm"
                     />
-                    <span className="text-sage font-display text-xl">—</span>
+                    <span className="text-ppp-muted font-serif text-xl">—</span>
                     <input
                       type="number"
                       min="0"
@@ -201,13 +201,13 @@ export default function NewMatchPage() {
                       placeholder="9"
                       value={s.opponent}
                       onChange={(e) => updateSet(i, "opponent", e.target.value)}
-                      className="w-full bg-transparent border border-white/25 text-white text-center font-display text-2xl py-2 outline-none focus:border-green transition-colors"
+                      className="w-full bg-white border border-gray-200 text-ppp-text text-center font-serif text-2xl py-2.5 outline-none focus:border-ppp-forest transition-all rounded-xl shadow-sm"
                     />
                   </div>
                   {sets.length > 1 && (
                     <button
                       onClick={() => removeSet(i)}
-                      className="text-sage/50 hover:text-red transition-colors p-1"
+                      className="text-ppp-muted/50 hover:text-red transition-colors p-1"
                       aria-label="Supprimer set"
                     >
                       <Trash2 size={16} />

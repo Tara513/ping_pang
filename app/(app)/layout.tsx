@@ -5,10 +5,11 @@ import { ToastProvider } from "@/components/ui/Toast"
 export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <ToastProvider>
-      <div className="min-h-screen bg-black">
+      {/* Contenu avec padding-bottom pour ne pas passer sous la nav fixe */}
+      <div className="min-h-dvh bg-ppp-bg pb-16">
         {children}
-        <BottomNav />
       </div>
+      <BottomNav />
     </ToastProvider>
   )
 }

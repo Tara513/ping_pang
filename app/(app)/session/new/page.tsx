@@ -17,12 +17,12 @@ import Slider from "@/components/ui/Slider"
 import type { SessionType } from "@/types/database"
 
 const SESSION_TYPES: { value: SessionType; label: string; icon: string; color: string }[] = [
-  { value: "technique", label: "Technique", icon: "🏓", color: "#4A5240" },
-  { value: "physique", label: "Physique", icon: "💪", color: "#8A9178" },
+  { value: "technique", label: "Technique", icon: "🏓", color: "#2D4A3E" },
+  { value: "physique", label: "Physique", icon: "💪", color: "#6B6B6B" },
   { value: "match", label: "Match", icon: "⚔️", color: "#C8352A" },
   { value: "service", label: "Service", icon: "🎯", color: "#E8C840" },
-  { value: "competition", label: "Compétition", icon: "🏆", color: "#E8C840" },
-  { value: "chill", label: "Chill", icon: "😎", color: "#2A2A2A" },
+  { value: "competition", label: "Compétition", icon: "🏆", color: "#B5985A" },
+  { value: "chill", label: "Chill", icon: "😎", color: "#8A8A8A" },
 ]
 
 const EXERCISES_PRESETS = [
@@ -40,7 +40,7 @@ function SessionEndedModal({ onDescribe, onQuick, loading }: { onDescribe: () =>
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center px-6 text-center"
+      className="fixed inset-0 z-50 bg-ppp-bg flex flex-col items-center justify-center px-6 text-center"
     >
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
@@ -48,8 +48,8 @@ function SessionEndedModal({ onDescribe, onQuick, loading }: { onDescribe: () =>
         transition={{ delay: 0.1, type: "spring" }}
       >
         <div className="text-6xl mb-4">🏓</div>
-        <h2 className="font-display text-5xl font-light text-white mb-2">Séance terminée !</h2>
-        <p className="text-sage text-sm mb-8">Tu veux décrire ta séance ?</p>
+        <h2 className="font-serif font-bold text-5xl text-ppp-text uppercase mb-2">Séance terminée !</h2>
+        <p className="text-ppp-muted text-sm mb-8">Tu veux décrire ta séance ?</p>
 
         <div className="flex flex-col gap-3 w-full max-w-xs">
           <Button onClick={onDescribe} size="lg" fullWidth>
@@ -144,21 +144,21 @@ export default function NewSessionPage() {
               className="flex flex-col gap-6 pt-4"
             >
               <div>
-                <p className="text-xs font-semibold text-sage uppercase tracking-wider mb-3">Type de séance</p>
-                <div className="grid grid-cols-2 gap-2">
+                <p className="text-[10px] font-serif uppercase tracking-[0.14em] text-ppp-muted mb-3">Type de séance</p>
+                <div className="grid grid-cols-2 gap-2.5">
                   {SESSION_TYPES.map((t) => (
                     <button
                       key={t.value}
                       onClick={() => setSessionType(t.value)}
-                      className={`flex items-center gap-3 p-4 border text-left transition-all ${
+                      className={`flex items-center gap-3 p-4 border rounded-2xl text-left transition-all ${
                         sessionType === t.value
-                          ? "border-green text-white"
-                          : "border-white/10 text-sage hover:border-white/30"
+                          ? "text-ppp-text shadow-sm"
+                          : "border-gray-100 bg-white text-ppp-muted hover:border-gray-200 shadow-sm"
                       }`}
-                      style={sessionType === t.value ? { borderColor: t.color, backgroundColor: `${t.color}20` } : {}}
+                      style={sessionType === t.value ? { borderColor: t.color, backgroundColor: `${t.color}12` } : {}}
                     >
                       <span className="text-2xl">{t.icon}</span>
-                      <span className="font-semibold text-sm">{t.label}</span>
+                      <span className="font-semibold text-sm font-serif">{t.label}</span>
                     </button>
                   ))}
                 </div>
@@ -221,17 +221,17 @@ export default function NewSessionPage() {
               className="flex flex-col gap-6 pt-4"
             >
               <div>
-                <h3 className="font-display text-2xl font-light text-white mb-1">Exercices</h3>
-                <p className="text-sage text-xs mb-4">Qu&apos;as-tu travaillé ?</p>
+                <h3 className="font-serif font-bold text-2xl text-ppp-text uppercase mb-1">Exercices</h3>
+                <p className="text-ppp-muted text-xs mb-4">Qu&apos;as-tu travaillé ?</p>
                 <div className="flex flex-wrap gap-2">
                   {EXERCISES_PRESETS.map((ex) => (
                     <button
                       key={ex}
                       onClick={() => toggleExercise(ex)}
-                      className={`text-xs px-3 py-1.5 border font-medium transition-all ${
+                      className={`text-xs px-3 py-1.5 border font-medium font-serif transition-all rounded-sm ${
                         selectedExercises.includes(ex)
-                          ? "bg-green border-green text-white"
-                          : "border-white/20 text-sage hover:border-white/40"
+                          ? "bg-ppp-forest border-ppp-forest text-ppp-white"
+                          : "border-ppp-border text-ppp-muted hover:border-ppp-text hover:text-ppp-text"
                       }`}
                     >
                       {ex}
@@ -261,19 +261,19 @@ export default function NewSessionPage() {
               className="flex flex-col gap-6 pt-4"
             >
               <div>
-                <h3 className="font-display text-2xl font-light text-white mb-1">Ressenti</h3>
-                <p className="text-sage text-xs mb-4">Comment tu te sens ?</p>
+                <h3 className="font-serif font-bold text-2xl text-ppp-text uppercase mb-1">Ressenti</h3>
+                <p className="text-ppp-muted text-xs mb-4">Comment tu te sens ?</p>
               </div>
 
               <div className="flex flex-col gap-2">
-                <p className="text-xs font-semibold text-sage uppercase tracking-wider">Ressenti général</p>
+                <p className="text-xs font-semibold font-serif text-ppp-muted uppercase tracking-wider">Ressenti général</p>
                 <div className="flex justify-between gap-2">
                   {[1, 2, 3, 4, 5].map((v) => (
                     <button
                       key={v}
                       onClick={() => setFeeling(v)}
-                      className={`flex-1 py-3 text-2xl border transition-all ${
-                        feeling === v ? "border-green bg-green/20" : "border-white/10 hover:border-white/30"
+                      className={`flex-1 py-3 text-2xl border transition-all rounded-sm ${
+                        feeling === v ? "border-ppp-forest bg-ppp-forest/10" : "border-ppp-border hover:border-ppp-text/40"
                       }`}
                       title={FEELING_LABELS[v]}
                     >

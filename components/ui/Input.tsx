@@ -1,7 +1,7 @@
 "use client"
 
-import { forwardRef, type InputHTMLAttributes } from "react"
 import { cn } from "@/lib/utils/cn"
+import { forwardRef, type InputHTMLAttributes } from "react"
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string
@@ -10,27 +10,34 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, hint, className, ...props }, ref) => {
+  ({ className, label, error, hint, id, ...props }, ref) => {
+    const inputId = id || label?.toLowerCase().replace(/\s+/g, "-")
+
     return (
-      <div className="flex flex-col">
+      <div className="flex flex-col gap-1.5">
         {label && (
-          <label className="text-[9px] text-sage uppercase tracking-[0.25em] mb-2">
+          <label
+            htmlFor={inputId}
+            className="text-xs font-serif uppercase tracking-[0.05em] text-ppp-muted"
+          >
             {label}
           </label>
         )}
         <input
           ref={ref}
+          id={inputId}
           className={cn(
-            "w-full bg-transparent border-b border-white/15 text-white py-3 text-sm outline-none",
-            "transition-colors duration-200",
-            "focus:border-white/50 placeholder:text-white/15",
-            error && "border-red focus:border-red",
+            "w-full bg-transparent border-0 border-b text-ppp-text font-serif text-base px-0 py-3",
+            "placeholder:text-ppp-muted outline-none transition-colors duration-200",
+            error
+              ? "border-red focus:border-red"
+              : "border-ppp-border focus:border-ppp-text",
             className
           )}
           {...props}
         />
-        {error && <span className="text-[10px] text-red mt-1.5">{error}</span>}
-        {hint && !error && <span className="text-[10px] text-sage/60 mt-1.5">{hint}</span>}
+        {error && <p className="text-xs font-serif text-red">{error}</p>}
+        {hint && !error && <p className="text-xs font-serif text-ppp-muted">{hint}</p>}
       </div>
     )
   }
