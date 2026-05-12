@@ -2,7 +2,6 @@
 
 export const dynamic = "force-dynamic"
 
-
 import { useEffect, useRef, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import TopBar from "@/components/layout/TopBar"
@@ -48,9 +47,6 @@ export default function MapPage() {
         matches = demoMatches as Match[]
       }
 
-      const locationPoints: LocationPoint[] = []
-
-      // Demo locations for sessions without GPS
       const parisLocations = [
         { lat: 48.8566, lng: 2.3522, label: "Ping Pang Paris" },
         { lat: 48.8721, lng: 2.3314, label: "Club Omnisports" },
@@ -59,30 +55,31 @@ export default function MapPage() {
         { lat: 48.883, lng: 2.3201, label: "Salle de sport" },
       ]
 
-      sessions.forEach((s, i) => {
-        const loc = parisLocations[i % parisLocations.length]
-        locationPoints.push({
-          id: `s-${s.id || i}`,
-          type: "session",
-          lat: s.location_lat ?? loc.lat + (Math.random() - 0.5) * 0.02,
-          lng: s.location_lng ?? loc.lng + (Math.random() - 0.5) * 0.02,
-          label: s.location || loc.label,
-          date: s.date || "",
-        })
-      })
-
-      matches.forEach((m, i) => {
-        const loc = parisLocations[i % parisLocations.length]
-        locationPoints.push({
-          id: `m-${m.id || i}`,
-          type: "match",
-          lat: m.location_lat ?? loc.lat + (Math.random() - 0.5) * 0.02,
-          lng: m.location_lng ?? loc.lng + (Math.random() - 0.5) * 0.02,
-          label: m.location || loc.label,
-          date: m.date || "",
-          result: m.result ?? undefined,
-        })
-      })
+      const locationPoints: LocationPoint[] = [
+        ...sessions.map((s, i) => {
+          const loc = parisLocations[i % parisLocations.length]
+          return {
+            id: `s-${s.id || i}`,
+            type: "session" as const,
+            lat: s.location_lat ?? loc.lat + (Math.random() - 0.5) * 0.02,
+            lng: s.location_lng ?? loc.lng + (Math.random() - 0.5) * 0.02,
+            label: s.location || loc.label,
+            date: s.date || "",
+          }
+        }),
+        ...matches.map((m, i) => {
+          const loc = parisLocations[i % parisLocations.length]
+          return {
+            id: `m-${m.id || i}`,
+            type: "match" as const,
+            lat: m.location_lat ?? loc.lat + (Math.random() - 0.5) * 0.02,
+            lng: m.location_lng ?? loc.lng + (Math.random() - 0.5) * 0.02,
+            label: m.location || loc.label,
+            date: m.date || "",
+            result: m.result ?? undefined,
+          }
+        }),
+      ]
 
       setPoints(locationPoints)
       setLoading(false)
@@ -91,8 +88,7 @@ export default function MapPage() {
   }, [])
 
   useEffect(() => {
-    if (!mapContainer.current || mapRef.current || loading) return
-    if (!MAPBOX_TOKEN) return
+    if (!mapContainer.current || mapRef.current || loading || !MAPBOX_TOKEN) return
 
     async function initMap() {
       const mapboxgl = (await import("mapbox-gl")).default
@@ -110,37 +106,33 @@ export default function MapPage() {
       mapRef.current = map
 
       map.on("load", () => {
-        const filtered = points.filter((p) => filter === "all" || p.type === filter)
+        points
+          .filter((p) => filter === "all" || p.type === filter)
+          .forEach((point) => {
+            const el = document.createElement("div")
+            el.style.cssText = `
+              width: 10px; height: 10px;
+              background: ${point.type === "session" ? "#1A5C4A" : point.result === "win" ? "#1A5C4A" : "#C72927"};
+              border: 1px solid rgba(255,255,255,0.3);
+              cursor: pointer;
+            `
 
-        filtered.forEach((point) => {
-          const el = document.createElement("div")
-          el.className = "map-marker"
-          el.style.cssText = `
-            width: 28px; height: 28px;
-            background: ${point.type === "session" ? "#4A5240" : point.result === "win" ? "#4A5240" : "#C8352A"};
-            border: 2px solid ${point.type === "match" ? "rgba(255,255,255,0.3)" : "transparent"};
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; font-size: 14px;
-          `
-          el.textContent = point.type === "session" ? "🏓" : "⚔️"
-
-          const popup = new mapboxgl.Popup({ offset: 20, className: "pingtrack-popup" })
-            .setHTML(`
-              <div style="font-family: system-ui; color: #F5F2EC;">
-                <div style="font-weight: 600; font-size: 13px;">${point.label}</div>
-                <div style="font-size: 11px; color: #8A9178; margin-top: 2px;">
-                  ${point.type === "session" ? "🏓 Séance" : "⚔️ Match"}
-                  ${point.result ? (point.result === "win" ? " — Victoire" : " — Défaite") : ""}
+            const popup = new mapboxgl.Popup({ offset: 16, className: "pingtrack-popup" })
+              .setHTML(`
+                <div style="font-family: system-ui; color: #F0EDE6; padding: 2px;">
+                  <div style="font-size: 12px; font-weight: 500;">${point.label}</div>
+                  <div style="font-size: 10px; color: #7A9E8E; margin-top: 2px;">
+                    ${point.type === "session" ? "Séance" : "Match"}
+                    ${point.result ? (point.result === "win" ? " · Victoire" : " · Défaite") : ""}
+                  </div>
                 </div>
-                <div style="font-size: 10px; color: #8A9178;">${point.date}</div>
-              </div>
-            `)
+              `)
 
-          new mapboxgl.Marker(el)
-            .setLngLat([point.lng, point.lat])
-            .setPopup(popup)
-            .addTo(map)
-        })
+            new mapboxgl.Marker(el)
+              .setLngLat([point.lng, point.lat])
+              .setPopup(popup)
+              .addTo(map)
+          })
       })
     }
 
@@ -154,44 +146,50 @@ export default function MapPage() {
       <TopBar title="Carte" />
       <div className="fixed inset-0 pt-14 pb-16 bg-black" style={{ zIndex: 0 }}>
         {/* Filter bar */}
-        <div className="absolute top-14 left-0 right-0 z-10 flex gap-2 px-4 py-3 bg-black/80 backdrop-blur-sm border-b border-white/[0.06]">
+        <div className="absolute top-14 left-0 right-0 z-10 flex items-center gap-3 px-4 py-3 bg-black/90 backdrop-blur-sm border-b border-white/[0.06]">
           {(["all", "session", "match"] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 text-xs font-semibold uppercase tracking-wide border transition-all ${
-                filter === f ? "bg-white text-black border-white" : "border-white/20 text-sage hover:border-white/40"
+              className={`px-3 py-1 text-[10px] uppercase tracking-[0.15em] border transition-all font-sans ${
+                filter === f ? "border-white text-white" : "border-white/15 text-sage/50 hover:border-white/30"
               }`}
             >
-              {f === "all" ? "Tous" : f === "session" ? "🏓 Séances" : "⚔️ Matchs"}
+              {f === "all" ? "Tout" : f === "session" ? "Séances" : "Matchs"}
             </button>
           ))}
-          <span className="ml-auto text-xs text-sage self-center">{filteredCount} lieux</span>
+          <span className="ml-auto text-[9px] text-sage/40 uppercase tracking-widest">{filteredCount} lieux</span>
         </div>
 
         {!MAPBOX_TOKEN ? (
-          <div className="flex items-center justify-center h-full flex-col gap-4 text-center px-8">
-            <div className="text-5xl">🗺</div>
-            <div className="font-display text-3xl font-light text-white">Carte</div>
-            <p className="text-sage text-sm">
-              Configure <code className="text-white bg-surface px-2 py-0.5">NEXT_PUBLIC_MAPBOX_TOKEN</code> pour activer la carte interactive.
-            </p>
-            <div className="mt-4 border border-white/10 bg-surface p-4 text-left w-full max-w-sm">
-              <div className="text-[10px] text-sage uppercase tracking-wider mb-2">Tes lieux ({filteredCount})</div>
-              <div className="flex flex-col gap-1 max-h-48 overflow-y-auto">
-                {points.filter((p) => filter === "all" || p.type === filter).map((p) => (
-                  <div key={p.id} className="flex items-center gap-2 text-xs text-white/60">
-                    <span>{p.type === "session" ? "🏓" : "⚔️"}</span>
-                    <span>{p.label}</span>
-                    <span className="ml-auto text-sage">{p.date}</span>
-                  </div>
-                ))}
+          <div className="flex items-center justify-center h-full flex-col gap-6 text-center px-8">
+            <div className="font-display font-light text-white/10 leading-none" style={{ fontSize: 88 }}>
+              MAP
+            </div>
+            <div className="text-[10px] text-sage uppercase tracking-[0.25em]">
+              Configure NEXT_PUBLIC_MAPBOX_TOKEN pour activer la carte
+            </div>
+
+            <div className="w-full max-w-sm mt-4">
+              <div className="text-[9px] text-sage uppercase tracking-[0.2em] mb-3">
+                Tes lieux ({filteredCount})
+              </div>
+              <div className="flex flex-col max-h-56 overflow-y-auto">
+                {points
+                  .filter((p) => filter === "all" || p.type === filter)
+                  .map((p) => (
+                    <div key={p.id} className="flex items-center gap-3 py-3 border-b border-white/[0.05]">
+                      <div className={`w-[3px] self-stretch flex-shrink-0 ${p.type === "session" ? "bg-green-light" : "bg-red"}`} />
+                      <span className="text-sm text-white/60 font-sans flex-1">{p.label}</span>
+                      <span className="text-[10px] text-sage/40">{p.date}</span>
+                    </div>
+                  ))}
               </div>
             </div>
           </div>
         ) : loading ? (
           <div className="flex items-center justify-center h-full">
-            <div className="text-sage">Chargement de la carte...</div>
+            <div className="text-[10px] text-sage uppercase tracking-[0.2em]">Chargement…</div>
           </div>
         ) : (
           <div ref={mapContainer} className="w-full h-full" />

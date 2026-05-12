@@ -2,30 +2,28 @@
 
 export const dynamic = "force-dynamic"
 
-
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/components/ui/Toast"
 import TopBar from "@/components/layout/TopBar"
-import PageWrapper from "@/components/layout/PageWrapper"
 import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
-import Textarea from "@/components/ui/Textarea"
 import Slider from "@/components/ui/Slider"
+import Textarea from "@/components/ui/Textarea"
 import type { SessionType } from "@/types/database"
 
-const SESSION_TYPES: { value: SessionType; label: string; icon: string; color: string }[] = [
-  { value: "technique", label: "Technique", icon: "🏓", color: "#2D4A3E" },
-  { value: "physique", label: "Physique", icon: "💪", color: "#6B6B6B" },
-  { value: "match", label: "Match", icon: "⚔️", color: "#C8352A" },
-  { value: "service", label: "Service", icon: "🎯", color: "#E8C840" },
-  { value: "competition", label: "Compétition", icon: "🏆", color: "#B5985A" },
-  { value: "chill", label: "Chill", icon: "😎", color: "#8A8A8A" },
+const SESSION_TYPES: { value: SessionType; label: string; sub: string }[] = [
+  { value: "technique",    label: "Technique",    sub: "Travail des coups, placement" },
+  { value: "physique",     label: "Physique",     sub: "Endurance, vitesse, explosivité" },
+  { value: "match",        label: "Match",        sub: "Matchs d'entraînement" },
+  { value: "service",      label: "Service",      sub: "Travail des services et retours" },
+  { value: "competition",  label: "Compétition",  sub: "Tournoi ou championnat officiel" },
+  { value: "chill",        label: "Chill",        sub: "Jeu libre et détente" },
 ]
 
-const EXERCISES_PRESETS = [
+const EXERCISES = [
   "Coup droit croisé", "Coup droit longue ligne", "Revers croisé", "Revers longue ligne",
   "Bloc revers", "Bloc coup droit", "Flick revers", "Flip coup droit",
   "Service pendule", "Service bombe", "Service revers", "Variation longueur",
@@ -33,46 +31,13 @@ const EXERCISES_PRESETS = [
   "Match entraînement", "Jeu libre",
 ]
 
-const FEELING_LABELS = ["", "😤 Mauvais", "😕 Bof", "😐 Neutre", "😊 Bien", "🤩 Excellent"]
-
-function SessionEndedModal({ onDescribe, onQuick, loading }: { onDescribe: () => void; onQuick: () => void; loading: boolean }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="fixed inset-0 z-50 bg-ppp-bg flex flex-col items-center justify-center px-6 text-center"
-    >
-      <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 0.1, type: "spring" }}
-      >
-        <div className="text-6xl mb-4">🏓</div>
-        <h2 className="font-serif font-bold text-5xl text-ppp-text uppercase mb-2">Séance terminée !</h2>
-        <p className="text-ppp-muted text-sm mb-8">Tu veux décrire ta séance ?</p>
-
-        <div className="flex flex-col gap-3 w-full max-w-xs">
-          <Button onClick={onDescribe} size="lg" fullWidth>
-            Décrire ma séance
-          </Button>
-          <Button onClick={onQuick} variant="outline" size="lg" fullWidth loading={loading}>
-            Enregistrer sans description
-          </Button>
-        </div>
-      </motion.div>
-    </motion.div>
-  )
-}
-
 export default function NewSessionPage() {
   const router = useRouter()
   const supabase = createClient()
   const { toast } = useToast()
 
-  const [mode, setMode] = useState<"choose-end" | "describe" | "quick" | null>(null)
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
-
   const [sessionType, setSessionType] = useState<SessionType | null>(null)
   const [duration, setDuration] = useState("")
   const [date, setDate] = useState(new Date().toISOString().split("T")[0])
@@ -84,18 +49,14 @@ export default function NewSessionPage() {
   const [motivation, setMotivation] = useState(3)
   const [confidence, setConfidence] = useState(3)
 
-  const toggleExercise = (ex: string) => {
-    setSelectedExercises((prev) =>
-      prev.includes(ex) ? prev.filter((e) => e !== ex) : [...prev, ex]
-    )
-  }
+  const toggleExercise = (ex: string) =>
+    setSelectedExercises((prev) => prev.includes(ex) ? prev.filter((e) => e !== ex) : [...prev, ex])
 
-  const saveSession = async (withDescription: boolean) => {
+  const save = async (withDescription: boolean) => {
     setLoading(true)
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
-
       await supabase.from("sessions").insert({
         player_id: user.id,
         session_type: sessionType || "technique",
@@ -110,8 +71,7 @@ export default function NewSessionPage() {
         confidence: withDescription ? confidence : null,
         has_description: withDescription,
       })
-
-      toast("Séance enregistrée ! 🏓", "success")
+      toast("Séance enregistrée !", "success")
       router.push("/dashboard")
     } catch {
       toast("Erreur lors de l'enregistrement", "error")
@@ -120,187 +80,167 @@ export default function NewSessionPage() {
     }
   }
 
-  if (mode === "choose-end") {
-    return (
-      <SessionEndedModal
-        onDescribe={() => { setMode("describe"); setStep(2) }}
-        onQuick={() => saveSession(false)}
-        loading={loading}
-      />
-    )
-  }
+  const canNext1 = sessionType && duration
 
   return (
-    <>
-      <TopBar title="Nouvelle séance" showBack />
-      <PageWrapper>
+    <div className="h-screen bg-black flex flex-col overflow-hidden">
+      <TopBar title={step === 1 ? "Séance" : step === 2 ? "Exercices" : "Ressenti"} showBack />
+
+      {/* Progress bar */}
+      <div className="flex h-[2px]">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className={`flex-1 transition-all duration-500 ${i <= step ? "bg-white" : "bg-white/10"}`} />
+        ))}
+      </div>
+
+      <div className="flex-1 overflow-y-auto">
         <AnimatePresence mode="wait">
-          {(mode === null || mode === "describe") && step === 1 && (
-            <motion.div
-              key="step1"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="flex flex-col gap-6 pt-4"
-            >
+          {step === 1 && (
+            <motion.div key="step1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <div className="px-4 pt-8 pb-6">
+                <div className="text-[9px] text-sage uppercase tracking-[0.3em] mb-2">Type de séance</div>
+                <div className="font-display font-light text-white leading-tight" style={{ fontSize: 40 }}>
+                  Qu&apos;as-tu<br />pratiqué ?
+                </div>
+              </div>
+
               <div>
-                <p className="text-[10px] font-serif uppercase tracking-[0.14em] text-ppp-muted mb-3">Type de séance</p>
-                <div className="grid grid-cols-2 gap-2.5">
-                  {SESSION_TYPES.map((t) => (
-                    <button
-                      key={t.value}
-                      onClick={() => setSessionType(t.value)}
-                      className={`flex items-center gap-3 p-4 border rounded-2xl text-left transition-all ${
-                        sessionType === t.value
-                          ? "text-ppp-text shadow-sm"
-                          : "border-gray-100 bg-white text-ppp-muted hover:border-gray-200 shadow-sm"
-                      }`}
-                      style={sessionType === t.value ? { borderColor: t.color, backgroundColor: `${t.color}12` } : {}}
-                    >
-                      <span className="text-2xl">{t.icon}</span>
-                      <span className="font-semibold text-sm font-serif">{t.label}</span>
-                    </button>
-                  ))}
-                </div>
+                {SESSION_TYPES.map((t) => (
+                  <button
+                    key={t.value}
+                    onClick={() => setSessionType(t.value)}
+                    className={`w-full flex items-center gap-4 px-4 py-4 border-b border-white/[0.05] text-left transition-all ${
+                      sessionType === t.value ? "bg-surface" : "hover:bg-white/[0.02]"
+                    }`}
+                  >
+                    <div className={`w-[3px] self-stretch flex-shrink-0 transition-colors ${
+                      sessionType === t.value ? "bg-green-light" : "bg-white/10"
+                    }`} />
+                    <div className="flex-1">
+                      <div className={`font-display text-2xl font-light transition-colors ${
+                        sessionType === t.value ? "text-white" : "text-white/40"
+                      }`}>{t.label}</div>
+                      <div className="text-[10px] text-sage mt-0.5">{t.sub}</div>
+                    </div>
+                    {sessionType === t.value && (
+                      <div className="text-[9px] text-green-light uppercase tracking-widest">✓</div>
+                    )}
+                  </button>
+                ))}
               </div>
 
-              <div className="flex gap-3">
-                <div className="flex-1">
-                  <Input
-                    label="Durée (min)"
-                    type="number"
-                    placeholder="90"
-                    value={duration}
-                    onChange={(e) => setDuration(e.target.value)}
-                  />
+              <div className="px-4 pt-7 pb-4 flex flex-col gap-6">
+                <div className="flex gap-5">
+                  <div className="flex-1">
+                    <Input label="Durée (min)" type="number" placeholder="90" value={duration} onChange={(e) => setDuration(e.target.value)} />
+                  </div>
+                  <div className="flex-1">
+                    <Input label="Date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <Input
-                    label="Date"
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <Input
-                label="Lieu (optionnel)"
-                placeholder="Ping Pang Paris"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-              />
-
-              <div className="flex flex-col gap-3 pt-2">
-                <Button
-                  onClick={() => setMode("choose-end")}
-                  fullWidth
-                  size="lg"
-                  disabled={!sessionType || !duration}
-                >
-                  Terminer la séance
-                </Button>
-                <Button
-                  onClick={() => { setMode("describe"); setStep(2) }}
-                  variant="outline"
-                  fullWidth
-                  disabled={!sessionType || !duration}
-                >
-                  Décrire maintenant
-                </Button>
+                <Input label="Lieu (optionnel)" placeholder="Salle Centrale..." value={location} onChange={(e) => setLocation(e.target.value)} />
               </div>
             </motion.div>
           )}
 
-          {mode === "describe" && step === 2 && (
-            <motion.div
-              key="step2"
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0 }}
-              className="flex flex-col gap-6 pt-4"
-            >
-              <div>
-                <h3 className="font-serif font-bold text-2xl text-ppp-text uppercase mb-1">Exercices</h3>
-                <p className="text-ppp-muted text-xs mb-4">Qu&apos;as-tu travaillé ?</p>
-                <div className="flex flex-wrap gap-2">
-                  {EXERCISES_PRESETS.map((ex) => (
-                    <button
-                      key={ex}
-                      onClick={() => toggleExercise(ex)}
-                      className={`text-xs px-3 py-1.5 border font-medium font-serif transition-all rounded-sm ${
-                        selectedExercises.includes(ex)
-                          ? "bg-ppp-forest border-ppp-forest text-ppp-white"
-                          : "border-ppp-border text-ppp-muted hover:border-ppp-text hover:text-ppp-text"
-                      }`}
-                    >
-                      {ex}
-                    </button>
-                  ))}
+          {step === 2 && (
+            <motion.div key="step2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <div className="px-4 pt-8 pb-6">
+                <div className="text-[9px] text-sage uppercase tracking-[0.3em] mb-2">Exercices</div>
+                <div className="font-display font-light text-white leading-tight" style={{ fontSize: 40 }}>
+                  Qu&apos;as-tu<br />travaillé ?
                 </div>
               </div>
-              <Textarea
-                label="Notes (optionnel)"
-                placeholder="Points travaillés, progrès, remarques..."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-              />
-              <div className="flex gap-3">
-                <Button variant="outline" onClick={() => setStep(1)} className="flex-1">Retour</Button>
-                <Button onClick={() => setStep(3)} className="flex-1">Suivant</Button>
+              <div className="px-4 flex flex-wrap gap-2 pb-4">
+                {EXERCISES.map((ex) => (
+                  <button
+                    key={ex}
+                    onClick={() => toggleExercise(ex)}
+                    className={`text-[11px] px-3 py-1.5 border font-sans uppercase tracking-[0.08em] transition-all ${
+                      selectedExercises.includes(ex)
+                        ? "border-white text-white bg-surface"
+                        : "border-white/15 text-sage hover:border-white/30"
+                    }`}
+                  >
+                    {selectedExercises.includes(ex) ? "✓ " : ""}{ex}
+                  </button>
+                ))}
+              </div>
+              <div className="px-4 pb-6">
+                <Textarea
+                  label="Notes (optionnel)"
+                  placeholder="Points travaillés, progrès, remarques..."
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                />
               </div>
             </motion.div>
           )}
 
-          {mode === "describe" && step === 3 && (
-            <motion.div
-              key="step3"
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0 }}
-              className="flex flex-col gap-6 pt-4"
-            >
-              <div>
-                <h3 className="font-serif font-bold text-2xl text-ppp-text uppercase mb-1">Ressenti</h3>
-                <p className="text-ppp-muted text-xs mb-4">Comment tu te sens ?</p>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <p className="text-xs font-semibold font-serif text-ppp-muted uppercase tracking-wider">Ressenti général</p>
-                <div className="flex justify-between gap-2">
-                  {[1, 2, 3, 4, 5].map((v) => (
-                    <button
-                      key={v}
-                      onClick={() => setFeeling(v)}
-                      className={`flex-1 py-3 text-2xl border transition-all rounded-sm ${
-                        feeling === v ? "border-ppp-forest bg-ppp-forest/10" : "border-ppp-border hover:border-ppp-text/40"
-                      }`}
-                      title={FEELING_LABELS[v]}
-                    >
-                      {["", "😤", "😕", "😐", "😊", "🤩"][v]}
-                    </button>
-                  ))}
+          {step === 3 && (
+            <motion.div key="step3" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <div className="px-4 pt-8 pb-6">
+                <div className="text-[9px] text-sage uppercase tracking-[0.3em] mb-2">Ressenti</div>
+                <div className="font-display font-light text-white leading-tight" style={{ fontSize: 40 }}>
+                  Comment<br />tu te sens ?
                 </div>
               </div>
 
-              <Slider label="Fatigue" value={fatigue} onChange={setFatigue} minLabel="Frais" maxLabel="Épuisé" />
-              <Slider label="Motivation" value={motivation} onChange={setMotivation} minLabel="Faible" maxLabel="Dans la zone" />
-              <Slider label="Confiance" value={confidence} onChange={setConfidence} minLabel="En doute" maxLabel="Invincible" />
+              <div className="px-4 mb-7">
+                <div className="text-[9px] text-sage uppercase tracking-[0.2em] mb-3">Ressenti général</div>
+                <div className="flex gap-2">
+                  {["😤", "😕", "😐", "😊", "🤩"].map((emoji, idx) => {
+                    const v = idx + 1
+                    return (
+                      <button
+                        key={v}
+                        onClick={() => setFeeling(v)}
+                        className={`flex-1 py-5 text-2xl border transition-all ${
+                          feeling === v ? "border-white bg-surface" : "border-white/10 hover:border-white/20"
+                        }`}
+                      >
+                        {emoji}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
 
-              <div className="flex gap-3 pt-2">
-                <Button variant="outline" onClick={() => setStep(2)} className="flex-1">Retour</Button>
-                <Button
-                  onClick={() => saveSession(true)}
-                  loading={loading}
-                  className="flex-1"
-                >
-                  Enregistrer
-                </Button>
+              <div className="px-4 flex flex-col gap-7 pb-4">
+                <Slider label="Fatigue" value={fatigue} onChange={setFatigue} minLabel="Frais" maxLabel="Épuisé" />
+                <Slider label="Motivation" value={motivation} onChange={setMotivation} minLabel="Faible" maxLabel="Dans la zone" />
+                <Slider label="Confiance" value={confidence} onChange={setConfidence} minLabel="En doute" maxLabel="Invincible" />
               </div>
             </motion.div>
           )}
         </AnimatePresence>
-      </PageWrapper>
-    </>
+      </div>
+
+      {/* Bottom bar */}
+      <div className="flex-shrink-0 px-4 py-4 border-t border-white/[0.06] bg-black flex gap-3">
+        {step > 1 && (
+          <button
+            onClick={() => setStep((s) => s - 1)}
+            className="flex-shrink-0 px-4 text-sage hover:text-white transition-colors font-sans text-sm"
+          >
+            ←
+          </button>
+        )}
+        {step < 3 ? (
+          <Button onClick={() => setStep((s) => s + 1)} fullWidth size="lg" disabled={step === 1 && !canNext1}>
+            Suivant →
+          </Button>
+        ) : (
+          <div className="flex gap-3 flex-1">
+            <Button variant="outline" onClick={() => save(false)} loading={loading} className="flex-1" size="lg">
+              Enregistrer
+            </Button>
+            <Button onClick={() => save(true)} loading={loading} className="flex-1" size="lg">
+              Avec ressenti
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
   )
 }

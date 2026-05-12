@@ -2,82 +2,45 @@
 
 export const dynamic = "force-dynamic"
 
-
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { Plus, Trash2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/components/ui/Toast"
 import TopBar from "@/components/layout/TopBar"
-import PageWrapper from "@/components/layout/PageWrapper"
 import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
 import Textarea from "@/components/ui/Textarea"
-import Card from "@/components/ui/Card"
 import type { MatchType } from "@/types/database"
 
-const MATCH_TYPES: { value: MatchType; label: string; icon: string }[] = [
-  { value: "friendly", label: "Amical", icon: "🤝" },
-  { value: "league", label: "Championnat", icon: "🏅" },
-  { value: "tournament", label: "Tournoi", icon: "🏆" },
-  { value: "training", label: "Entraînement", icon: "🎯" },
+const MATCH_TYPES: { value: MatchType; label: string; sub: string }[] = [
+  { value: "friendly",    label: "Amical",        sub: "Match informel entre joueurs" },
+  { value: "league",      label: "Championnat",   sub: "Rencontre officielle de ligue" },
+  { value: "tournament",  label: "Tournoi",       sub: "Compétition avec classement" },
+  { value: "training",    label: "Entraînement",  sub: "Match dans le cadre d'un training" },
 ]
 
-interface SetScore {
-  player: string
-  opponent: string
-}
-
-function ScoreDisplay({ sets }: { sets: SetScore[] }) {
-  const setsWon = sets.filter((s) => parseInt(s.player) > parseInt(s.opponent)).length
-  const setsLost = sets.filter((s) => parseInt(s.opponent) > parseInt(s.player)).length
-  const isWin = setsWon > setsLost && sets.length >= 3
-
-  if (sets.length === 0) return null
-
-  return (
-    <div className="flex items-center gap-4 p-4 bg-ppp-card border border-ppp-border rounded-md">
-      <div className="flex flex-col items-center">
-        <div className={`font-serif font-bold text-4xl leading-none ${isWin ? "text-ppp-forest" : setsLost > setsWon ? "text-red" : "text-ppp-text"}`}>
-          {setsWon}
-        </div>
-        <div className="text-[10px] text-ppp-muted uppercase">SETS</div>
-      </div>
-      <div className="text-ppp-text/20 font-serif text-2xl">—</div>
-      <div className="flex flex-col items-center">
-        <div className={`font-serif font-bold text-4xl leading-none ${setsLost > setsWon ? "text-red" : "text-ppp-text"}`}>
-          {setsLost}
-        </div>
-        <div className="text-[10px] text-ppp-muted uppercase">SETS</div>
-      </div>
-      {sets.length >= 3 && (
-        <div className={`ml-auto text-xs font-semibold font-serif uppercase px-3 py-1 rounded-sm ${isWin ? "bg-ppp-forest text-ppp-white" : "bg-red text-ppp-white"}`}>
-          {isWin ? "Victoire" : "Défaite"}
-        </div>
-      )}
-    </div>
-  )
-}
+interface SetScore { player: string; opponent: string }
 
 export default function NewMatchPage() {
   const router = useRouter()
   const supabase = createClient()
   const { toast } = useToast()
 
+  const [step, setStep] = useState(1)
+  const [loading, setLoading] = useState(false)
   const [opponentName, setOpponentName] = useState("")
   const [matchType, setMatchType] = useState<MatchType>("friendly")
   const [date, setDate] = useState(new Date().toISOString().split("T")[0])
   const [location, setLocation] = useState("")
   const [sets, setSets] = useState<SetScore[]>([{ player: "", opponent: "" }])
   const [notes, setNotes] = useState("")
-  const [loading, setLoading] = useState(false)
 
   const addSet = () => setSets((prev) => [...prev, { player: "", opponent: "" }])
   const removeSet = (i: number) => setSets((prev) => prev.filter((_, idx) => idx !== i))
-  const updateSet = (i: number, field: "player" | "opponent", val: string) => {
+  const updateSet = (i: number, field: "player" | "opponent", val: string) =>
     setSets((prev) => prev.map((s, idx) => idx === i ? { ...s, [field]: val } : s))
-  }
 
   const computeResult = () => {
     const won = sets.filter((s) => parseInt(s.player) > parseInt(s.opponent)).length
@@ -85,20 +48,19 @@ export default function NewMatchPage() {
     return { won, lost, result: won > lost ? "win" as const : "loss" as const }
   }
 
-  const save = async () => {
-    if (!opponentName.trim()) {
-      toast("Renseigne le nom de l'adversaire", "error")
-      return
-    }
+  const setsWon = sets.filter((s) => parseInt(s.player) > parseInt(s.opponent)).length
+  const setsLost = sets.filter((s) => parseInt(s.opponent) > parseInt(s.player)).length
+  const filledSets = sets.filter((s) => s.player !== "" && s.opponent !== "")
+  const isLeading = setsWon > setsLost
+  const hasResult = filledSets.length >= 3
 
+  const save = async () => {
+    if (!opponentName.trim()) { toast("Renseigne le nom de l'adversaire", "error"); return }
     setLoading(true)
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
-
       const { won, lost, result } = computeResult()
-      const validSets = sets.filter((s) => s.player !== "" && s.opponent !== "")
-
       await supabase.from("matches").insert({
         player_id: user.id,
         opponent_name: opponentName.trim(),
@@ -106,14 +68,13 @@ export default function NewMatchPage() {
         date,
         location: location || null,
         result,
-        score_player: validSets.map((s) => parseInt(s.player) || 0),
-        score_opponent: validSets.map((s) => parseInt(s.opponent) || 0),
+        score_player: filledSets.map((s) => parseInt(s.player) || 0),
+        score_opponent: filledSets.map((s) => parseInt(s.opponent) || 0),
         sets_won: won,
         sets_lost: lost,
         notes: notes || null,
       })
-
-      toast("Match enregistré ! ⚔️", "success")
+      toast("Match enregistré !", "success")
       router.push("/dashboard")
     } catch {
       toast("Erreur lors de l'enregistrement", "error")
@@ -123,113 +84,189 @@ export default function NewMatchPage() {
   }
 
   return (
-    <>
-      <TopBar title="Nouveau match" showBack />
-      <PageWrapper>
-        <div className="flex flex-col gap-6 pt-4">
-          <Input
-            label="Adversaire"
-            placeholder="Nom de l'adversaire"
-            value={opponentName}
-            onChange={(e) => setOpponentName(e.target.value)}
-          />
+    <div className="h-screen bg-black flex flex-col overflow-hidden">
+      <TopBar title={step === 1 ? "Match" : "Score"} showBack />
 
-          <div>
-            <p className="text-[10px] font-serif uppercase tracking-[0.14em] text-ppp-muted mb-3">Type de match</p>
-            <div className="grid grid-cols-2 gap-2.5">
+      <div className="flex h-[2px]">
+        {[1, 2].map((i) => (
+          <div key={i} className={`flex-1 transition-all duration-500 ${i <= step ? "bg-white" : "bg-white/10"}`} />
+        ))}
+      </div>
+
+      <div className="flex-1 overflow-y-auto">
+        <AnimatePresence mode="wait">
+          {step === 1 && (
+            <motion.div key="step1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <div className="px-4 pt-8 pb-6">
+                <div className="text-[9px] text-sage uppercase tracking-[0.3em] mb-2">Adversaire</div>
+                <div className="font-display font-light text-white leading-tight" style={{ fontSize: 40 }}>
+                  Contre<br />qui ?
+                </div>
+              </div>
+
+              <div className="px-4 pb-6">
+                <input
+                  type="text"
+                  placeholder="Nom de l'adversaire"
+                  value={opponentName}
+                  onChange={(e) => setOpponentName(e.target.value)}
+                  autoFocus
+                  className="w-full bg-transparent border-b border-white/20 text-white font-display font-light pb-3 outline-none focus:border-white/50 transition-colors placeholder:text-white/20"
+                  style={{ fontSize: 32 }}
+                />
+              </div>
+
+              <div className="text-[9px] text-sage uppercase tracking-[0.3em] px-4 mb-3">Type de match</div>
               {MATCH_TYPES.map((t) => (
                 <button
                   key={t.value}
                   onClick={() => setMatchType(t.value)}
-                  className={`flex items-center gap-3 p-4 border rounded-2xl text-left transition-all shadow-sm ${
-                    matchType === t.value
-                      ? "border-ppp-forest bg-ppp-forest/8 text-ppp-text"
-                      : "border-gray-100 bg-white text-ppp-muted hover:border-gray-200"
+                  className={`w-full flex items-center gap-4 px-4 py-4 border-b border-white/[0.05] text-left transition-all ${
+                    matchType === t.value ? "bg-surface" : "hover:bg-white/[0.02]"
                   }`}
                 >
-                  <span className="text-xl">{t.icon}</span>
-                  <span className="font-semibold text-sm font-serif">{t.label}</span>
+                  <div className={`w-[3px] self-stretch flex-shrink-0 transition-colors ${
+                    matchType === t.value ? "bg-green-light" : "bg-white/10"
+                  }`} />
+                  <div className="flex-1">
+                    <div className={`font-display text-2xl font-light transition-colors ${
+                      matchType === t.value ? "text-white" : "text-white/40"
+                    }`}>{t.label}</div>
+                    <div className="text-[10px] text-sage mt-0.5">{t.sub}</div>
+                  </div>
+                  {matchType === t.value && (
+                    <div className="text-[9px] text-green-light uppercase tracking-widest">✓</div>
+                  )}
                 </button>
               ))}
-            </div>
-          </div>
 
-          <div className="flex gap-3">
-            <div className="flex-1">
-              <Input label="Date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-            </div>
-            <div className="flex-1">
-              <Input label="Lieu" placeholder="Club..." value={location} onChange={(e) => setLocation(e.target.value)} />
-            </div>
-          </div>
+              <div className="px-4 pt-6 pb-4 flex gap-5">
+                <div className="flex-1">
+                  <Input label="Date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+                </div>
+                <div className="flex-1">
+                  <Input label="Lieu (optionnel)" placeholder="Club..." value={location} onChange={(e) => setLocation(e.target.value)} />
+                </div>
+              </div>
+            </motion.div>
+          )}
 
-          {/* Score par set */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-semibold font-serif text-ppp-muted uppercase tracking-wider">Score par set</p>
-              <button onClick={addSet} className="flex items-center gap-1 text-xs text-ppp-muted hover:text-ppp-text transition-colors font-serif">
-                <Plus size={14} /> Ajouter set
-              </button>
-            </div>
+          {step === 2 && (
+            <motion.div key="step2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              {/* Score hero */}
+              {filledSets.length > 0 ? (
+                <div className={`-mx-0 px-4 py-8 mb-0 ${hasResult ? (isLeading ? "bg-green" : "bg-red/20") : "bg-surface"}`}>
+                  <div className="text-[9px] text-sage uppercase tracking-[0.3em] mb-1">Score</div>
+                  <div className="flex items-center gap-6">
+                    <div>
+                      <div className="text-[9px] text-sage uppercase tracking-widest mb-1">Toi</div>
+                      <div className={`font-display font-light leading-none ${isLeading ? "text-white" : "text-white/50"}`} style={{ fontSize: 80 }}>
+                        {setsWon}
+                      </div>
+                    </div>
+                    <div className="text-white/20 font-display" style={{ fontSize: 48 }}>—</div>
+                    <div>
+                      <div className="text-[9px] text-sage uppercase tracking-widest mb-1">{opponentName || "Adversaire"}</div>
+                      <div className={`font-display font-light leading-none ${!isLeading ? "text-red" : "text-white/50"}`} style={{ fontSize: 80 }}>
+                        {setsLost}
+                      </div>
+                    </div>
+                    {hasResult && (
+                      <div className={`ml-auto self-end pb-4 text-[9px] uppercase tracking-widest border px-3 py-1 ${
+                        isLeading ? "border-white text-white" : "border-red text-red"
+                      }`}>
+                        {isLeading ? "Victoire" : "Défaite"}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="px-4 pt-8 pb-6">
+                  <div className="text-[9px] text-sage uppercase tracking-[0.3em] mb-2">Score</div>
+                  <div className="font-display font-light text-white leading-tight" style={{ fontSize: 40 }}>
+                    Quel était<br />le score ?
+                  </div>
+                </div>
+              )}
 
-            <ScoreDisplay sets={sets} />
-
-            <div className="flex flex-col gap-2 mt-3">
-              {sets.map((s, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="flex items-center gap-3"
-                >
-                  <div className="text-xs text-ppp-muted font-serif uppercase tracking-wider w-8">S{i + 1}</div>
-                  <div className="flex items-center gap-2 flex-1">
+              {/* Sets */}
+              <div className="mt-0">
+                {sets.map((s, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-center gap-3 px-4 py-4 border-b border-white/[0.05]"
+                  >
+                    <div className="text-[9px] text-sage uppercase tracking-widest w-8 flex-shrink-0">S{i + 1}</div>
                     <input
-                      type="number"
-                      min="0"
-                      max="21"
+                      type="number" min="0" max="21"
                       placeholder="11"
                       value={s.player}
                       onChange={(e) => updateSet(i, "player", e.target.value)}
-                      className="w-full bg-white border border-gray-200 text-ppp-text text-center font-serif text-2xl py-2.5 outline-none focus:border-ppp-forest transition-all rounded-xl shadow-sm"
+                      className="w-full bg-transparent border-b border-white/20 text-white text-center font-display font-light py-2 outline-none focus:border-white/60 transition-colors placeholder:text-white/15"
+                      style={{ fontSize: 36 }}
                     />
-                    <span className="text-ppp-muted font-serif text-xl">—</span>
+                    <span className="text-white/20 font-display text-2xl flex-shrink-0">—</span>
                     <input
-                      type="number"
-                      min="0"
-                      max="21"
+                      type="number" min="0" max="21"
                       placeholder="9"
                       value={s.opponent}
                       onChange={(e) => updateSet(i, "opponent", e.target.value)}
-                      className="w-full bg-white border border-gray-200 text-ppp-text text-center font-serif text-2xl py-2.5 outline-none focus:border-ppp-forest transition-all rounded-xl shadow-sm"
+                      className="w-full bg-transparent border-b border-white/20 text-white text-center font-display font-light py-2 outline-none focus:border-white/60 transition-colors placeholder:text-white/15"
+                      style={{ fontSize: 36 }}
                     />
-                  </div>
-                  {sets.length > 1 && (
-                    <button
-                      onClick={() => removeSet(i)}
-                      className="text-ppp-muted/50 hover:text-red transition-colors p-1"
-                      aria-label="Supprimer set"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  )}
-                </motion.div>
-              ))}
-            </div>
-          </div>
+                    {sets.length > 1 && (
+                      <button
+                        onClick={() => removeSet(i)}
+                        className="text-white/20 hover:text-red transition-colors flex-shrink-0 p-1"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    )}
+                  </motion.div>
+                ))}
+              </div>
 
-          <Textarea
-            label="Notes (optionnel)"
-            placeholder="Tactiques, observations..."
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-          />
+              <button
+                onClick={addSet}
+                className="flex items-center gap-2 px-4 py-4 text-[10px] text-sage hover:text-white transition-colors uppercase tracking-[0.2em] w-full border-b border-white/[0.05]"
+              >
+                <Plus size={13} /> Ajouter un set
+              </button>
 
+              <div className="px-4 pt-6 pb-4">
+                <Textarea
+                  label="Notes (optionnel)"
+                  placeholder="Tactiques, observations, moments clés..."
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      <div className="flex-shrink-0 px-4 py-4 border-t border-white/[0.06] bg-black flex gap-3">
+        {step > 1 && (
+          <button
+            onClick={() => setStep((s) => s - 1)}
+            className="flex-shrink-0 px-4 text-sage hover:text-white transition-colors font-sans text-sm"
+          >
+            ←
+          </button>
+        )}
+        {step === 1 ? (
+          <Button onClick={() => setStep(2)} fullWidth size="lg" disabled={!opponentName.trim()}>
+            Saisir le score →
+          </Button>
+        ) : (
           <Button onClick={save} loading={loading} fullWidth size="lg">
             Enregistrer le match
           </Button>
-        </div>
-      </PageWrapper>
-    </>
+        )}
+      </div>
+    </div>
   )
 }

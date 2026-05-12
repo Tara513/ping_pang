@@ -8,9 +8,8 @@ import { createClient } from "@/lib/supabase/client"
 import TopBar from "@/components/layout/TopBar"
 import PageWrapper from "@/components/layout/PageWrapper"
 import Avatar from "@/components/ui/Avatar"
-import Card from "@/components/ui/Card"
 import Badge from "@/components/ui/Badge"
-import { Settings, ChevronRight, Clock } from "lucide-react"
+import { Settings } from "lucide-react"
 import type { Profile, Session, Match, Equipment, EloRating } from "@/types/database"
 import { FEDERATION_META } from "@/lib/elo/calculator"
 import { BADGE_DEFINITIONS } from "@/types/app"
@@ -20,16 +19,16 @@ import { fr } from "date-fns/locale"
 
 const LEVEL_LABELS: Record<string, string> = {
   beginner: "Débutant", intermediate: "Intermédiaire", advanced: "Avancé",
-  competitive: "Compétiteur", elite: "Elite"
+  competitive: "Compétiteur", elite: "Elite",
 }
-const SESSION_ICONS: Record<string, string> = {
-  technique: "🏓", physique: "💪", match: "⚔️", service: "🎯", competition: "🏆", chill: "😎"
+const PLAY_STYLE_LABELS: Record<string, string> = {
+  attacker: "Attaquant", defender: "Défenseur", allround: "Polyvalent",
+  penhold: "Penholder", other: "Autre",
 }
 const SESSION_LABELS: Record<string, string> = {
   technique: "Technique", physique: "Physique", match: "Match",
-  service: "Service", competition: "Compétition", chill: "Chill"
+  service: "Service", competition: "Compétition", chill: "Chill",
 }
-
 const TABS = ["Activité", "Stats", "ELO", "Matériel", "Badges"]
 
 export default function ProfilePage() {
@@ -45,8 +44,7 @@ export default function ProfilePage() {
   useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { setLoading(false); return }
-
+      if (!user) return
       const [pRes, sRes, mRes, eqRes, eloRes] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", user.id).single(),
         supabase.from("sessions").select("*").eq("player_id", user.id).order("date", { ascending: false }),
@@ -54,7 +52,6 @@ export default function ProfilePage() {
         supabase.from("equipment").select("*").eq("player_id", user.id).order("started_at", { ascending: false }),
         supabase.from("elo_ratings").select("*").eq("player_id", user.id),
       ])
-
       setProfile(pRes.data)
       setSessions(sRes.data?.length ? sRes.data : demoSessions as Session[])
       setMatches(mRes.data?.length ? mRes.data : demoMatches as Match[])
@@ -65,10 +62,9 @@ export default function ProfilePage() {
     load()
   }, [supabase])
 
-  const totalHours = Math.round(sessions.reduce((acc, s) => acc + (s.duration_min || 0), 0) / 60)
+  const totalHours = Math.round(sessions.reduce((a, s) => a + (s.duration_min || 0), 0) / 60)
   const wins = matches.filter((m) => m.result === "win").length
   const winRate = matches.length > 0 ? Math.round((wins / matches.length) * 100) : 0
-
   const earnedBadges = [
     sessions.length >= 10 && BADGE_DEFINITIONS.find((b) => b.type === "centurion"),
     wins >= 5 && BADGE_DEFINITIONS.find((b) => b.type === "precision"),
@@ -79,75 +75,68 @@ export default function ProfilePage() {
       <TopBar
         title="Profil"
         actions={
-          <Link href="/profile/settings" className="text-ppp-muted hover:text-ppp-text transition-colors">
-            <Settings size={20} strokeWidth={1.5} />
+          <Link href="/profile/settings" className="text-sage hover:text-white transition-colors">
+            <Settings size={18} strokeWidth={1.5} />
           </Link>
         }
       />
-
-      <div className="pb-24">
-        {/* ── Banner + Avatar ── */}
-        <div className="relative">
-          {/* Banner */}
-          <div className="h-32 bg-ppp-forest" />
-
-          {/* Avatar overlapping */}
-          <div className="absolute -bottom-12 left-5">
-            <div className="ring-4 ring-ppp-bg rounded-full">
-              <Avatar src={profile?.avatar_url} name={profile?.full_name} size="xl" />
+      <PageWrapper noPadding>
+        {/* Hero header — full bleed green */}
+        <div className="bg-green px-4 pt-8 pb-6">
+          <div className="flex items-end gap-4">
+            <Avatar src={profile?.avatar_url} name={profile?.full_name} size="xl" />
+            <div className="flex-1 pb-1">
+              <div className="font-display font-light text-white leading-none" style={{ fontSize: 32 }}>
+                {profile?.full_name || "Joueur"}
+              </div>
+              <div className="text-[10px] text-sage uppercase tracking-[0.2em] mt-1">
+                @{profile?.username || "username"}
+              </div>
+              {profile?.level && (
+                <div className="mt-2">
+                  <span className="text-[9px] text-green-light uppercase tracking-[0.2em] border border-green-light/40 px-2 py-0.5">
+                    {LEVEL_LABELS[profile.level] || profile.level}
+                  </span>
+                  {profile.play_style && (
+                    <span className="text-[9px] text-sage ml-2">· {PLAY_STYLE_LABELS[profile.play_style]}</span>
+                  )}
+                </div>
+              )}
+              {profile?.city && (
+                <div className="text-[10px] text-sage mt-1">
+                  {profile.city}{profile.club ? ` · ${profile.club}` : ""}
+                </div>
+              )}
             </div>
           </div>
-
-          {/* Edit button top right */}
-          <Link
-            href="/profile/settings"
-            className="absolute top-4 right-4 bg-ppp-white/90 backdrop-blur-sm text-ppp-text text-xs font-serif uppercase tracking-wide px-3 py-1.5 rounded-full border border-gray-200 hover:bg-white transition-all"
-          >
-            Modifier
-          </Link>
         </div>
 
-        {/* ── Identity ── */}
-        <div className="px-5 pt-14 pb-5">
-          <h1 className="font-serif font-bold text-2xl text-ppp-text uppercase leading-tight">
-            {profile?.full_name || "Joueur"}
-          </h1>
-          <div className="text-ppp-muted text-sm font-serif">@{profile?.username || "username"}</div>
-
-          <div className="flex items-center gap-2 flex-wrap mt-2">
-            {profile?.level && (
-              <Badge label={LEVEL_LABELS[profile.level] || profile.level} color="forest" />
-            )}
-            {profile?.city && (
-              <span className="text-xs text-ppp-muted font-serif">📍 {profile.city}{profile.club ? ` · ${profile.club}` : ""}</span>
-            )}
-          </div>
-        </div>
-
-        {/* ── Stats row ── */}
-        <div className="mx-5 grid grid-cols-3 gap-2 mb-1">
+        {/* Stats row */}
+        <div className="flex border-b border-white/[0.06]">
           {[
             { label: "Séances", value: sessions.length },
             { label: "Matchs", value: matches.length },
             { label: "Heures", value: `${totalHours}h` },
+            { label: "Win %", value: `${winRate}%` },
           ].map((s, i) => (
-            <div key={i} className="bg-white border border-gray-100 rounded-2xl p-4 text-center shadow-sm">
-              <div className="font-serif font-bold text-2xl text-ppp-text">{s.value}</div>
-              <div className="text-[9px] text-ppp-muted uppercase tracking-[0.12em] font-serif mt-0.5">{s.label}</div>
+            <div
+              key={i}
+              className={`flex-1 py-4 text-center ${i < 3 ? "border-r border-white/[0.06]" : ""}`}
+            >
+              <div className="font-display text-2xl font-light text-white">{s.value}</div>
+              <div className="text-[9px] text-sage uppercase tracking-widest mt-0.5">{s.label}</div>
             </div>
           ))}
         </div>
 
-        {/* ── Tabs ── */}
-        <div className="flex border-b border-gray-100 mt-4 overflow-x-auto no-scrollbar px-1">
+        {/* Tabs */}
+        <div className="flex overflow-x-auto no-scrollbar border-b border-white/[0.06]">
           {TABS.map((t, i) => (
             <button
               key={t}
               onClick={() => setTab(i)}
-              className={`px-4 py-3.5 text-xs font-semibold font-serif uppercase tracking-[0.08em] flex-shrink-0 border-b-2 transition-all ${
-                tab === i
-                  ? "border-ppp-forest text-ppp-forest"
-                  : "border-transparent text-ppp-muted hover:text-ppp-text"
+              className={`px-5 py-3 text-[9px] uppercase tracking-[0.2em] flex-shrink-0 border-b-2 -mb-px transition-all ${
+                tab === i ? "border-white text-white" : "border-transparent text-sage/50 hover:text-sage"
               }`}
             >
               {t}
@@ -155,79 +144,70 @@ export default function ProfilePage() {
           ))}
         </div>
 
-        {/* ── Tab content ── */}
-        <div className="px-5 py-4">
+        {/* Tab content */}
+        <div className="px-4 py-4">
           {loading ? (
-            <div className="flex flex-col gap-3 animate-pulse">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="bg-white border border-gray-100 rounded-2xl h-20" />
-              ))}
+            <div className="animate-pulse space-y-3">
+              {[1, 2, 3].map((i) => <div key={i} className="h-16 bg-surface" />)}
             </div>
           ) : (
             <>
-              {/* Activité */}
+              {/* Activité — line based */}
               {tab === 0 && (
-                <div className="flex flex-col gap-3">
-                  {[
-                    ...sessions.slice(0, 5).map((s) => ({ type: "session" as const, data: s })),
-                    ...matches.slice(0, 3).map((m) => ({ type: "match" as const, data: m })),
-                  ]
+                <div>
+                  {[...sessions.slice(0, 5).map((s) => ({ type: "session" as const, data: s })),
+                    ...matches.slice(0, 3).map((m) => ({ type: "match" as const, data: m }))]
                     .sort((a, b) => new Date(b.data.date!).getTime() - new Date(a.data.date!).getTime())
-                    .map((item, i) => {
-                      const isSession = item.type === "session"
-                      const s = item.data as Session
-                      const m = item.data as Match
-                      const dateStr = item.data.date
-                        ? formatDistanceToNow(new Date(item.data.date!), { addSuffix: true, locale: fr })
-                        : ""
-
-                      return (
-                        <Link key={i} href={isSession ? `/session/${item.data.id}` : `/match/${item.data.id}`}>
-                          <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all flex items-center gap-4">
-                            <div className="text-2xl w-10 h-10 flex items-center justify-center bg-ppp-bg rounded-xl">
-                              {isSession ? SESSION_ICONS[s.session_type] || "🏓" : "⚔️"}
+                    .map((item, i) => (
+                      <Link
+                        key={i}
+                        href={item.type === "session" ? `/session/${item.data.id}` : `/match/${item.data.id}`}
+                        className="flex gap-3 py-4 border-b border-white/[0.05] active:bg-white/[0.02] transition-colors"
+                      >
+                        <div className={`w-[3px] flex-shrink-0 self-stretch ${item.type === "session" ? "bg-green-light" : "bg-red"}`} />
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <div className="text-[9px] text-sage uppercase tracking-[0.15em]">
+                              {item.type === "session"
+                                ? SESSION_LABELS[(item.data as Session).session_type] || "Séance"
+                                : `Match vs ${(item.data as Match).opponent_name}`}
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="font-serif font-semibold text-sm text-ppp-text">
-                                {isSession ? SESSION_LABELS[s.session_type] || s.session_type : `vs ${m.opponent_name}`}
-                              </div>
-                              <div className="flex items-center gap-2 mt-0.5">
-                                <span className="text-[10px] text-ppp-muted font-serif">{dateStr}</span>
-                                {isSession && s.duration_min && (
-                                  <span className="flex items-center gap-0.5 text-[10px] text-ppp-muted font-serif">
-                                    <Clock size={9} /> {Math.round(s.duration_min / 60 * 10) / 10}h
-                                  </span>
-                                )}
-                              </div>
+                            <div className="text-[9px] text-sage/40">
+                              {formatDistanceToNow(new Date(item.data.date!), { locale: fr, addSuffix: true })}
                             </div>
-                            {!isSession && m.result && (
-                              <span className={`text-[10px] font-serif font-bold uppercase px-2 py-1 rounded-full ${m.result === "win" ? "bg-ppp-forest/10 text-ppp-forest" : "bg-red/10 text-red"}`}>
-                                {m.result === "win" ? "W" : "L"}
-                              </span>
-                            )}
-                            <ChevronRight size={14} className="text-ppp-muted/40 shrink-0" />
                           </div>
-                        </Link>
-                      )
-                    })}
+                          <div className="font-display text-lg font-light text-white mt-0.5">
+                            {item.type === "session"
+                              ? `${Math.round(((item.data as Session).duration_min || 0) / 60 * 10) / 10}h · ${(item.data as Session).location || "Sans lieu"}`
+                              : `${(item.data as Match).sets_won ?? "?"} — ${(item.data as Match).sets_lost ?? "?"}`}
+                          </div>
+                        </div>
+                        {item.type === "match" && (item.data as Match).result && (
+                          <div className={`self-center text-[9px] uppercase tracking-widest px-2 py-0.5 border ${
+                            (item.data as Match).result === "win"
+                              ? "border-green-light text-green-light"
+                              : "border-red text-red"
+                          }`}>
+                            {(item.data as Match).result === "win" ? "W" : "L"}
+                          </div>
+                        )}
+                      </Link>
+                    ))}
                 </div>
               )}
 
               {/* Stats */}
               {tab === 1 && (
-                <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col">
                   {[
-                    { label: "Séances", value: sessions.length, icon: "🏓" },
-                    { label: "Matchs", value: matches.length, icon: "⚔️" },
-                    { label: "Heures", value: `${totalHours}h`, icon: "⏱" },
-                    { label: "Win rate", value: `${winRate}%`, icon: "🏆", color: winRate >= 50 ? "#2D4A3E" : "#C8352A" },
-                  ].map((s) => (
-                    <div key={s.label} className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
-                      <div className="text-2xl mb-2">{s.icon}</div>
-                      <div className="font-serif font-bold text-4xl leading-none" style={s.color ? { color: s.color } : { color: "#1A1A1A" }}>
-                        {s.value}
-                      </div>
-                      <div className="text-[10px] text-ppp-muted uppercase tracking-[0.12em] font-serif mt-2">{s.label}</div>
+                    { label: "Séances totales", value: sessions.length },
+                    { label: "Matchs disputés", value: matches.length },
+                    { label: "Heures de jeu", value: `${totalHours}h` },
+                    { label: "Taux de victoire", value: `${winRate}%` },
+                  ].map((s, i) => (
+                    <div key={i} className="flex items-center justify-between py-4 border-b border-white/[0.05]">
+                      <div className="text-[9px] text-sage uppercase tracking-[0.2em]">{s.label}</div>
+                      <div className="font-display text-3xl font-light text-white">{s.value}</div>
                     </div>
                   ))}
                 </div>
@@ -235,23 +215,24 @@ export default function ProfilePage() {
 
               {/* ELO */}
               {tab === 2 && (
-                <div className="flex flex-col gap-3">
+                <div>
                   {elos.length === 0 ? (
-                    <div className="text-center py-12 text-ppp-muted font-serif">
-                      <div className="text-4xl mb-2">📊</div>Aucun ELO enregistré
+                    <div className="text-center py-16">
+                      <div className="font-display text-6xl font-light text-white/10">ELO</div>
+                      <div className="text-[10px] text-sage uppercase tracking-[0.2em] mt-3">Aucun ELO enregistré</div>
                     </div>
                   ) : elos.map((r) => {
                     const meta = FEDERATION_META[r.federation as keyof typeof FEDERATION_META]
                     return (
-                      <div key={r.federation} className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm flex items-center justify-between">
+                      <div key={r.federation} className="flex items-center justify-between py-4 border-b border-white/[0.05]">
                         <div className="flex items-center gap-3">
-                          <span className="text-2xl">{meta?.flag}</span>
+                          <span className="text-xl">{meta?.flag}</span>
                           <div>
-                            <div className="font-semibold text-sm font-serif text-ppp-text">{meta?.name}</div>
-                            <div className="text-xs text-ppp-muted font-serif">{meta?.country}</div>
+                            <div className="text-sm text-white font-sans">{meta?.name}</div>
+                            <div className="text-[10px] text-sage">{meta?.country}</div>
                           </div>
                         </div>
-                        <div className="font-serif font-bold text-3xl text-ppp-forest">{r.elo}</div>
+                        <div className="font-display text-4xl font-light text-white">{r.elo}</div>
                       </div>
                     )
                   })}
@@ -260,26 +241,27 @@ export default function ProfilePage() {
 
               {/* Matériel */}
               {tab === 3 && (
-                <div className="flex flex-col gap-3">
+                <div>
                   {equipment.length === 0 ? (
-                    <div className="text-center py-12 text-ppp-muted font-serif">
-                      <div className="text-4xl mb-2">🏓</div>Aucun matériel renseigné
+                    <div className="text-center py-16">
+                      <div className="font-display text-5xl font-light text-white/10">🏓</div>
+                      <div className="text-[10px] text-sage uppercase tracking-[0.2em] mt-3">Aucun matériel renseigné</div>
                     </div>
                   ) : equipment.map((eq) => (
-                    <div key={eq.id} className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
-                      {eq.is_current && <Badge label="Actuel" color="forest" className="mb-3" />}
-                      <div className="flex flex-col gap-3">
-                        {[
-                          { key: "Bois", val: eq.blade },
-                          { key: "Coup droit", val: eq.rubber_fh ? `${eq.rubber_fh}${eq.thickness_fh ? ` (${eq.thickness_fh}mm)` : ""}` : null },
-                          { key: "Revers", val: eq.rubber_bh ? `${eq.rubber_bh}${eq.thickness_bh ? ` (${eq.thickness_bh}mm)` : ""}` : null },
-                        ].filter(r => r.val).map(r => (
-                          <div key={r.key}>
-                            <div className="text-[9px] text-ppp-muted uppercase tracking-[0.12em] font-serif">{r.key}</div>
-                            <div className="text-sm text-ppp-text font-serif mt-0.5">{r.val}</div>
-                          </div>
-                        ))}
-                      </div>
+                    <div key={eq.id} className="py-4 border-b border-white/[0.05]">
+                      {eq.is_current && (
+                        <div className="text-[9px] text-green-light uppercase tracking-[0.2em] mb-3">· Actuel</div>
+                      )}
+                      {[
+                        { label: "Bois", value: eq.blade },
+                        { label: "Coup droit", value: eq.rubber_fh ? `${eq.rubber_fh}${eq.thickness_fh ? ` (${eq.thickness_fh}mm)` : ""}` : null },
+                        { label: "Revers", value: eq.rubber_bh ? `${eq.rubber_bh}${eq.thickness_bh ? ` (${eq.thickness_bh}mm)` : ""}` : null },
+                      ].filter((x) => x.value).map((x) => (
+                        <div key={x.label} className="flex items-baseline justify-between py-1.5">
+                          <div className="text-[9px] text-sage uppercase tracking-[0.2em]">{x.label}</div>
+                          <div className="text-sm text-white font-sans">{x.value}</div>
+                        </div>
+                      ))}
                     </div>
                   ))}
                 </div>
@@ -287,18 +269,22 @@ export default function ProfilePage() {
 
               {/* Badges */}
               {tab === 4 && (
-                <div className="grid grid-cols-3 gap-3">
+                <div className="flex flex-col gap-0">
                   {BADGE_DEFINITIONS.map((b) => {
                     const earned = earnedBadges.some((e) => e && e.type === b.type)
                     return (
                       <div
                         key={b.type}
-                        className={`bg-white border rounded-2xl p-4 text-center shadow-sm transition-all ${
-                          earned ? "border-ppp-forest/30 bg-ppp-forest/5" : "border-gray-100 opacity-40"
-                        }`}
+                        className={`flex items-center gap-4 py-4 border-b border-white/[0.05] transition-opacity ${earned ? "" : "opacity-30"}`}
                       >
-                        <div className="text-3xl mb-2">{b.emoji}</div>
-                        <div className="text-[9px] text-ppp-text font-semibold font-serif uppercase tracking-wider leading-tight">{b.label}</div>
+                        <div className="text-3xl w-10 text-center">{b.emoji}</div>
+                        <div className="flex-1">
+                          <div className="text-sm text-white font-sans font-medium">{b.label}</div>
+                          <div className="text-[10px] text-sage mt-0.5">{b.description}</div>
+                        </div>
+                        {earned && (
+                          <div className="text-[9px] text-green-light uppercase tracking-widest">✓</div>
+                        )}
                       </div>
                     )
                   })}
@@ -307,7 +293,7 @@ export default function ProfilePage() {
             </>
           )}
         </div>
-      </div>
+      </PageWrapper>
     </>
   )
 }
