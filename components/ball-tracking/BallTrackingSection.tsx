@@ -132,7 +132,7 @@ export default function BallTrackingSection({ data }: { data: BallData }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
-        <Badge label="Données capteur" color="green" size="md" />
+        <Badge label="Données capteur" color="sage" size="md" />
       </div>
 
       {/* Speed + Spin */}

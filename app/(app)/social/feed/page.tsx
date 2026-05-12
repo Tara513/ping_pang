@@ -77,7 +77,7 @@ export default function SocialFeedPage() {
                         {SESSION_ICONS[s.session_type || ""]} {SESSION_LABELS[s.session_type || ""] || s.session_type}
                       </span>
                     ) : (
-                      <Badge label={m.result === "win" ? "Victoire" : "Défaite"} color={m.result === "win" ? "forest" : "red"} />
+                      <Badge label={m.result === "win" ? "Victoire" : "Défaite"} color={m.result === "win" ? "green" : "red"} />
                     )}
                   </div>
                   <div className="text-xs text-ppp-muted font-serif mt-0.5">{dateStr}</div>
