@@ -6,7 +6,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <ToastProvider>
       {/* Contenu avec padding-bottom pour ne pas passer sous la nav fixe */}
-      <div className="min-h-dvh bg-ppp-bg pb-16">
+      <div className="min-h-dvh bg-black pb-16">
         {children}
       </div>
       <BottomNav />

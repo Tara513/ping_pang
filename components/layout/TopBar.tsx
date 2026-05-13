@@ -1,7 +1,6 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { ArrowLeft } from "lucide-react"
 import { cn } from "@/lib/utils/cn"
 import type { ReactNode } from "react"
 
@@ -24,22 +23,22 @@ export default function TopBar({ title, showBack, backHref, onBack, actions, cla
   }
 
   return (
-    <header className={cn("sticky top-0 z-20 bg-white border-b border-gray-100", className)}>
-      <div className="flex items-center h-14 px-4 gap-3 max-w-2xl mx-auto">
+    <header className={cn("sticky top-0 z-20 bg-black/95 backdrop-blur-sm border-b border-white/[0.04]", className)}>
+      <div className="flex items-center h-14 px-4 gap-4">
         {showBack && (
           <button
             onClick={handleBack}
-            className="text-gray-400 hover:text-ppp-text transition-colors p-1.5 rounded-full hover:bg-gray-50 -ml-1"
+            className="text-sage hover:text-white transition-colors text-sm font-sans"
             aria-label="Retour"
           >
-            <ArrowLeft size={18} strokeWidth={1.5} />
+            ←
           </button>
         )}
-        <h1 className="font-serif font-bold text-lg uppercase tracking-[0.06em] text-ppp-text flex-1 leading-none">
+        <h1 className="font-display font-light text-xl text-white flex-1 leading-none">
           {title}
         </h1>
         {actions && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {actions}
           </div>
         )}

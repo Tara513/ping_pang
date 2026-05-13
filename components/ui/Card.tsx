@@ -20,9 +20,9 @@ export default function Card({ className, padding = "md", border = true, feature
       className={cn(
         "transition-all duration-200",
         featured
-          ? "bg-ppp-forest text-ppp-white rounded-none"
-          : "bg-ppp-card text-ppp-text rounded-md",
-        border && !featured && "border border-ppp-border",
+          ? "bg-green text-white"
+          : "bg-surface text-white",
+        border && !featured && "border border-white/[0.06]",
         paddings[padding],
         className
       )}

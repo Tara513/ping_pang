@@ -4,14 +4,15 @@ export const dynamic = "force-dynamic"
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { Bell, Flame, ChevronRight, Clock, MapPin } from "lucide-react"
+import { Bell } from "lucide-react"
 import { motion } from "framer-motion"
 import { createClient } from "@/lib/supabase/client"
 import Avatar from "@/components/ui/Avatar"
-import PageWrapper from "@/components/layout/PageWrapper"
+import Badge from "@/components/ui/Badge"
+import BottomNav from "@/components/layout/BottomNav"
 import type { Profile, Session, Match } from "@/types/database"
 import { SESSION_TYPE_COLORS } from "@/types/app"
-import { formatDistanceToNow, format } from "date-fns"
+import { formatDistanceToNow } from "date-fns"
 import { fr } from "date-fns/locale"
 import { demoSessions, demoMatches } from "@/lib/seeds/demoData"
 
@@ -22,80 +23,69 @@ interface FeedEntry {
   profile: Profile
 }
 
-const SESSION_ICONS: Record<string, string> = {
-  technique: "🏓", physique: "💪", match: "⚔️", service: "🎯", competition: "🏆", chill: "😎"
-}
 const SESSION_LABELS: Record<string, string> = {
   technique: "Technique", physique: "Physique", match: "Match",
-  service: "Service", competition: "Compétition", chill: "Chill"
+  service: "Service", competition: "Compétition", chill: "Chill",
 }
+
 const MATCH_LABELS: Record<string, string> = {
-  friendly: "Amical", league: "Championnat", tournament: "Tournoi", training: "Entraînement"
+  friendly: "Amical", league: "Championnat", tournament: "Tournoi", training: "Entraînement",
 }
 
-// ─── Week Summary ────────────────────────────────────────────────────────────
+function WeekHero({ sessions, targetHours }: { sessions: Partial<Session>[]; targetHours: number }) {
+  const now = new Date()
+  const weekStart = new Date(now)
+  weekStart.setDate(now.getDate() - now.getDay() + 1)
+  weekStart.setHours(0, 0, 0, 0)
 
-function WeekSummary({ sessions, targetHours }: { sessions: Partial<Session>[]; targetHours: number }) {
-  const thisWeek = sessions.filter((s) => {
-    const d = new Date(s.date!)
-    const now = new Date()
-    const weekStart = new Date(now)
-    weekStart.setDate(now.getDate() - now.getDay() + 1)
-    weekStart.setHours(0, 0, 0, 0)
-    return d >= weekStart
-  })
-
+  const thisWeek = sessions.filter((s) => s.date && new Date(s.date) >= weekStart)
   const totalMins = thisWeek.reduce((acc, s) => acc + (s.duration_min || 0), 0)
-  const totalHours = Math.round(totalMins / 60 * 10) / 10
+  const totalHours = Math.round((totalMins / 60) * 10) / 10
   const progress = Math.min((totalHours / targetHours) * 100, 100)
-  const types = ["technique", "physique", "match", "service", "competition", "chill"]
+
+  const sessionTypes = ["technique", "physique", "match", "service", "competition", "chill"]
   const typeDone = new Set(thisWeek.map((s) => s.session_type))
 
   return (
-    <div className="bg-ppp-forest rounded-2xl p-5 text-ppp-white">
-      {/* Header row */}
-      <div className="flex items-start justify-between mb-4">
-        <div>
-          <div className="text-[9px] text-ppp-white/50 uppercase tracking-[0.18em] font-serif mb-1">Cette semaine</div>
-          <div className="flex items-baseline gap-1.5">
-            <span className="font-serif font-bold text-5xl leading-none">{totalHours}</span>
-            <span className="text-ppp-white/60 text-base font-serif">h</span>
-            <span className="text-ppp-white/40 text-sm font-serif">/ {targetHours}h</span>
-          </div>
+    <div className="-mx-4 bg-green px-4 py-7">
+      <div className="text-[9px] text-sage uppercase tracking-[0.3em] mb-3">Cette semaine</div>
+
+      <div className="flex items-end justify-between">
+        <div className="flex items-baseline gap-1.5">
+          <span className="font-display font-light text-white leading-none" style={{ fontSize: "80px" }}>
+            {totalHours}
+          </span>
+          <span className="text-green-light font-display text-3xl font-light mb-2">h</span>
         </div>
-        <div className="flex flex-col items-end gap-1">
-          <div className="flex items-center gap-1.5 text-yellow">
-            <Flame size={18} />
-            <span className="font-serif font-bold text-2xl leading-none">{thisWeek.length}</span>
-          </div>
-          <span className="text-[9px] text-ppp-white/40 uppercase tracking-wider font-serif">séances</span>
+        <div className="flex flex-col items-end mb-2">
+          <span className="font-display font-light text-white leading-none text-5xl">{thisWeek.length}</span>
+          <span className="text-[9px] text-sage uppercase tracking-[0.25em] mt-1">séances</span>
         </div>
       </div>
 
-      {/* Progress bar */}
-      <div className="h-1.5 bg-ppp-white/15 rounded-full overflow-hidden mb-4">
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${progress}%` }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="h-full bg-ppp-white rounded-full"
-        />
+      <div className="mt-4 mb-5">
+        <div className="h-px bg-white/20 w-full relative">
+          <div
+            className="absolute top-0 left-0 h-full bg-white/60 transition-all duration-700"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+        <div className="text-[9px] text-sage/60 mt-1.5">
+          {totalHours}h / {targetHours}h objectif
+        </div>
       </div>
 
-      {/* Session type pills */}
-      <div className="flex gap-1.5 flex-wrap">
-        {types.map((t) => {
+      <div className="flex gap-2 flex-wrap">
+        {sessionTypes.map((t) => {
           const done = typeDone.has(t as Session["session_type"])
           return (
             <span
               key={t}
-              className={`text-[9px] font-serif uppercase tracking-wide px-2.5 py-1 rounded-full transition-all ${
-                done
-                  ? "bg-ppp-white/20 text-ppp-white"
-                  : "text-ppp-white/25"
+              className={`text-[9px] uppercase tracking-[0.1em] px-2 py-1 transition-all font-sans ${
+                done ? "bg-white/10 text-white" : "text-sage/40"
               }`}
             >
-              {done && "✓ "}{SESSION_LABELS[t]}
+              {done ? "✓ " : ""}{SESSION_LABELS[t]}
             </span>
           )
         })}
@@ -104,88 +94,89 @@ function WeekSummary({ sessions, targetHours }: { sessions: Partial<Session>[]; 
   )
 }
 
-// ─── Feed Item ───────────────────────────────────────────────────────────────
-
 function FeedItem({ entry }: { entry: FeedEntry }) {
   const isSession = entry.type === "session"
   const s = entry.data as Session
   const m = entry.data as Match
 
-  const typeLabel = isSession ? SESSION_LABELS[s.session_type] || s.session_type : MATCH_LABELS[m.match_type] || m.match_type
-  const typeColor = isSession ? SESSION_TYPE_COLORS[s.session_type] || "#2D4A3E" : m.result === "win" ? "#2D4A3E" : "#C8352A"
-  const icon = isSession ? SESSION_ICONS[s.session_type] : "⚔️"
+  const typeLabel = isSession
+    ? SESSION_LABELS[s.session_type] || s.session_type
+    : MATCH_LABELS[m.match_type] || m.match_type
+
+  const accentColor = isSession
+    ? SESSION_TYPE_COLORS[s.session_type] || "#4A5240"
+    : m.result === "win" ? "#1A5C4A" : "#C72927"
+
   const dateStr = formatDistanceToNow(new Date(entry.data.date), { addSuffix: true, locale: fr })
-  const duration = isSession ? Math.round((s.duration_min || 0) / 60 * 10) / 10 : null
+
+  const title = isSession
+    ? SESSION_LABELS[s.session_type] || "Séance"
+    : `vs ${m.opponent_name || "Adversaire"}`
+
+  const sub = isSession
+    ? [
+        s.duration_min ? `${Math.round(s.duration_min / 60 * 10) / 10}h` : null,
+        s.location ? s.location : null,
+      ].filter(Boolean).join(" · ")
+    : m.sets_won !== null ? `${m.sets_won}–${m.sets_lost}` : undefined
 
   return (
     <Link href={isSession ? `/session/${entry.data.id}` : `/match/${entry.data.id}`}>
-      <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all active:scale-[0.99] cursor-pointer">
-        {/* Top row: type badge + date */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <span
-              className="text-[10px] font-serif font-semibold uppercase tracking-[0.08em] px-2.5 py-1 rounded-full text-white"
-              style={{ backgroundColor: typeColor }}
-            >
-              {icon} {typeLabel}
-            </span>
+      <div className="flex gap-4 py-4 border-b border-white/[0.05] active:bg-white/[0.02] transition-colors">
+        <div className="w-[3px] flex-shrink-0 self-stretch" style={{ backgroundColor: accentColor }} />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[9px] font-sans uppercase tracking-[0.15em] text-sage">{typeLabel}</span>
             {!isSession && m.result && (
-              <span className={`text-[10px] font-serif font-semibold uppercase tracking-[0.08em] px-2.5 py-1 rounded-full text-white ${m.result === "win" ? "bg-ppp-forest" : "bg-red"}`}>
-                {m.result === "win" ? "Victoire" : "Défaite"}
-              </span>
+              <Badge
+                label={m.result === "win" ? "Victoire" : "Défaite"}
+                color={m.result === "win" ? "green" : "red"}
+              />
             )}
+            <span className="text-[10px] text-sage/50 ml-auto flex-shrink-0">{dateStr}</span>
           </div>
-          <span className="text-[10px] text-ppp-muted font-serif">{dateStr}</span>
+          <div className="font-display text-xl font-light text-white leading-tight">{title}</div>
+          {sub && <div className="text-xs text-sage mt-1">{sub}</div>}
         </div>
-
-        {/* Main info */}
-        <div className="flex items-center gap-3">
-          <Avatar src={entry.profile.avatar_url} name={entry.profile.full_name} size="sm" />
-          <div className="flex-1 min-w-0">
-            <div className="font-serif font-semibold text-sm text-ppp-text">
-              {entry.profile.full_name || entry.profile.username}
-            </div>
-            {isSession && s.location && (
-              <div className="flex items-center gap-1 text-xs text-ppp-muted font-serif mt-0.5">
-                <MapPin size={10} />
-                {s.location}
-              </div>
-            )}
-            {!isSession && (
-              <div className="text-xs text-ppp-muted font-serif mt-0.5">
-                vs {m.opponent_name}
-                {m.sets_won !== null && ` · ${m.sets_won}–${m.sets_lost}`}
-              </div>
-            )}
-          </div>
-          <ChevronRight size={16} className="text-ppp-muted/40 shrink-0" />
-        </div>
-
-        {/* Stats row */}
-        {isSession && (
-          <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-50">
-            {duration !== null && (
-              <div className="flex items-center gap-1.5 text-xs text-ppp-muted font-serif">
-                <Clock size={12} />
-                <span className="font-semibold text-ppp-text">{duration}h</span>
-              </div>
-            )}
-            {s.feeling && (
-              <div className="flex items-center gap-1 text-xs text-ppp-muted font-serif">
-                <span>{"⭐".repeat(Math.min(s.feeling, 5))}</span>
-              </div>
-            )}
-            {s.exercises && Array.isArray(s.exercises) && s.exercises.length > 0 && (
-              <span className="text-xs text-ppp-muted font-serif">{s.exercises.length} exercice{s.exercises.length > 1 ? "s" : ""}</span>
-            )}
-          </div>
-        )}
+        <Avatar
+          src={entry.profile.avatar_url}
+          name={entry.profile.full_name}
+          size="sm"
+          className="flex-shrink-0 self-center"
+        />
       </div>
     </Link>
   )
 }
 
-// ─── Page ────────────────────────────────────────────────────────────────────
+function FeedSkeleton() {
+  return (
+    <div className="flex flex-col">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <div key={i} className="flex gap-4 py-4 border-b border-white/[0.05] animate-pulse">
+          <div className="w-[3px] bg-white/10 self-stretch flex-shrink-0" />
+          <div className="flex-1 flex flex-col gap-2">
+            <div className="h-2.5 bg-white/10 w-1/3" />
+            <div className="h-4 bg-white/10 w-2/3" />
+            <div className="h-2 bg-white/10 w-1/4" />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function EmptyFeed() {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <div className="font-display font-light text-white/10 leading-none select-none" style={{ fontSize: "120px" }}>
+        0
+      </div>
+      <div className="font-display text-2xl font-light text-white mt-4">C&apos;est parti !</div>
+      <div className="text-xs text-sage mt-2 tracking-[0.05em]">Enregistre ta première séance</div>
+    </div>
+  )
+}
 
 export default function DashboardPage() {
   const supabase = createClient()
@@ -198,7 +189,7 @@ export default function DashboardPage() {
   useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { setLoading(false); return }
+      if (!user) return
 
       const [profileRes, sessionsRes, matchesRes, goalRes] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", user.id).single(),
@@ -218,13 +209,13 @@ export default function DashboardPage() {
   }, [supabase])
 
   const feedEntries: FeedEntry[] = [
-    ...sessions.slice(0, 6).map((s) => ({
+    ...sessions.slice(0, 5).map((s) => ({
       id: `s-${s.id || Math.random()}`,
       type: "session" as const,
       data: s as Session,
       profile: profile || { id: "demo", username: "moi", full_name: "Moi", avatar_url: null } as Profile,
     })),
-    ...matches.slice(0, 4).map((m) => ({
+    ...matches.slice(0, 3).map((m) => ({
       id: `m-${m.id || Math.random()}`,
       type: "match" as const,
       data: m as Match,
@@ -233,75 +224,73 @@ export default function DashboardPage() {
   ].sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime())
 
   const firstName = profile?.full_name?.split(" ")[0] || profile?.username || "joueur"
-  const today = format(new Date(), "EEEE d MMMM", { locale: fr })
+  const todayStr = new Date().toLocaleDateString("fr-FR", {
+    weekday: "long", day: "numeric", month: "long",
+  }).toUpperCase()
 
   return (
-    <PageWrapper>
-      {/* ── Header ── */}
+    <main className="min-h-screen bg-black pb-24 px-4">
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-start justify-between pt-10 pb-6"
+        transition={{ duration: 0.4 }}
+        className="pt-14 pb-6"
       >
-        <div>
-          <div className="text-[10px] text-ppp-muted uppercase tracking-[0.16em] font-serif capitalize">{today}</div>
-          <div className="font-serif font-bold text-[2.6rem] text-ppp-text uppercase leading-[0.95] mt-1">
-            {firstName}
+        <div className="flex items-start justify-between">
+          <div>
+            <div className="text-[9px] text-sage uppercase tracking-[0.3em] mb-1">{todayStr}</div>
+            <div className="font-display font-light text-white leading-none" style={{ fontSize: "52px" }}>
+              {firstName}
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-3 pt-1">
-          <Link href="/profile" className="relative text-ppp-muted hover:text-ppp-text transition-colors p-1">
-            <Bell size={20} strokeWidth={1.5} />
-          </Link>
-          <Link href="/profile">
-            <Avatar src={profile?.avatar_url} name={profile?.full_name} size="sm" />
-          </Link>
+          <div className="flex items-center gap-3 pt-2">
+            <Link href="/profile" className="text-sage hover:text-white transition-colors">
+              <Bell size={20} strokeWidth={1.5} />
+            </Link>
+            <Link href="/profile">
+              <Avatar src={profile?.avatar_url} name={profile?.full_name} size="sm" />
+            </Link>
+          </div>
         </div>
       </motion.div>
 
-      {/* ── Week Summary ── */}
       {!loading && (
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
-          <WeekSummary sessions={sessions} targetHours={targetHours} />
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1, duration: 0.4 }}>
+          <WeekHero sessions={sessions} targetHours={targetHours} />
         </motion.div>
       )}
 
-      {/* ── Feed ── */}
-      <div className="mt-7">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-serif font-bold text-xl text-ppp-text uppercase tracking-[0.04em]">Activité récente</h2>
-          <Link href="/stats" className="text-[10px] text-ppp-muted hover:text-ppp-forest transition-colors uppercase tracking-[0.1em] font-serif flex items-center gap-1">
-            Tout voir <ChevronRight size={12} />
+      <div className="h-px bg-white/[0.06] mt-8 mb-6" />
+
+      <div>
+        <div className="flex items-baseline justify-between mb-5">
+          <div className="text-[9px] text-sage uppercase tracking-[0.3em]">Activité récente</div>
+          <Link href="/stats" className="text-[9px] text-sage hover:text-white transition-colors uppercase tracking-[0.2em]">
+            Tout voir →
           </Link>
         </div>
 
         {loading ? (
-          <div className="flex flex-col gap-3">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="bg-white border border-gray-100 rounded-2xl p-5 animate-pulse h-28" />
-            ))}
-          </div>
+          <FeedSkeleton />
         ) : feedEntries.length > 0 ? (
-          <div className="flex flex-col gap-3">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}>
             {feedEntries.map((entry, i) => (
               <motion.div
                 key={entry.id}
-                initial={{ opacity: 0, y: 16 }}
+                initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 + i * 0.04 }}
+                transition={{ delay: 0.15 + i * 0.04 }}
               >
                 <FeedItem entry={entry} />
               </motion.div>
             ))}
-          </div>
+          </motion.div>
         ) : (
-          <div className="bg-white border border-gray-100 rounded-2xl p-10 text-center shadow-sm">
-            <div className="text-5xl mb-4">🏓</div>
-            <div className="font-serif font-bold text-xl text-ppp-text uppercase mb-1">C&apos;est parti !</div>
-            <div className="text-ppp-muted text-sm font-serif">Enregistre ta première séance</div>
-          </div>
+          <EmptyFeed />
         )}
       </div>
-    </PageWrapper>
+
+      <BottomNav />
+    </main>
   )
 }

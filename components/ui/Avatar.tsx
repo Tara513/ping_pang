@@ -24,7 +24,7 @@ export default function Avatar({ src, name, size = "md", className }: AvatarProp
   return (
     <div
       className={cn(
-        "relative rounded-full overflow-hidden flex items-center justify-center bg-ppp-forest flex-shrink-0",
+        "relative overflow-hidden flex items-center justify-center bg-green flex-shrink-0",
         sizes[size],
         className
       )}
@@ -38,7 +38,7 @@ export default function Avatar({ src, name, size = "md", className }: AvatarProp
           sizes={`${pxSizes[size]}px`}
         />
       ) : (
-        <span className="font-serif text-ppp-white">{initial}</span>
+        <span className="font-display font-light text-white">{initial}</span>
       )}
     </div>
   )

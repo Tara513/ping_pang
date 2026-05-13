@@ -9,7 +9,7 @@ interface PageWrapperProps {
 
 export default function PageWrapper({ children, className, noPadding }: PageWrapperProps) {
   return (
-    <main className={cn("bg-ppp-bg w-full max-w-2xl mx-auto", !noPadding && "px-4", className)}>
+    <main className={cn("bg-black w-full min-h-screen pb-24", !noPadding && "px-4", className)}>
       {children}
     </main>
   )

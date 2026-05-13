@@ -2,49 +2,65 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, BarChart2, Map, User, Plus } from "lucide-react"
+import { Home, BarChart2, Map, User, Plus, X } from "lucide-react"
 import { cn } from "@/lib/utils/cn"
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 
 const navItems = [
-  { href: "/dashboard", icon: Home,      label: "Feed"   },
-  { href: "/stats",     icon: BarChart2,  label: "Stats"  },
-  { href: "/map",       icon: Map,        label: "Carte"  },
-  { href: "/profile",   icon: User,       label: "Profil" },
+  { href: "/dashboard", icon: Home,     label: "Feed"   },
+  { href: "/stats",     icon: BarChart2, label: "Stats"  },
+  { href: "/map",       icon: Map,       label: "Carte"  },
+  { href: "/profile",   icon: User,      label: "Profil" },
+]
+
+const quickActions = [
+  { href: "/session/new", label: "Logger une séance",  accent: "border-green-light" },
+  { href: "/match/new",   label: "Logger un match",    accent: "border-sage" },
+  { href: "/calendar",    label: "Calendrier",         accent: "border-white/30" },
+  { href: "/program",     label: "Mon programme",      accent: "border-white/30" },
 ]
 
 function QuickActionMenu({ onClose }: { onClose: () => void }) {
   return (
     <AnimatePresence>
       <motion.div
+        key="backdrop"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm"
+        className="fixed inset-0 z-40 bg-black/85"
         onClick={onClose}
       />
       <motion.div
+        key="menu"
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 16 }}
-        transition={{ type: "spring", damping: 26, stiffness: 320 }}
-        className="fixed bottom-20 left-0 right-0 z-50 flex flex-col gap-3 px-5 max-w-sm mx-auto"
+        transition={{ duration: 0.18 }}
+        className="fixed bottom-20 left-0 right-0 z-50 px-4 flex flex-col gap-0"
       >
-        <Link
-          href="/session/new"
-          onClick={onClose}
-          className="bg-ppp-forest text-white py-4 font-serif text-sm tracking-[0.08em] uppercase flex items-center justify-center gap-3 rounded-2xl shadow-xl hover:bg-ppp-forest-dark active:scale-[0.98] transition-all"
-        >
-          🏓 Logger une séance
-        </Link>
-        <Link
-          href="/match/new"
-          onClick={onClose}
-          className="bg-white text-ppp-text border border-gray-200 py-4 font-serif text-sm tracking-[0.08em] uppercase flex items-center justify-center gap-3 rounded-2xl shadow-xl hover:border-ppp-forest active:scale-[0.98] transition-all"
-        >
-          ⚔️ Logger un match
-        </Link>
+        {quickActions.map((action, i) => (
+          <motion.div
+            key={action.href}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.04 }}
+          >
+            <Link
+              href={action.href}
+              onClick={onClose}
+              className={cn(
+                "flex items-center bg-surface border-l-4 text-white px-6 py-4",
+                "font-sans text-sm uppercase tracking-[0.15em]",
+                "border-b border-white/[0.04] hover:bg-surface/80 transition-colors",
+                action.accent
+              )}
+            >
+              {action.label}
+            </Link>
+          </motion.div>
+        ))}
       </motion.div>
     </AnimatePresence>
   )
@@ -58,12 +74,8 @@ export default function BottomNav() {
     <>
       {showQuickMenu && <QuickActionMenu onClose={() => setShowQuickMenu(false)} />}
 
-      {/* Nav fixée en bas, pleine largeur, propre */}
-      <nav
-        className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-gray-100"
-        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
-      >
-        <div className="flex items-center h-16 max-w-2xl mx-auto px-2">
+      <nav className="fixed bottom-0 left-0 right-0 z-30 bg-black border-t border-white/[0.06] safe-bottom">
+        <div className="flex items-center h-16">
           {navItems.slice(0, 2).map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
             return (
@@ -71,31 +83,29 @@ export default function BottomNav() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex-1 flex flex-col items-center justify-center gap-1 h-full transition-colors",
-                  isActive ? "text-ppp-forest" : "text-gray-400 hover:text-gray-600"
+                  "flex-1 flex flex-col items-center justify-center gap-1 h-full transition-colors relative",
+                  isActive ? "text-white border-t-2 border-white -mt-px" : "text-sage/50"
                 )}
               >
                 <item.icon size={20} strokeWidth={isActive ? 2 : 1.5} />
-                <span className="text-[0.6rem] font-serif uppercase tracking-[0.06em]">{item.label}</span>
+                <span className="text-[9px] font-sans uppercase tracking-widest">{item.label}</span>
               </Link>
             )
           })}
 
-          <div className="flex-1 flex items-center justify-center">
-            <button
-              onClick={() => setShowQuickMenu(v => !v)}
-              aria-label="Ajouter"
-              style={{ width: 52, height: 52 }}
-              className={cn(
-                "flex items-center justify-center rounded-full shadow-lg transition-all duration-200",
-                showQuickMenu ? "bg-ppp-forest-dark" : "bg-ppp-forest hover:bg-ppp-forest-dark active:scale-95"
-              )}
-            >
-              <motion.div animate={{ rotate: showQuickMenu ? 45 : 0 }} transition={{ duration: 0.2 }}>
-                <Plus size={22} className="text-white" />
-              </motion.div>
-            </button>
-          </div>
+          <button
+            onClick={() => setShowQuickMenu((v) => !v)}
+            aria-label="Ajouter"
+            className={cn(
+              "flex items-center justify-center w-12 h-12 mx-3 flex-shrink-0 transition-all duration-200",
+              showQuickMenu ? "bg-surface" : "bg-green-light"
+            )}
+          >
+            {showQuickMenu
+              ? <X size={20} className="text-white" />
+              : <Plus size={20} className="text-white" />
+            }
+          </button>
 
           {navItems.slice(2).map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
@@ -104,12 +114,12 @@ export default function BottomNav() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex-1 flex flex-col items-center justify-center gap-1 h-full transition-colors",
-                  isActive ? "text-ppp-forest" : "text-gray-400 hover:text-gray-600"
+                  "flex-1 flex flex-col items-center justify-center gap-1 h-full transition-colors relative",
+                  isActive ? "text-white border-t-2 border-white -mt-px" : "text-sage/50"
                 )}
               >
                 <item.icon size={20} strokeWidth={isActive ? 2 : 1.5} />
-                <span className="text-[0.6rem] font-serif uppercase tracking-[0.06em]">{item.label}</span>
+                <span className="text-[9px] font-sans uppercase tracking-widest">{item.label}</span>
               </Link>
             )
           })}

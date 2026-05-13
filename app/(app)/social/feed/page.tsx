@@ -2,13 +2,13 @@
 
 import TopBar from "@/components/layout/TopBar"
 import PageWrapper from "@/components/layout/PageWrapper"
-import Card from "@/components/ui/Card"
 import Avatar from "@/components/ui/Avatar"
 import Badge from "@/components/ui/Badge"
 import { demoSessions, demoMatches } from "@/lib/seeds/demoData"
 import type { Session, Match } from "@/types/database"
 import { formatDistanceToNow } from "date-fns"
 import { fr } from "date-fns/locale"
+import Link from "next/link"
 
 const DEMO_FRIENDS = [
   { id: "f1", username: "thomas_m", full_name: "Thomas M.", avatar_url: null },
@@ -19,9 +19,6 @@ const DEMO_FRIENDS = [
 const SESSION_LABELS: Record<string, string> = {
   technique: "Technique", physique: "Physique", match: "Match",
   service: "Service", competition: "Compétition", chill: "Chill"
-}
-const SESSION_ICONS: Record<string, string> = {
-  technique: "🏓", physique: "💪", match: "⚔️", service: "🎯", competition: "🏆", chill: "😎"
 }
 
 export default function SocialFeedPage() {
@@ -45,61 +42,69 @@ export default function SocialFeedPage() {
 
   return (
     <>
-      <TopBar title="Activité amis" />
+      <TopBar title="Activité" />
       <PageWrapper>
-        <div className="pt-4 flex flex-col gap-3">
-          {/* Following pills */}
-          <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
+        <div className="pt-4">
+          {/* Following avatars */}
+          <div className="flex gap-4 overflow-x-auto pb-4 mb-6 no-scrollbar">
             {DEMO_FRIENDS.map((f) => (
-              <div key={f.id} className="flex flex-col items-center gap-1 flex-shrink-0">
+              <div key={f.id} className="flex flex-col items-center gap-1.5 flex-shrink-0">
                 <Avatar src={f.avatar_url} name={f.full_name} size="md" />
-                <span className="text-[10px] text-ppp-muted font-serif">{f.username}</span>
+                <span className="text-[9px] text-sage font-sans uppercase tracking-[0.1em]">{f.username}</span>
               </div>
             ))}
           </div>
 
-          {feedItems.map((item) => {
-            const s = item.data as Partial<Session>
-            const m = item.data as Partial<Match>
-            const isSession = item.type === "session"
-            const dateStr = item.data.date
-              ? formatDistanceToNow(new Date(item.data.date), { addSuffix: true, locale: fr })
-              : ""
+          <div className="h-px bg-white/[0.06] mb-6" />
 
-            return (
-              <Card key={item.id} className="flex gap-3 items-start hover:border-ppp-text/20 transition-all">
-                <Avatar src={item.friend.avatar_url} name={item.friend.full_name} size="sm" />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-semibold text-sm font-serif text-ppp-text">{item.friend.full_name}</span>
-                    {isSession ? (
-                      <span className="text-[10px] font-semibold font-serif uppercase px-2 py-0.5 bg-ppp-forest text-ppp-white rounded-sm">
-                        {SESSION_ICONS[s.session_type || ""]} {SESSION_LABELS[s.session_type || ""] || s.session_type}
-                      </span>
-                    ) : (
-                      <Badge label={m.result === "win" ? "Victoire" : "Défaite"} color={m.result === "win" ? "green" : "red"} />
-                    )}
+          <div className="text-[9px] text-sage uppercase tracking-[0.3em] mb-5">Feed</div>
+
+          <div className="flex flex-col">
+            {feedItems.map((item) => {
+              const s = item.data as Partial<Session>
+              const m = item.data as Partial<Match>
+              const isSession = item.type === "session"
+              const dateStr = item.data.date
+                ? formatDistanceToNow(new Date(item.data.date), { addSuffix: true, locale: fr })
+                : ""
+
+              return (
+                <Link
+                  key={item.id}
+                  href={isSession ? `/session/${item.data.id}` : `/match/${item.data.id}`}
+                >
+                  <div className="flex gap-4 py-4 border-b border-white/[0.05] active:bg-white/[0.02] transition-colors">
+                    <Avatar src={item.friend.avatar_url} name={item.friend.full_name} size="sm" className="flex-shrink-0 self-center" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <span className="font-sans text-sm text-white font-medium">{item.friend.full_name}</span>
+                        {isSession ? (
+                          <span className="text-[9px] font-sans uppercase tracking-[0.1em] text-sage">
+                            {SESSION_LABELS[s.session_type || ""] || s.session_type}
+                          </span>
+                        ) : (
+                          <Badge label={m.result === "win" ? "Victoire" : "Défaite"} color={m.result === "win" ? "green" : "red"} />
+                        )}
+                        <span className="text-[10px] text-sage/50 ml-auto flex-shrink-0">{dateStr}</span>
+                      </div>
+
+                      {isSession && (
+                        <div className="flex gap-3 text-xs text-sage font-sans">
+                          <span>{Math.round((s.duration_min || 0) / 60 * 10) / 10}h</span>
+                          {s.feeling && <span>{"★".repeat(s.feeling)}</span>}
+                        </div>
+                      )}
+                      {!isSession && (
+                        <div className="text-xs text-sage font-sans">
+                          vs {m.opponent_name} — {m.sets_won}-{m.sets_lost}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="text-xs text-ppp-muted font-serif mt-0.5">{dateStr}</div>
-
-                  {isSession && (
-                    <div className="flex gap-3 mt-2 text-xs text-ppp-muted font-serif">
-                      <span>{Math.round((s.duration_min || 0) / 60 * 10) / 10}h</span>
-                      {s.feeling && <span>{"⭐".repeat(s.feeling)}</span>}
-                    </div>
-                  )}
-                  {!isSession && (
-                    <div className="text-xs text-ppp-muted font-serif mt-2">
-                      vs {m.opponent_name} — {m.sets_won}-{m.sets_lost}
-                    </div>
-                  )}
-                </div>
-                <button className="text-[10px] text-ppp-muted border border-ppp-border px-2 py-1 hover:border-ppp-text transition-all uppercase font-serif rounded-sm">
-                  ❤
-                </button>
-              </Card>
-            )
-          })}
+                </Link>
+              )
+            })}
+          </div>
         </div>
       </PageWrapper>
     </>
