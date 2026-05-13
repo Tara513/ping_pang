@@ -1,299 +1,190 @@
-"use client"
+'use client'
 
-export const dynamic = "force-dynamic"
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { Button } from '@/components/ui/Button'
+import { Card, CardTitle } from '@/components/ui/Card'
+import { Badge } from '@/components/ui/Badge'
+import { Avatar } from '@/components/ui/Avatar'
+import { PageLoader } from '@/components/ui/LoadingSpinner'
+import { Edit, MapPin, Zap, Wrench, Award, Activity, BarChart2, TrendingUp } from 'lucide-react'
+import type { UserProfile, TrainingSession, Match, EloRating, Equipment, Badge as BadgeType } from '@/lib/types'
+import { getUser, getSessions, getMatches, getEloRatings, getActiveEquipment, getBadges } from '@/lib/api'
+import { LEVEL_LABELS, STYLE_LABELS, formatDate, formatElo, FEDERATION_LABELS } from '@/lib/utils/format'
 
-import { useEffect, useState } from "react"
-import Link from "next/link"
-import { createClient } from "@/lib/supabase/client"
-import TopBar from "@/components/layout/TopBar"
-import PageWrapper from "@/components/layout/PageWrapper"
-import Avatar from "@/components/ui/Avatar"
-import Badge from "@/components/ui/Badge"
-import { Settings } from "lucide-react"
-import type { Profile, Session, Match, Equipment, EloRating } from "@/types/database"
-import { FEDERATION_META } from "@/lib/elo/calculator"
-import { BADGE_DEFINITIONS } from "@/types/app"
-import { demoSessions, demoMatches, demoEloRatings } from "@/lib/seeds/demoData"
-import { formatDistanceToNow } from "date-fns"
-import { fr } from "date-fns/locale"
-
-const LEVEL_LABELS: Record<string, string> = {
-  beginner: "Débutant", intermediate: "Intermédiaire", advanced: "Avancé",
-  competitive: "Compétiteur", elite: "Elite",
-}
-const PLAY_STYLE_LABELS: Record<string, string> = {
-  attacker: "Attaquant", defender: "Défenseur", allround: "Polyvalent",
-  penhold: "Penholder", other: "Autre",
-}
-const SESSION_LABELS: Record<string, string> = {
-  technique: "Technique", physique: "Physique", match: "Match",
-  service: "Service", competition: "Compétition", chill: "Chill",
-}
-const TABS = ["Activité", "Stats", "ELO", "Matériel", "Badges"]
+const TABS = ['Activité', 'Stats', 'ELO', 'Matériel', 'Badges'] as const
+type Tab = typeof TABS[number]
 
 export default function ProfilePage() {
-  const supabase = createClient()
-  const [profile, setProfile] = useState<Profile | null>(null)
-  const [sessions, setSessions] = useState<Partial<Session>[]>([])
-  const [matches, setMatches] = useState<Partial<Match>[]>([])
-  const [equipment, setEquipment] = useState<Equipment[]>([])
-  const [elos, setElos] = useState<Partial<EloRating>[]>([])
-  const [tab, setTab] = useState(0)
+  const [user, setUser] = useState<UserProfile | null>(null)
+  const [sessions, setSessions] = useState<TrainingSession[]>([])
+  const [matches, setMatches] = useState<Match[]>([])
+  const [ratings, setRatings] = useState<EloRating[]>([])
+  const [equipment, setEquipment] = useState<Equipment | null>(null)
+  const [badges, setBadges] = useState<BadgeType[]>([])
+  const [tab, setTab] = useState<Tab>('Activité')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    async function load() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      const [pRes, sRes, mRes, eqRes, eloRes] = await Promise.all([
-        supabase.from("profiles").select("*").eq("id", user.id).single(),
-        supabase.from("sessions").select("*").eq("player_id", user.id).order("date", { ascending: false }),
-        supabase.from("matches").select("*").eq("player_id", user.id).order("date", { ascending: false }),
-        supabase.from("equipment").select("*").eq("player_id", user.id).order("started_at", { ascending: false }),
-        supabase.from("elo_ratings").select("*").eq("player_id", user.id),
-      ])
-      setProfile(pRes.data)
-      setSessions(sRes.data?.length ? sRes.data : demoSessions as Session[])
-      setMatches(mRes.data?.length ? mRes.data : demoMatches as Match[])
-      setEquipment(eqRes.data || [])
-      setElos(eloRes.data?.length ? eloRes.data : demoEloRatings as EloRating[])
-      setLoading(false)
-    }
-    load()
-  }, [supabase])
+    Promise.all([getUser(), getSessions(), getMatches(), getEloRatings(), getActiveEquipment(), getBadges()])
+      .then(([u, s, m, r, eq, b]) => {
+        setUser(u); setSessions(s); setMatches(m); setRatings(r); setEquipment(eq); setBadges(b)
+        setLoading(false)
+      })
+  }, [])
 
-  const totalHours = Math.round(sessions.reduce((a, s) => a + (s.duration_min || 0), 0) / 60)
-  const wins = matches.filter((m) => m.result === "win").length
-  const winRate = matches.length > 0 ? Math.round((wins / matches.length) * 100) : 0
-  const earnedBadges = [
-    sessions.length >= 10 && BADGE_DEFINITIONS.find((b) => b.type === "centurion"),
-    wins >= 5 && BADGE_DEFINITIONS.find((b) => b.type === "precision"),
-  ].filter(Boolean)
+  if (loading || !user) return <PageLoader />
+
+  const wins = matches.filter(m => m.result === 'win').length
+  const totalHours = sessions.reduce((sum, s) => sum + s.duration, 0) / 60
+  const unlockedBadges = badges.filter(b => b.unlocked).length
 
   return (
-    <>
-      <TopBar
-        title="Profil"
-        actions={
-          <Link href="/profile/settings" className="text-sage hover:text-white transition-colors">
-            <Settings size={18} strokeWidth={1.5} />
-          </Link>
-        }
-      />
-      <PageWrapper noPadding>
-        {/* Hero header — full bleed green */}
-        <div className="bg-green px-4 pt-8 pb-6">
-          <div className="flex items-end gap-4">
-            <Avatar src={profile?.avatar_url} name={profile?.full_name} size="xl" />
-            <div className="flex-1 pb-1">
-              <div className="font-display font-light text-white leading-none" style={{ fontSize: 32 }}>
-                {profile?.full_name || "Joueur"}
-              </div>
-              <div className="text-[10px] text-sage uppercase tracking-[0.2em] mt-1">
-                @{profile?.username || "username"}
-              </div>
-              {profile?.level && (
-                <div className="mt-2">
-                  <span className="text-[9px] text-green-light uppercase tracking-[0.2em] border border-green-light/40 px-2 py-0.5">
-                    {LEVEL_LABELS[profile.level] || profile.level}
-                  </span>
-                  {profile.play_style && (
-                    <span className="text-[9px] text-sage ml-2">· {PLAY_STYLE_LABELS[profile.play_style]}</span>
-                  )}
-                </div>
-              )}
-              {profile?.city && (
-                <div className="text-[10px] text-sage mt-1">
-                  {profile.city}{profile.club ? ` · ${profile.club}` : ""}
-                </div>
-              )}
+    <div className="space-y-4">
+      {/* Header */}
+      <Card>
+        <div className="flex items-start gap-4">
+          <Avatar name={user.name} size="lg" />
+          <div className="flex-1 min-w-0">
+            <h2 className="font-heading font-bold text-xl text-onyx">{user.name}</h2>
+            <p className="text-sm text-onyx-400">@{user.username}</p>
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              <Badge variant="lime">{LEVEL_LABELS[user.level]}</Badge>
+              <Badge variant="outline">{STYLE_LABELS[user.playing_style]}</Badge>
+              {user.coach_mode && <Badge variant="blue">Mode coach</Badge>}
             </div>
           </div>
+          <Link href="/profile/edit">
+            <Button variant="ghost" size="sm" icon={Edit} />
+          </Link>
         </div>
+        <div className="mt-3 pt-3 border-t border-onyx-100 flex items-center gap-4 text-sm text-onyx-400">
+          {user.club && <span className="flex items-center gap-1"><Zap size={13} />{user.club}</span>}
+          <span className="flex items-center gap-1"><MapPin size={13} />{user.city}</span>
+        </div>
+      </Card>
 
-        {/* Stats row */}
-        <div className="flex border-b border-white/[0.06]">
-          {[
-            { label: "Séances", value: sessions.length },
-            { label: "Matchs", value: matches.length },
-            { label: "Heures", value: `${totalHours}h` },
-            { label: "Win %", value: `${winRate}%` },
-          ].map((s, i) => (
-            <div
-              key={i}
-              className={`flex-1 py-4 text-center ${i < 3 ? "border-r border-white/[0.06]" : ""}`}
-            >
-              <div className="font-display text-2xl font-light text-white">{s.value}</div>
-              <div className="text-[9px] text-sage uppercase tracking-widest mt-0.5">{s.label}</div>
-            </div>
+      {/* Tabs */}
+      <div className="flex gap-0 border-b border-onyx-100 overflow-x-auto">
+        {TABS.map(t => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`shrink-0 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+              tab === t ? 'border-evergreen text-evergreen' : 'border-transparent text-onyx-400 hover:text-onyx'
+            }`}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab content */}
+      {tab === 'Activité' && (
+        <div className="space-y-2">
+          {[...sessions.slice(0, 3).map(s => ({ type: 'session' as const, data: s })),
+            ...matches.slice(0, 3).map(m => ({ type: 'match' as const, data: m }))
+          ]
+            .sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime())
+            .slice(0, 5)
+            .map(item => (
+              item.type === 'session' ? (
+                <Link key={item.data.id} href={`/sessions/${item.data.id}`}>
+                  <Card padding="sm" hover>
+                    <p className="text-sm font-medium text-onyx">{formatDate(item.data.date)}</p>
+                    <p className="text-xs text-onyx-400">Séance · {item.data.duration}min</p>
+                  </Card>
+                </Link>
+              ) : (
+                <Link key={item.data.id} href={`/matches/${item.data.id}`}>
+                  <Card padding="sm" hover>
+                    <p className="text-sm font-medium text-onyx">vs {(item.data as Match).opponent_name}</p>
+                    <p className={`text-xs ${(item.data as Match).result === 'win' ? 'text-evergreen' : 'text-mauve'}`}>
+                      {(item.data as Match).result === 'win' ? 'Victoire' : 'Défaite'} · {formatDate(item.data.date)}
+                    </p>
+                  </Card>
+                </Link>
+              )
+            ))}
+        </div>
+      )}
+
+      {tab === 'Stats' && (
+        <div className="grid grid-cols-2 gap-3">
+          <StatCard label="Heures totales" value={`${totalHours.toFixed(1)}h`} />
+          <StatCard label="Séances" value={String(sessions.length)} />
+          <StatCard label="Matchs" value={String(matches.length)} />
+          <StatCard label="Victoires" value={String(wins)} />
+          <StatCard label="Win rate" value={matches.length ? `${Math.round((wins / matches.length) * 100)}%` : '—'} />
+          <StatCard label="Badges" value={`${unlockedBadges}/${badges.length}`} />
+        </div>
+      )}
+
+      {tab === 'ELO' && (
+        <div className="space-y-3">
+          {ratings.map(r => (
+            <Card key={r.id} padding="sm" className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-onyx-400 mb-0.5">{FEDERATION_LABELS[r.federation]}</p>
+                <p className="font-heading font-bold text-xl text-onyx">{formatElo(r.rating)}</p>
+              </div>
+              <div className="text-right">
+                {r.percentile && <p className="text-xs text-onyx-400">Top {100 - r.percentile}%</p>}
+                <Badge variant={r.confidence === 'high' ? 'success' : r.confidence === 'medium' ? 'warning' : 'danger'} size="sm">
+                  {r.confidence === 'high' ? 'Haute' : r.confidence === 'medium' ? 'Moyenne' : 'Faible'}
+                </Badge>
+              </div>
+            </Card>
           ))}
         </div>
+      )}
 
-        {/* Tabs */}
-        <div className="flex overflow-x-auto no-scrollbar border-b border-white/[0.06]">
-          {TABS.map((t, i) => (
-            <button
-              key={t}
-              onClick={() => setTab(i)}
-              className={`px-5 py-3 text-[9px] uppercase tracking-[0.2em] flex-shrink-0 border-b-2 -mb-px transition-all ${
-                tab === i ? "border-white text-white" : "border-transparent text-sage/50 hover:text-sage"
-              }`}
-            >
-              {t}
-            </button>
+      {tab === 'Matériel' && equipment && (
+        <div className="space-y-3">
+          <Card>
+            <CardTitle className="mb-3">Matériel actif</CardTitle>
+            <div className="space-y-2 text-sm">
+              <Row label="Bois" value={`${equipment.blade.brand} ${equipment.blade.model}`} />
+              <Row label="CD" value={`${equipment.forehand_rubber.brand} ${equipment.forehand_rubber.model} (${equipment.forehand_rubber.thickness})`} />
+              <Row label="RV" value={`${equipment.backhand_rubber.brand} ${equipment.backhand_rubber.model} (${equipment.backhand_rubber.thickness})`} />
+              <Row label="Heures jouées" value={`${equipment.hours_played}h`} />
+              <Row label="Depuis" value={formatDate(equipment.start_date)} />
+            </div>
+          </Card>
+          <Link href="/equipment">
+            <Button variant="outline" fullWidth icon={Wrench}>Gérer le matériel</Button>
+          </Link>
+        </div>
+      )}
+
+      {tab === 'Badges' && (
+        <div className="grid grid-cols-3 gap-2">
+          {badges.slice(0, 9).map(badge => (
+            <Card key={badge.id} padding="sm" className={`text-center ${!badge.unlocked ? 'opacity-40' : ''}`}>
+              <div className="text-2xl mb-1">{badge.unlocked ? '★' : '☆'}</div>
+              <p className="text-[10px] font-medium text-onyx leading-tight">{badge.name}</p>
+            </Card>
           ))}
         </div>
+      )}
+    </div>
+  )
+}
 
-        {/* Tab content */}
-        <div className="px-4 py-4">
-          {loading ? (
-            <div className="animate-pulse space-y-3">
-              {[1, 2, 3].map((i) => <div key={i} className="h-16 bg-surface" />)}
-            </div>
-          ) : (
-            <>
-              {/* Activité — line based */}
-              {tab === 0 && (
-                <div>
-                  {[...sessions.slice(0, 5).map((s) => ({ type: "session" as const, data: s })),
-                    ...matches.slice(0, 3).map((m) => ({ type: "match" as const, data: m }))]
-                    .sort((a, b) => new Date(b.data.date!).getTime() - new Date(a.data.date!).getTime())
-                    .map((item, i) => (
-                      <Link
-                        key={i}
-                        href={item.type === "session" ? `/session/${item.data.id}` : `/match/${item.data.id}`}
-                        className="flex gap-3 py-4 border-b border-white/[0.05] active:bg-white/[0.02] transition-colors"
-                      >
-                        <div className={`w-[3px] flex-shrink-0 self-stretch ${item.type === "session" ? "bg-green-light" : "bg-red"}`} />
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <div className="text-[9px] text-sage uppercase tracking-[0.15em]">
-                              {item.type === "session"
-                                ? SESSION_LABELS[(item.data as Session).session_type] || "Séance"
-                                : `Match vs ${(item.data as Match).opponent_name}`}
-                            </div>
-                            <div className="text-[9px] text-sage/40">
-                              {formatDistanceToNow(new Date(item.data.date!), { locale: fr, addSuffix: true })}
-                            </div>
-                          </div>
-                          <div className="font-display text-lg font-light text-white mt-0.5">
-                            {item.type === "session"
-                              ? `${Math.round(((item.data as Session).duration_min || 0) / 60 * 10) / 10}h · ${(item.data as Session).location || "Sans lieu"}`
-                              : `${(item.data as Match).sets_won ?? "?"} — ${(item.data as Match).sets_lost ?? "?"}`}
-                          </div>
-                        </div>
-                        {item.type === "match" && (item.data as Match).result && (
-                          <div className={`self-center text-[9px] uppercase tracking-widest px-2 py-0.5 border ${
-                            (item.data as Match).result === "win"
-                              ? "border-green-light text-green-light"
-                              : "border-red text-red"
-                          }`}>
-                            {(item.data as Match).result === "win" ? "W" : "L"}
-                          </div>
-                        )}
-                      </Link>
-                    ))}
-                </div>
-              )}
+function StatCard({ label, value }: { label: string; value: string }) {
+  return (
+    <Card padding="sm" className="text-center">
+      <p className="font-heading font-bold text-xl text-onyx">{value}</p>
+      <p className="text-xs text-onyx-400 mt-0.5">{label}</p>
+    </Card>
+  )
+}
 
-              {/* Stats */}
-              {tab === 1 && (
-                <div className="flex flex-col">
-                  {[
-                    { label: "Séances totales", value: sessions.length },
-                    { label: "Matchs disputés", value: matches.length },
-                    { label: "Heures de jeu", value: `${totalHours}h` },
-                    { label: "Taux de victoire", value: `${winRate}%` },
-                  ].map((s, i) => (
-                    <div key={i} className="flex items-center justify-between py-4 border-b border-white/[0.05]">
-                      <div className="text-[9px] text-sage uppercase tracking-[0.2em]">{s.label}</div>
-                      <div className="font-display text-3xl font-light text-white">{s.value}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* ELO */}
-              {tab === 2 && (
-                <div>
-                  {elos.length === 0 ? (
-                    <div className="text-center py-16">
-                      <div className="font-display text-6xl font-light text-white/10">ELO</div>
-                      <div className="text-[10px] text-sage uppercase tracking-[0.2em] mt-3">Aucun ELO enregistré</div>
-                    </div>
-                  ) : elos.map((r) => {
-                    const meta = FEDERATION_META[r.federation as keyof typeof FEDERATION_META]
-                    return (
-                      <div key={r.federation} className="flex items-center justify-between py-4 border-b border-white/[0.05]">
-                        <div className="flex items-center gap-3">
-                          <span className="text-xl">{meta?.flag}</span>
-                          <div>
-                            <div className="text-sm text-white font-sans">{meta?.name}</div>
-                            <div className="text-[10px] text-sage">{meta?.country}</div>
-                          </div>
-                        </div>
-                        <div className="font-display text-4xl font-light text-white">{r.elo}</div>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-
-              {/* Matériel */}
-              {tab === 3 && (
-                <div>
-                  {equipment.length === 0 ? (
-                    <div className="text-center py-16">
-                      <div className="font-display text-5xl font-light text-white/10">🏓</div>
-                      <div className="text-[10px] text-sage uppercase tracking-[0.2em] mt-3">Aucun matériel renseigné</div>
-                    </div>
-                  ) : equipment.map((eq) => (
-                    <div key={eq.id} className="py-4 border-b border-white/[0.05]">
-                      {eq.is_current && (
-                        <div className="text-[9px] text-green-light uppercase tracking-[0.2em] mb-3">· Actuel</div>
-                      )}
-                      {[
-                        { label: "Bois", value: eq.blade },
-                        { label: "Coup droit", value: eq.rubber_fh ? `${eq.rubber_fh}${eq.thickness_fh ? ` (${eq.thickness_fh}mm)` : ""}` : null },
-                        { label: "Revers", value: eq.rubber_bh ? `${eq.rubber_bh}${eq.thickness_bh ? ` (${eq.thickness_bh}mm)` : ""}` : null },
-                      ].filter((x) => x.value).map((x) => (
-                        <div key={x.label} className="flex items-baseline justify-between py-1.5">
-                          <div className="text-[9px] text-sage uppercase tracking-[0.2em]">{x.label}</div>
-                          <div className="text-sm text-white font-sans">{x.value}</div>
-                        </div>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Badges */}
-              {tab === 4 && (
-                <div className="flex flex-col gap-0">
-                  {BADGE_DEFINITIONS.map((b) => {
-                    const earned = earnedBadges.some((e) => e && e.type === b.type)
-                    return (
-                      <div
-                        key={b.type}
-                        className={`flex items-center gap-4 py-4 border-b border-white/[0.05] transition-opacity ${earned ? "" : "opacity-30"}`}
-                      >
-                        <div className="text-3xl w-10 text-center">{b.emoji}</div>
-                        <div className="flex-1">
-                          <div className="text-sm text-white font-sans font-medium">{b.label}</div>
-                          <div className="text-[10px] text-sage mt-0.5">{b.description}</div>
-                        </div>
-                        {earned && (
-                          <div className="text-[9px] text-green-light uppercase tracking-widest">✓</div>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </PageWrapper>
-    </>
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between py-1 border-b border-onyx-50 last:border-0">
+      <span className="text-onyx-400">{label}</span>
+      <span className="font-medium text-onyx">{value}</span>
+    </div>
   )
 }

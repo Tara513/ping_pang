@@ -1,44 +1,46 @@
-import Image from "next/image"
-import { cn } from "@/lib/utils/cn"
+import { cn } from '@/lib/utils/cn'
+
+type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+
+const sizes: Record<AvatarSize, string> = {
+  xs: 'size-6 text-[10px]',
+  sm: 'size-8 text-xs',
+  md: 'size-10 text-sm',
+  lg: 'size-14 text-base',
+  xl: 'size-20 text-xl',
+}
 
 interface AvatarProps {
-  src?: string | null
-  name?: string | null
-  size?: "xs" | "sm" | "md" | "lg" | "xl"
+  name: string
+  src?: string
+  size?: AvatarSize
   className?: string
 }
 
-const sizes = {
-  xs: "w-7 h-7 text-sm",
-  sm: "w-9 h-9 text-base",
-  md: "w-12 h-12 text-lg",
-  lg: "w-16 h-16 text-2xl",
-  xl: "w-24 h-24 text-4xl",
+function getInitials(name: string): string {
+  return name
+    .split(' ')
+    .map(p => p[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase()
 }
 
-const pxSizes = { xs: 28, sm: 36, md: 48, lg: 64, xl: 96 }
-
-export default function Avatar({ src, name, size = "md", className }: AvatarProps) {
-  const initial = name ? name.charAt(0).toUpperCase() : "?"
-
+export function Avatar({ name, src, size = 'md', className }: AvatarProps) {
   return (
     <div
       className={cn(
-        "relative overflow-hidden flex items-center justify-center bg-green flex-shrink-0",
+        'rounded-full flex items-center justify-center font-semibold shrink-0 overflow-hidden select-none',
+        'bg-evergreen text-lime',
         sizes[size],
-        className
+        className,
       )}
     >
       {src ? (
-        <Image
-          src={src}
-          alt={name || "Avatar"}
-          fill
-          className="object-cover"
-          sizes={`${pxSizes[size]}px`}
-        />
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt={name} className="w-full h-full object-cover" />
       ) : (
-        <span className="font-display font-light text-white">{initial}</span>
+        getInitials(name)
       )}
     </div>
   )

@@ -1,44 +1,56 @@
-"use client"
-
-import { cn } from "@/lib/utils/cn"
-import { forwardRef, type InputHTMLAttributes } from "react"
+import { cn } from '@/lib/utils/cn'
+import { type InputHTMLAttributes, forwardRef } from 'react'
+import { type LucideIcon } from 'lucide-react'
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string
   error?: string
   hint?: string
+  icon?: LucideIcon
 }
 
-const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className, label, error, hint, id, ...props }, ref) => {
-    const inputId = id || label?.toLowerCase().replace(/\s+/g, "-")
-
-    return (
-      <div className="flex flex-col gap-2">
-        {label && (
-          <label htmlFor={inputId} className="text-[9px] text-sage uppercase tracking-[0.25em] font-sans">
-            {label}
-          </label>
+export const Input = forwardRef<HTMLInputElement, InputProps>(({
+  label,
+  error,
+  hint,
+  icon: Icon,
+  className,
+  id,
+  ...props
+}, ref) => {
+  const inputId = id ?? label?.toLowerCase().replace(/\s+/g, '-')
+  return (
+    <div className="flex flex-col gap-1.5">
+      {label && (
+        <label htmlFor={inputId} className="text-sm font-medium text-onyx-600">
+          {label}
+        </label>
+      )}
+      <div className="relative">
+        {Icon && (
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-onyx-400">
+            <Icon size={16} />
+          </span>
         )}
         <input
           ref={ref}
           id={inputId}
           className={cn(
-            "w-full bg-transparent border-b text-white font-sans text-base px-0 py-2",
-            "placeholder:text-white/20 outline-none transition-colors duration-200",
-            error
-              ? "border-red focus:border-red"
-              : "border-white/15 focus:border-white/50",
-            className
+            'w-full h-10 rounded-[8px] border border-onyx-200 bg-white px-3 text-sm text-onyx',
+            'placeholder:text-onyx-400',
+            'focus:outline-none focus:border-evergreen focus:ring-2 focus:ring-evergreen/10',
+            'disabled:bg-onyx-50 disabled:cursor-not-allowed',
+            Icon && 'pl-9',
+            error && 'border-mauve focus:border-mauve focus:ring-mauve/10',
+            className,
           )}
           {...props}
         />
-        {error && <p className="text-[11px] text-red border-l-2 border-red pl-2">{error}</p>}
-        {hint && !error && <p className="text-[10px] text-sage/60">{hint}</p>}
       </div>
-    )
-  }
-)
+      {error && <p className="text-xs text-mauve">{error}</p>}
+      {hint && !error && <p className="text-xs text-onyx-400">{hint}</p>}
+    </div>
+  )
+})
 
-Input.displayName = "Input"
-export default Input
+Input.displayName = 'Input'

@@ -1,61 +1,71 @@
-"use client"
+'use client'
 
-import { cn } from "@/lib/utils/cn"
-import { type ButtonHTMLAttributes, forwardRef } from "react"
+import { cn } from '@/lib/utils/cn'
+import { type LucideIcon } from 'lucide-react'
+import { type ButtonHTMLAttributes, forwardRef } from 'react'
+
+type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline'
+type Size = 'sm' | 'md' | 'lg'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "ghost" | "danger" | "outline"
-  size?: "sm" | "md" | "lg"
+  variant?: Variant
+  size?: Size
+  icon?: LucideIcon
+  iconRight?: LucideIcon
   loading?: boolean
   fullWidth?: boolean
 }
 
-const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = "primary", size = "md", loading, fullWidth, children, disabled, ...props }, ref) => {
-    const base =
-      "inline-flex items-center justify-center font-sans tracking-[0.15em] uppercase transition-all duration-200 cursor-pointer select-none text-xs font-medium"
+const variants: Record<Variant, string> = {
+  primary: 'bg-evergreen text-pp-white hover:bg-evergreen-light active:scale-[0.98]',
+  secondary: 'bg-lime text-evergreen hover:bg-[#d4f08a] active:scale-[0.98]',
+  ghost: 'bg-transparent text-onyx hover:bg-onyx-50 active:scale-[0.98]',
+  danger: 'bg-mauve text-white hover:bg-[#d13e3e] active:scale-[0.98]',
+  outline: 'border border-onyx-200 bg-transparent text-onyx hover:bg-onyx-50 active:scale-[0.98]',
+}
 
-    const variants = {
-      primary:  "bg-white text-black hover:bg-cream active:opacity-80",
-      secondary:"bg-green text-white hover:bg-green-light active:opacity-80",
-      ghost:    "bg-transparent text-sage hover:text-white active:opacity-60",
-      danger:   "bg-transparent border border-red text-red hover:bg-red hover:text-white active:opacity-80",
-      outline:  "bg-transparent border border-white/20 text-white hover:border-white active:opacity-80",
-    }
+const sizes: Record<Size, string> = {
+  sm: 'h-8 px-3 text-sm gap-1.5',
+  md: 'h-10 px-4 text-sm gap-2',
+  lg: 'h-12 px-6 text-base gap-2.5',
+}
 
-    const sizes = {
-      sm: "px-4 py-2",
-      md: "px-6 py-3.5",
-      lg: "px-8 py-5",
-    }
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
+  variant = 'primary',
+  size = 'md',
+  icon: Icon,
+  iconRight: IconRight,
+  loading = false,
+  fullWidth = false,
+  className,
+  children,
+  disabled,
+  ...props
+}, ref) => {
+  return (
+    <button
+      ref={ref}
+      disabled={disabled || loading}
+      className={cn(
+        'inline-flex items-center justify-center font-medium rounded-[8px] transition-all duration-150 cursor-pointer select-none',
+        'disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100',
+        'focus-visible:outline-2 focus-visible:outline-evergreen focus-visible:outline-offset-2',
+        variants[variant],
+        sizes[size],
+        fullWidth && 'w-full',
+        className,
+      )}
+      {...props}
+    >
+      {loading ? (
+        <span className="size-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+      ) : Icon ? (
+        <Icon size={size === 'sm' ? 14 : size === 'lg' ? 18 : 16} />
+      ) : null}
+      {children}
+      {IconRight && !loading && <IconRight size={size === 'sm' ? 14 : size === 'lg' ? 18 : 16} />}
+    </button>
+  )
+})
 
-    return (
-      <button
-        ref={ref}
-        disabled={disabled || loading}
-        className={cn(
-          base,
-          variants[variant],
-          sizes[size],
-          fullWidth && "w-full",
-          (disabled || loading) && "opacity-40 cursor-not-allowed",
-          className
-        )}
-        {...props}
-      >
-        {loading ? (
-          <span className="flex items-center gap-2">
-            <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
-            {children}
-          </span>
-        ) : children}
-      </button>
-    )
-  }
-)
-
-Button.displayName = "Button"
-export default Button
+Button.displayName = 'Button'

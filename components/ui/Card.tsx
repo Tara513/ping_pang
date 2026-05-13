@@ -1,34 +1,42 @@
-import { cn } from "@/lib/utils/cn"
-import { type HTMLAttributes } from "react"
+import { cn } from '@/lib/utils/cn'
+import { type HTMLAttributes } from 'react'
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
-  padding?: "none" | "sm" | "md" | "lg"
+  padding?: 'none' | 'sm' | 'md' | 'lg'
+  hover?: boolean
   border?: boolean
-  featured?: boolean
 }
 
-export default function Card({ className, padding = "md", border = true, featured = false, children, ...props }: CardProps) {
-  const paddings = {
-    none: "",
-    sm: "p-3",
-    md: "p-5",
-    lg: "p-7",
-  }
-
+export function Card({ padding = 'md', hover = false, border = true, className, children, ...props }: CardProps) {
+  const paddings = { none: '', sm: 'p-3', md: 'p-4', lg: 'p-6' }
   return (
     <div
       className={cn(
-        "transition-all duration-200",
-        featured
-          ? "bg-green text-white"
-          : "bg-surface text-white",
-        border && !featured && "border border-white/[0.06]",
+        'bg-white rounded-[8px]',
+        border && 'border border-onyx-100',
         paddings[padding],
-        className
+        hover && 'hover:shadow-sm hover:border-onyx-200 transition-all duration-150 cursor-pointer',
+        className,
       )}
       {...props}
     >
       {children}
     </div>
+  )
+}
+
+export function CardHeader({ className, children, ...props }: HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div className={cn('flex items-center justify-between mb-4', className)} {...props}>
+      {children}
+    </div>
+  )
+}
+
+export function CardTitle({ className, children, ...props }: HTMLAttributes<HTMLHeadingElement>) {
+  return (
+    <h3 className={cn('font-heading font-semibold text-onyx text-base', className)} {...props}>
+      {children}
+    </h3>
   )
 }

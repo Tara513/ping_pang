@@ -1,19 +1,21 @@
-import type { Metadata, Viewport } from "next"
-import "./globals.css"
+import type { Metadata, Viewport } from 'next'
+import './globals.css'
 
 export const metadata: Metadata = {
-  title: "PingTrack — Track your game",
-  description: "L'app Strava du tennis de table.",
-  manifest: "/manifest.json",
-  appleWebApp: { capable: true, statusBarStyle: "default", title: "PingTrack" },
+  title: 'Ping Pang Training',
+  description: 'Transforme tes matchs et entraînements en progression concrète.',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Ping Pang',
+  },
 }
 
 export const viewport: Viewport = {
-  width: "device-width",
+  width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
-  themeColor: "#0C0C0C",
+  themeColor: '#092C25',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -22,14 +24,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=Space+Grotesk:wght@300;400;500;600&display=swap"
-          rel="stylesheet"
-        />
       </head>
-      <body className="antialiased bg-black text-white min-h-screen">
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   )
 }
