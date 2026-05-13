@@ -34,28 +34,32 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={{ toast }}>
       {children}
-      <div className="fixed top-4 left-0 right-0 z-50 flex flex-col gap-2 px-4 pointer-events-none">
+      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 w-full max-w-[440px] px-4 pointer-events-none">
         <AnimatePresence>
           {toasts.map((t) => (
             <motion.div
               key={t.id}
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className={`flex items-center gap-3 p-4 pointer-events-auto border ${
+              initial={{ opacity: 0, y: -16, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -16, scale: 0.96 }}
+              transition={{ type: "spring", damping: 24, stiffness: 300 }}
+              className={`flex items-center gap-3 px-4 py-3.5 pointer-events-auto border font-sans text-sm ${
                 t.type === "success"
-                  ? "bg-kaki border-kaki/50 text-white"
-                  : "bg-red border-red/50 text-white"
+                  ? "bg-green border-green-light text-white"
+                  : "bg-black border-red text-red"
               }`}
             >
-              {t.type === "success" ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
-              <span className="text-sm font-sans flex-1">{t.message}</span>
+              {t.type === "success"
+                ? <CheckCircle size={17} className="shrink-0" />
+                : <AlertCircle size={17} className="shrink-0" />
+              }
+              <span className="flex-1">{t.message}</span>
               <button
                 onClick={() => setToasts((prev) => prev.filter((i) => i.id !== t.id))}
-                className="opacity-60 hover:opacity-100 transition-opacity"
+                className="opacity-60 hover:opacity-100 transition-opacity shrink-0"
                 aria-label="Fermer"
               >
-                <X size={16} />
+                <X size={15} />
               </button>
             </motion.div>
           ))}

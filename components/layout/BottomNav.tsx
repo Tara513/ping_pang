@@ -2,52 +2,65 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, BarChart2, Map, User, Plus, Disc, Swords } from "lucide-react"
+import { Home, BarChart2, Map, User, Plus, X } from "lucide-react"
 import { cn } from "@/lib/utils/cn"
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 
 const navItems = [
-  { href: "/dashboard", icon: Home, label: "Feed" },
-  { href: "/stats", icon: BarChart2, label: "Stats" },
-  { href: "/map", icon: Map, label: "Carte" },
-  { href: "/profile", icon: User, label: "Profil" },
+  { href: "/dashboard", icon: Home,     label: "Feed"   },
+  { href: "/stats",     icon: BarChart2, label: "Stats"  },
+  { href: "/map",       icon: Map,       label: "Carte"  },
+  { href: "/profile",   icon: User,      label: "Profil" },
 ]
 
-interface QuickActionMenuProps {
-  onClose: () => void
-}
+const quickActions = [
+  { href: "/session/new", label: "Logger une séance",  accent: "border-green-light" },
+  { href: "/match/new",   label: "Logger un match",    accent: "border-sage" },
+  { href: "/calendar",    label: "Calendrier",         accent: "border-white/30" },
+  { href: "/program",     label: "Mon programme",      accent: "border-white/30" },
+]
 
-function QuickActionMenu({ onClose }: QuickActionMenuProps) {
+function QuickActionMenu({ onClose }: { onClose: () => void }) {
   return (
     <AnimatePresence>
       <motion.div
+        key="backdrop"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-40 bg-black/80"
+        className="fixed inset-0 z-40 bg-black/85"
         onClick={onClose}
       />
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        key="menu"
+        initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 20 }}
-        className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-3 items-center"
+        exit={{ opacity: 0, y: 16 }}
+        transition={{ duration: 0.18 }}
+        className="fixed bottom-20 left-0 right-0 z-50 px-4 flex flex-col gap-0"
       >
-        <Link
-          href="/session/new"
-          onClick={onClose}
-          className="bg-kaki text-white px-8 py-3 font-sans font-semibold text-sm uppercase tracking-wide flex items-center gap-3 min-w-[200px] justify-center"
-        >
-          <Disc size={16} strokeWidth={1.5} /> Logger une séance
-        </Link>
-        <Link
-          href="/match/new"
-          onClick={onClose}
-          className="bg-anthracite border border-white/20 text-white px-8 py-3 font-sans font-semibold text-sm uppercase tracking-wide flex items-center gap-3 min-w-[200px] justify-center"
-        >
-          <Swords size={16} strokeWidth={1.5} /> Logger un match
-        </Link>
+        {quickActions.map((action, i) => (
+          <motion.div
+            key={action.href}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.04 }}
+          >
+            <Link
+              href={action.href}
+              onClick={onClose}
+              className={cn(
+                "flex items-center bg-surface border-l-4 text-white px-6 py-4",
+                "font-sans text-sm uppercase tracking-[0.15em]",
+                "border-b border-white/[0.04] hover:bg-surface/80 transition-colors",
+                action.accent
+              )}
+            >
+              {action.label}
+            </Link>
+          </motion.div>
+        ))}
       </motion.div>
     </AnimatePresence>
   )
@@ -60,6 +73,7 @@ export default function BottomNav() {
   return (
     <>
       {showQuickMenu && <QuickActionMenu onClose={() => setShowQuickMenu(false)} />}
+
       <nav className="fixed bottom-0 left-0 right-0 z-30 bg-black border-t border-white/[0.06] safe-bottom">
         <div className="flex items-center h-16">
           {navItems.slice(0, 2).map((item) => {
@@ -69,28 +83,28 @@ export default function BottomNav() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex-1 flex flex-col items-center justify-center gap-1 h-full transition-colors",
-                  isActive ? "text-white" : "text-olive"
+                  "flex-1 flex flex-col items-center justify-center gap-1 h-full transition-colors relative",
+                  isActive ? "text-white border-t-2 border-white -mt-px" : "text-sage/50"
                 )}
               >
-                <item.icon size={22} strokeWidth={isActive ? 2.5 : 1.5} />
-                <span className="text-[10px] font-sans font-medium tracking-wide uppercase">{item.label}</span>
+                <item.icon size={20} strokeWidth={isActive ? 2 : 1.5} />
+                <span className="text-[9px] font-sans uppercase tracking-widest">{item.label}</span>
               </Link>
             )
           })}
 
-          {/* FAB central */}
           <button
             onClick={() => setShowQuickMenu((v) => !v)}
             aria-label="Ajouter"
             className={cn(
-              "flex items-center justify-center w-14 h-14 mx-2 transition-all duration-200",
-              showQuickMenu
-                ? "bg-kaki rotate-45"
-                : "bg-white hover:bg-beige active:scale-95"
+              "flex items-center justify-center w-12 h-12 mx-3 flex-shrink-0 transition-all duration-200",
+              showQuickMenu ? "bg-surface" : "bg-green-light"
             )}
           >
-            <Plus size={24} className={showQuickMenu ? "text-white" : "text-black"} />
+            {showQuickMenu
+              ? <X size={20} className="text-white" />
+              : <Plus size={20} className="text-white" />
+            }
           </button>
 
           {navItems.slice(2).map((item) => {
@@ -100,12 +114,12 @@ export default function BottomNav() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex-1 flex flex-col items-center justify-center gap-1 h-full transition-colors",
-                  isActive ? "text-white" : "text-olive"
+                  "flex-1 flex flex-col items-center justify-center gap-1 h-full transition-colors relative",
+                  isActive ? "text-white border-t-2 border-white -mt-px" : "text-sage/50"
                 )}
               >
-                <item.icon size={22} strokeWidth={isActive ? 2.5 : 1.5} />
-                <span className="text-[10px] font-sans font-medium tracking-wide uppercase">{item.label}</span>
+                <item.icon size={20} strokeWidth={isActive ? 2 : 1.5} />
+                <span className="text-[9px] font-sans uppercase tracking-widest">{item.label}</span>
               </Link>
             )
           })}

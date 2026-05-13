@@ -13,21 +13,12 @@ interface SliderProps {
   className?: string
 }
 
-export default function Slider({
-  label,
-  value,
-  onChange,
-  min = 1,
-  max = 5,
-  minLabel,
-  maxLabel,
-  className,
-}: SliderProps) {
+export default function Slider({ label, value, onChange, min = 1, max = 5, minLabel, maxLabel, className }: SliderProps) {
   return (
-    <div className={cn("flex flex-col gap-2", className)}>
-      <div className="flex justify-between items-center">
-        <label className="text-xs font-semibold text-olive uppercase tracking-wider">{label}</label>
-        <span className="font-display text-2xl text-white leading-none">{value}</span>
+    <div className={cn("flex flex-col gap-3", className)}>
+      <div className="flex justify-between items-baseline">
+        <label className="text-[9px] text-sage uppercase tracking-[0.2em] font-sans">{label}</label>
+        <span className="font-display font-light text-2xl text-white leading-none">{value}</span>
       </div>
       <input
         type="range"
@@ -35,12 +26,12 @@ export default function Slider({
         max={max}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full accent-kaki h-1 bg-white/20 rounded-none cursor-pointer"
+        className="w-full accent-white h-px bg-white/15 cursor-pointer"
       />
       {(minLabel || maxLabel) && (
         <div className="flex justify-between">
-          <span className="text-[10px] text-olive">{minLabel}</span>
-          <span className="text-[10px] text-olive">{maxLabel}</span>
+          <span className="text-[9px] text-sage/50 font-sans">{minLabel}</span>
+          <span className="text-[9px] text-sage/50 font-sans">{maxLabel}</span>
         </div>
       )}
     </div>

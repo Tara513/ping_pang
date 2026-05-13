@@ -2,7 +2,6 @@
 
 export const dynamic = "force-dynamic"
 
-
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -10,10 +9,8 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { motion } from "framer-motion"
-import { Disc } from "lucide-react"
+import { Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
-import Button from "@/components/ui/Button"
-import Input from "@/components/ui/Input"
 
 const schema = z.object({
   email: z.string().email("Email invalide"),
@@ -26,91 +23,96 @@ export default function LoginPage() {
   const router = useRouter()
   const supabase = createClient()
   const [error, setError] = useState<string | null>(null)
+  const [showPassword, setShowPassword] = useState(false)
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<FormData>({ resolver: zodResolver(schema) })
+  const { register, handleSubmit, formState: { errors, isSubmitting } } =
+    useForm<FormData>({ resolver: zodResolver(schema) })
 
   const onSubmit = async (data: FormData) => {
     setError(null)
     const { error } = await supabase.auth.signInWithPassword(data)
-    if (error) {
-      setError("Email ou mot de passe incorrect")
-      return
-    }
+    if (error) { setError("Email ou mot de passe incorrect"); return }
     router.push("/dashboard")
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-black px-6">
-      {/* Logo */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="pt-16 pb-12"
-      >
-        <div className="inline-flex items-center gap-3">
-          <div className="w-10 h-10 bg-kaki flex items-center justify-center">
-            <Disc size={20} strokeWidth={1.5} className="text-white" />
-          </div>
-          <div>
-            <div className="font-display text-3xl text-white uppercase leading-none">PingTrack</div>
-            <div className="text-[10px] text-olive uppercase tracking-widest">Track your game</div>
-          </div>
-        </div>
-      </motion.div>
-
+    <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="flex-1 flex flex-col"
+        transition={{ duration: 0.4 }}
+        className="w-full max-w-sm"
       >
-        <h1 className="font-display text-4xl text-white uppercase mb-8">Connexion</h1>
+        <div className="flex flex-col items-center mb-12">
+          <div className="font-display font-light text-white leading-none mb-1" style={{ fontSize: "56px" }}>
+            Ping
+          </div>
+          <div className="text-[9px] text-sage uppercase tracking-[0.35em]">Track your game</div>
+        </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-          <Input
-            label="Email"
-            type="email"
-            autoComplete="email"
-            placeholder="ton@email.com"
-            error={errors.email?.message}
-            {...register("email")}
-          />
-          <Input
-            label="Mot de passe"
-            type="password"
-            autoComplete="current-password"
-            placeholder="••••••••"
-            error={errors.password?.message}
-            {...register("password")}
-          />
-
-          {error && (
-            <p className="text-sm text-red bg-red/10 border border-red/20 px-4 py-3">{error}</p>
-          )}
-
-          <div className="flex justify-end">
-            <Link href="/forgot-password" className="text-xs text-olive hover:text-white transition-colors">
-              Mot de passe oublié ?
-            </Link>
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
+          <div className="flex flex-col gap-2">
+            <label className="text-[9px] text-sage uppercase tracking-[0.25em] font-sans">Email</label>
+            <input
+              type="email"
+              autoComplete="email"
+              placeholder="ton@email.com"
+              className="w-full bg-transparent border-b border-white/15 focus:border-white/50 py-2.5 text-sm text-white font-sans placeholder:text-white/20 outline-none transition-colors"
+              {...register("email")}
+            />
+            {errors.email && <p className="text-[11px] text-red font-sans">{errors.email.message}</p>}
           </div>
 
-          <Button type="submit" loading={isSubmitting} fullWidth size="lg" className="mt-2">
-            Se connecter
-          </Button>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <label className="text-[9px] text-sage uppercase tracking-[0.25em] font-sans">Mot de passe</label>
+              <Link href="/forgot-password" className="text-[9px] text-sage/50 hover:text-sage font-sans transition-colors">
+                Oublié ?
+              </Link>
+            </div>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                placeholder="••••••••"
+                className="w-full bg-transparent border-b border-white/15 focus:border-white/50 py-2.5 pr-10 text-sm text-white font-sans placeholder:text-white/20 outline-none transition-colors"
+                {...register("password")}
+              />
+              <button type="button" onClick={() => setShowPassword(v => !v)}
+                className="absolute right-0 top-1/2 -translate-y-1/2 text-white/30 hover:text-sage transition-colors">
+                {showPassword ? <EyeOff size={16} strokeWidth={1.5} /> : <Eye size={16} strokeWidth={1.5} />}
+              </button>
+            </div>
+            {errors.password && <p className="text-[11px] text-red font-sans">{errors.password.message}</p>}
+          </div>
+
+          {error && (
+            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+              className="text-xs text-red font-sans text-center border border-red/20 px-4 py-3">
+              {error}
+            </motion.p>
+          )}
+
+          <button type="submit" disabled={isSubmitting}
+            className="w-full mt-2 bg-white hover:bg-cream text-black font-sans text-xs uppercase tracking-[0.2em] py-4 flex items-center justify-center gap-2 transition-all disabled:opacity-50">
+            {isSubmitting
+              ? <Loader2 size={16} className="animate-spin" />
+              : <><span>Se connecter</span><ArrowRight size={15} strokeWidth={1.5} /></>}
+          </button>
         </form>
 
-        <div className="mt-auto pb-10 pt-8">
-          <p className="text-center text-sm text-olive">
-            Pas encore de compte ?{" "}
-            <Link href="/register" className="text-white font-semibold hover:text-kaki transition-colors underline underline-offset-2">
-              Créer un compte
-            </Link>
-          </p>
+        <div className="flex items-center gap-4 my-8">
+          <div className="flex-1 h-px bg-white/[0.06]" />
+          <span className="text-[9px] text-white/20 font-sans uppercase tracking-widest">ou</span>
+          <div className="flex-1 h-px bg-white/[0.06]" />
         </div>
+
+        <p className="text-center text-sm text-sage font-sans">
+          Pas de compte ?{" "}
+          <Link href="/register" className="text-white hover:text-cream transition-colors">
+            Créer un compte
+          </Link>
+        </p>
       </motion.div>
     </div>
   )
