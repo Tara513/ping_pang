@@ -13,6 +13,7 @@ export type SessionType = "technique" | "physique" | "match" | "service" | "comp
 export type MatchType = "friendly" | "league" | "tournament" | "training"
 export type MatchResult = "win" | "loss"
 export type Federation = "FFTT" | "RFETM" | "DTTB" | "ETTU" | "ITTF" | "custom"
+export type RecapType = "week" | "season"
 
 export interface Profile {
   id: string
@@ -176,10 +177,93 @@ export interface ProPlayer {
   equipment: Json | null
   bio: string | null
   image_url: string | null
+  routine: ProRoutineDay[] | null
   updated_at: string
 }
 
-// Supabase Database type
+export interface ProRoutineDay {
+  day: string
+  focus: string
+  duration_min: number
+  exercises: string[]
+  notes?: string
+}
+
+// ── Training programs ──────────────────────────────────────────────────────
+
+export interface TrainingProgram {
+  id: string
+  player_id: string
+  title: string
+  description: string | null
+  duration_weeks: number
+  level: PlayerLevel | null
+  is_active: boolean
+  created_by_coach: boolean
+  coach_id: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface ProgramSession {
+  id: string
+  program_id: string
+  week_number: number
+  day_of_week: number
+  session_type: SessionType
+  duration_min: number | null
+  objectives: string | null
+  exercises: Exercise[]
+  notes: string | null
+  completed: boolean
+  completed_session_id: string | null
+}
+
+// ── AI Recaps ──────────────────────────────────────────────────────────────
+
+export interface RecapContent {
+  resume: string
+  points_forts: string[]
+  points_amelioration: string[]
+  recommandations: string[]
+  objectif_prochain: string
+  score_global: number
+}
+
+export interface Recap {
+  id: string
+  player_id: string
+  type: RecapType
+  period_start: string
+  period_end: string
+  content: RecapContent
+  sessions_count: number
+  matches_count: number
+  total_hours: number
+  created_at: string
+}
+
+// ── Analysis chats ─────────────────────────────────────────────────────────
+
+export interface ChatMessage {
+  role: "user" | "assistant"
+  content: string
+  timestamp: string
+}
+
+export interface AnalysisChat {
+  id: string
+  player_id: string
+  match_id: string | null
+  session_id: string | null
+  title: string | null
+  messages: ChatMessage[]
+  created_at: string
+  updated_at: string
+}
+
+// ── Supabase Database type ─────────────────────────────────────────────────
+
 export interface Database {
   public: {
     Tables: {
@@ -233,9 +317,34 @@ export interface Database {
         Insert: Omit<ProPlayer, "id" | "updated_at"> & { id?: string; updated_at?: string }
         Update: Partial<Omit<ProPlayer, "id">>
       }
+      training_programs: {
+        Row: TrainingProgram
+        Insert: Omit<TrainingProgram, "id" | "created_at" | "updated_at"> & { id?: string; created_at?: string; updated_at?: string }
+        Update: Partial<Omit<TrainingProgram, "id">>
+      }
+      program_sessions: {
+        Row: ProgramSession
+        Insert: Omit<ProgramSession, "id"> & { id?: string }
+        Update: Partial<Omit<ProgramSession, "id">>
+      }
+      recaps: {
+        Row: Recap
+        Insert: Omit<Recap, "id" | "created_at"> & { id?: string; created_at?: string }
+        Update: Partial<Omit<Recap, "id">>
+      }
+      analysis_chats: {
+        Row: AnalysisChat
+        Insert: Omit<AnalysisChat, "id" | "created_at" | "updated_at"> & { id?: string; created_at?: string; updated_at?: string }
+        Update: Partial<Omit<AnalysisChat, "id">>
+      }
     }
     Views: Record<string, never>
-    Functions: Record<string, never>
+    Functions: {
+      check_and_award_badges: {
+        Args: { p_player_id: string }
+        Returns: void
+      }
+    }
     Enums: Record<string, never>
   }
 }
