@@ -24,23 +24,25 @@ export default function Slider({
   className,
 }: SliderProps) {
   return (
-    <div className={cn("flex flex-col gap-2", className)}>
-      <div className="flex justify-between items-center">
-        <label className="text-[10px] font-serif uppercase tracking-[0.1em] text-ppp-muted">{label}</label>
-        <span className="font-serif font-bold text-2xl text-ppp-forest leading-none">{value}</span>
+    <div className={cn("flex flex-col gap-3", className)}>
+      <div className="flex items-center justify-between gap-3">
+        <label className="text-xs font-semibold uppercase tracking-[0.08em] text-ppp-muted">{label}</label>
+        <span className="rounded-full border border-ppp-forest/25 bg-ppp-forest/12 px-2.5 py-1 text-sm font-bold text-ppp-forest">
+          {value}
+        </span>
       </div>
       <input
         type="range"
         min={min}
         max={max}
         value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full accent-ppp-forest h-1 bg-ppp-border rounded-none cursor-pointer"
+        onChange={(event) => onChange(Number(event.target.value))}
+        className="h-2 w-full cursor-pointer accent-ppp-forest"
       />
       {(minLabel || maxLabel) && (
-        <div className="flex justify-between">
-          <span className="text-[10px] text-ppp-muted font-serif">{minLabel}</span>
-          <span className="text-[10px] text-ppp-muted font-serif">{maxLabel}</span>
+        <div className="flex items-center justify-between text-xs text-ppp-muted">
+          <span>{minLabel}</span>
+          <span>{maxLabel}</span>
         </div>
       )}
     </div>

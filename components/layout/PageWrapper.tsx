@@ -4,12 +4,18 @@ import type { ReactNode } from "react"
 interface PageWrapperProps {
   children: ReactNode
   className?: string
-  noPadding?: boolean
+  size?: "default" | "wide"
 }
 
-export default function PageWrapper({ children, className, noPadding }: PageWrapperProps) {
+export default function PageWrapper({ children, className, size = "default" }: PageWrapperProps) {
   return (
-    <main className={cn("bg-ppp-bg w-full max-w-2xl mx-auto", !noPadding && "px-4", className)}>
+    <main
+      className={cn(
+        "mx-auto w-full px-4 pb-28 pt-5 sm:px-6 lg:pb-10",
+        size === "wide" ? "max-w-7xl" : "max-w-6xl",
+        className
+      )}
+    >
       {children}
     </main>
   )

@@ -1,8 +1,8 @@
 "use client"
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { X, CheckCircle, AlertCircle } from "lucide-react"
+import { createContext, useCallback, useContext, useState, type ReactNode } from "react"
+import { AnimatePresence, motion } from "framer-motion"
+import { AlertCircle, CheckCircle2, X } from "lucide-react"
 
 interface ToastItem {
   id: string
@@ -26,41 +26,36 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const toast = useCallback((message: string, type: "success" | "error" = "success") => {
     const id = Math.random().toString(36).slice(2)
     setToasts((prev) => [...prev, { id, message, type }])
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id))
-    }, 3500)
+    window.setTimeout(() => {
+      setToasts((prev) => prev.filter((item) => item.id !== id))
+    }, 3600)
   }, [])
 
   return (
     <ToastContext.Provider value={{ toast }}>
       {children}
-      {/* Toasts centrés dans le container max-w-[480px] */}
-      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 w-full max-w-[440px] px-4 pointer-events-none">
+      <div className="pointer-events-none fixed left-1/2 top-4 z-50 flex w-full max-w-md -translate-x-1/2 flex-col gap-2 px-4">
         <AnimatePresence>
-          {toasts.map((t) => (
+          {toasts.map((item) => (
             <motion.div
-              key={t.id}
-              initial={{ opacity: 0, y: -16, scale: 0.96 }}
+              key={item.id}
+              initial={{ opacity: 0, y: -12, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -16, scale: 0.96 }}
-              transition={{ type: "spring", damping: 24, stiffness: 300 }}
-              className={`flex items-center gap-3 px-4 py-3.5 pointer-events-auto rounded-xl shadow-lg border ${
-                t.type === "success"
-                  ? "bg-ppp-forest border-ppp-forest-dark text-ppp-white"
-                  : "bg-red border-red/70 text-ppp-white"
+              exit={{ opacity: 0, y: -12, scale: 0.96 }}
+              className={`pointer-events-auto flex items-center gap-3 rounded-lg border px-4 py-3 shadow-2xl ${
+                item.type === "success"
+                  ? "border-ppp-forest/30 bg-ppp-forest text-black"
+                  : "border-red/30 bg-red text-white"
               }`}
             >
-              {t.type === "success"
-                ? <CheckCircle size={17} className="shrink-0" />
-                : <AlertCircle size={17} className="shrink-0" />
-              }
-              <span className="text-sm font-serif flex-1">{t.message}</span>
+              {item.type === "success" ? <CheckCircle2 className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
+              <span className="flex-1 text-sm font-semibold">{item.message}</span>
               <button
-                onClick={() => setToasts((prev) => prev.filter((i) => i.id !== t.id))}
-                className="opacity-60 hover:opacity-100 transition-opacity shrink-0"
+                onClick={() => setToasts((prev) => prev.filter((toastItem) => toastItem.id !== item.id))}
+                className="focus-ring rounded p-1 opacity-70 transition hover:opacity-100"
                 aria-label="Fermer"
               >
-                <X size={15} />
+                <X className="h-4 w-4" />
               </button>
             </motion.div>
           ))}

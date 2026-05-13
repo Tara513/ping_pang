@@ -14,12 +14,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     const inputId = id || label?.toLowerCase().replace(/\s+/g, "-")
 
     return (
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-2">
         {label && (
-          <label
-            htmlFor={inputId}
-            className="text-xs font-serif uppercase tracking-[0.05em] text-ppp-muted"
-          >
+          <label htmlFor={inputId} className="text-xs font-semibold uppercase tracking-[0.08em] text-ppp-muted">
             {label}
           </label>
         )}
@@ -27,21 +24,20 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           ref={ref}
           id={inputId}
           className={cn(
-            "w-full bg-transparent border-0 border-b text-ppp-text font-serif text-base px-0 py-3",
-            "placeholder:text-ppp-muted outline-none transition-colors duration-200",
-            error
-              ? "border-red focus:border-red"
-              : "border-ppp-border focus:border-ppp-text",
+            "focus-ring h-12 w-full rounded-lg border bg-ppp-surface px-3.5 text-sm text-ppp-text outline-none transition",
+            "placeholder:text-ppp-muted/55",
+            error ? "border-red focus:border-red" : "border-white/10 focus:border-ppp-forest",
             className
           )}
           {...props}
         />
-        {error && <p className="text-xs font-serif text-red">{error}</p>}
-        {hint && !error && <p className="text-xs font-serif text-ppp-muted">{hint}</p>}
+        {error && <p className="text-xs text-red">{error}</p>}
+        {hint && !error && <p className="text-xs text-ppp-muted">{hint}</p>}
       </div>
     )
   }
 )
 
 Input.displayName = "Input"
+
 export default Input

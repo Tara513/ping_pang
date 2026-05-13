@@ -1,195 +1,31 @@
 "use client"
 
-export const dynamic = "force-dynamic"
-
-import { useEffect, useState } from "react"
-import Link from "next/link"
-import { Bell, Flame, ChevronRight, Clock, MapPin } from "lucide-react"
-import { motion } from "framer-motion"
-import { createClient } from "@/lib/supabase/client"
-import Avatar from "@/components/ui/Avatar"
+import ActivityCard from "@/components/training/ActivityCard"
+import MetricCard from "@/components/training/MetricCard"
 import PageWrapper from "@/components/layout/PageWrapper"
-import type { Profile, Session, Match } from "@/types/database"
-import { SESSION_TYPE_COLORS } from "@/types/app"
-import { formatDistanceToNow, format } from "date-fns"
+import Avatar from "@/components/ui/Avatar"
+import Badge from "@/components/ui/Badge"
+import Button from "@/components/ui/Button"
+import Card from "@/components/ui/Card"
+import { createClient } from "@/lib/supabase/client"
+import { demoMatches, demoSessions } from "@/lib/seeds/demoData"
+import type { Match, Profile, Session } from "@/types/database"
+import { format } from "date-fns"
 import { fr } from "date-fns/locale"
-import { demoSessions, demoMatches } from "@/lib/seeds/demoData"
+import { Activity, ArrowUpRight, CalendarDays, Clock3, Flame, Plus, Swords, Target, Trophy } from "lucide-react"
+import Link from "next/link"
+import { useEffect, useMemo, useState } from "react"
 
 interface FeedEntry {
-  id: string
+  key: string
   type: "session" | "match"
-  data: Session | Match
-  profile: Profile
+  data: Partial<Session> | Partial<Match>
+  href: string
 }
-
-const SESSION_ICONS: Record<string, string> = {
-  technique: "🏓", physique: "💪", match: "⚔️", service: "🎯", competition: "🏆", chill: "😎"
-}
-const SESSION_LABELS: Record<string, string> = {
-  technique: "Technique", physique: "Physique", match: "Match",
-  service: "Service", competition: "Compétition", chill: "Chill"
-}
-const MATCH_LABELS: Record<string, string> = {
-  friendly: "Amical", league: "Championnat", tournament: "Tournoi", training: "Entraînement"
-}
-
-// ─── Week Summary ────────────────────────────────────────────────────────────
-
-function WeekSummary({ sessions, targetHours }: { sessions: Partial<Session>[]; targetHours: number }) {
-  const thisWeek = sessions.filter((s) => {
-    const d = new Date(s.date!)
-    const now = new Date()
-    const weekStart = new Date(now)
-    weekStart.setDate(now.getDate() - now.getDay() + 1)
-    weekStart.setHours(0, 0, 0, 0)
-    return d >= weekStart
-  })
-
-  const totalMins = thisWeek.reduce((acc, s) => acc + (s.duration_min || 0), 0)
-  const totalHours = Math.round(totalMins / 60 * 10) / 10
-  const progress = Math.min((totalHours / targetHours) * 100, 100)
-  const types = ["technique", "physique", "match", "service", "competition", "chill"]
-  const typeDone = new Set(thisWeek.map((s) => s.session_type))
-
-  return (
-    <div className="bg-ppp-forest rounded-2xl p-5 text-ppp-white">
-      {/* Header row */}
-      <div className="flex items-start justify-between mb-4">
-        <div>
-          <div className="text-[9px] text-ppp-white/50 uppercase tracking-[0.18em] font-serif mb-1">Cette semaine</div>
-          <div className="flex items-baseline gap-1.5">
-            <span className="font-serif font-bold text-5xl leading-none">{totalHours}</span>
-            <span className="text-ppp-white/60 text-base font-serif">h</span>
-            <span className="text-ppp-white/40 text-sm font-serif">/ {targetHours}h</span>
-          </div>
-        </div>
-        <div className="flex flex-col items-end gap-1">
-          <div className="flex items-center gap-1.5 text-yellow">
-            <Flame size={18} />
-            <span className="font-serif font-bold text-2xl leading-none">{thisWeek.length}</span>
-          </div>
-          <span className="text-[9px] text-ppp-white/40 uppercase tracking-wider font-serif">séances</span>
-        </div>
-      </div>
-
-      {/* Progress bar */}
-      <div className="h-1.5 bg-ppp-white/15 rounded-full overflow-hidden mb-4">
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${progress}%` }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="h-full bg-ppp-white rounded-full"
-        />
-      </div>
-
-      {/* Session type pills */}
-      <div className="flex gap-1.5 flex-wrap">
-        {types.map((t) => {
-          const done = typeDone.has(t as Session["session_type"])
-          return (
-            <span
-              key={t}
-              className={`text-[9px] font-serif uppercase tracking-wide px-2.5 py-1 rounded-full transition-all ${
-                done
-                  ? "bg-ppp-white/20 text-ppp-white"
-                  : "text-ppp-white/25"
-              }`}
-            >
-              {done && "✓ "}{SESSION_LABELS[t]}
-            </span>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-// ─── Feed Item ───────────────────────────────────────────────────────────────
-
-function FeedItem({ entry }: { entry: FeedEntry }) {
-  const isSession = entry.type === "session"
-  const s = entry.data as Session
-  const m = entry.data as Match
-
-  const typeLabel = isSession ? SESSION_LABELS[s.session_type] || s.session_type : MATCH_LABELS[m.match_type] || m.match_type
-  const typeColor = isSession ? SESSION_TYPE_COLORS[s.session_type] || "#2D4A3E" : m.result === "win" ? "#2D4A3E" : "#C8352A"
-  const icon = isSession ? SESSION_ICONS[s.session_type] : "⚔️"
-  const dateStr = formatDistanceToNow(new Date(entry.data.date), { addSuffix: true, locale: fr })
-  const duration = isSession ? Math.round((s.duration_min || 0) / 60 * 10) / 10 : null
-
-  return (
-    <Link href={isSession ? `/session/${entry.data.id}` : `/match/${entry.data.id}`}>
-      <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all active:scale-[0.99] cursor-pointer">
-        {/* Top row: type badge + date */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <span
-              className="text-[10px] font-serif font-semibold uppercase tracking-[0.08em] px-2.5 py-1 rounded-full text-white"
-              style={{ backgroundColor: typeColor }}
-            >
-              {icon} {typeLabel}
-            </span>
-            {!isSession && m.result && (
-              <span className={`text-[10px] font-serif font-semibold uppercase tracking-[0.08em] px-2.5 py-1 rounded-full text-white ${m.result === "win" ? "bg-ppp-forest" : "bg-red"}`}>
-                {m.result === "win" ? "Victoire" : "Défaite"}
-              </span>
-            )}
-          </div>
-          <span className="text-[10px] text-ppp-muted font-serif">{dateStr}</span>
-        </div>
-
-        {/* Main info */}
-        <div className="flex items-center gap-3">
-          <Avatar src={entry.profile.avatar_url} name={entry.profile.full_name} size="sm" />
-          <div className="flex-1 min-w-0">
-            <div className="font-serif font-semibold text-sm text-ppp-text">
-              {entry.profile.full_name || entry.profile.username}
-            </div>
-            {isSession && s.location && (
-              <div className="flex items-center gap-1 text-xs text-ppp-muted font-serif mt-0.5">
-                <MapPin size={10} />
-                {s.location}
-              </div>
-            )}
-            {!isSession && (
-              <div className="text-xs text-ppp-muted font-serif mt-0.5">
-                vs {m.opponent_name}
-                {m.sets_won !== null && ` · ${m.sets_won}–${m.sets_lost}`}
-              </div>
-            )}
-          </div>
-          <ChevronRight size={16} className="text-ppp-muted/40 shrink-0" />
-        </div>
-
-        {/* Stats row */}
-        {isSession && (
-          <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-50">
-            {duration !== null && (
-              <div className="flex items-center gap-1.5 text-xs text-ppp-muted font-serif">
-                <Clock size={12} />
-                <span className="font-semibold text-ppp-text">{duration}h</span>
-              </div>
-            )}
-            {s.feeling && (
-              <div className="flex items-center gap-1 text-xs text-ppp-muted font-serif">
-                <span>{"⭐".repeat(Math.min(s.feeling, 5))}</span>
-              </div>
-            )}
-            {s.exercises && Array.isArray(s.exercises) && s.exercises.length > 0 && (
-              <span className="text-xs text-ppp-muted font-serif">{s.exercises.length} exercice{s.exercises.length > 1 ? "s" : ""}</span>
-            )}
-          </div>
-        )}
-      </div>
-    </Link>
-  )
-}
-
-// ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
-  const supabase = createClient()
-  const [profile, setProfile] = useState<Profile | null>(null)
+  const supabase = useMemo(() => createClient(), [])
+  const [profile, setProfile] = useState<Partial<Profile> | null>(null)
   const [sessions, setSessions] = useState<Partial<Session>[]>([])
   const [matches, setMatches] = useState<Partial<Match>[]>([])
   const [targetHours, setTargetHours] = useState(5)
@@ -197,111 +33,211 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function load() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { setLoading(false); return }
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
 
-      const [profileRes, sessionsRes, matchesRes, goalRes] = await Promise.all([
-        supabase.from("profiles").select("*").eq("id", user.id).single(),
-        supabase.from("sessions").select("*").eq("player_id", user.id).order("date", { ascending: false }).limit(20),
-        supabase.from("matches").select("*").eq("player_id", user.id).order("date", { ascending: false }).limit(10),
-        supabase.from("weekly_goals").select("*").eq("player_id", user.id).order("week_start", { ascending: false }).limit(1),
-      ])
+        if (!user) {
+          setSessions(demoSessions)
+          setMatches(demoMatches)
+          setLoading(false)
+          return
+        }
 
-      setProfile(profileRes.data)
-      setSessions(sessionsRes.data?.length ? sessionsRes.data : demoSessions as Session[])
-      setMatches(matchesRes.data?.length ? matchesRes.data : demoMatches as Match[])
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (goalRes.data?.[0]) setTargetHours((goalRes.data[0] as any).target_hours || 5)
-      setLoading(false)
+        const [profileRes, sessionsRes, matchesRes, goalRes] = await Promise.all([
+          supabase.from("profiles").select("*").eq("id", user.id).single(),
+          supabase.from("sessions").select("*").eq("player_id", user.id).order("date", { ascending: false }).limit(20),
+          supabase.from("matches").select("*").eq("player_id", user.id).order("date", { ascending: false }).limit(12),
+          supabase.from("weekly_goals").select("*").eq("player_id", user.id).order("week_start", { ascending: false }).limit(1),
+        ])
+
+        setProfile(profileRes.data || null)
+        setSessions(sessionsRes.data?.length ? sessionsRes.data : demoSessions)
+        setMatches(matchesRes.data?.length ? matchesRes.data : demoMatches)
+        if (goalRes.data?.[0]?.target_hours) setTargetHours(goalRes.data[0].target_hours)
+      } finally {
+        setLoading(false)
+      }
     }
+
     load()
   }, [supabase])
 
-  const feedEntries: FeedEntry[] = [
-    ...sessions.slice(0, 6).map((s) => ({
-      id: `s-${s.id || Math.random()}`,
-      type: "session" as const,
-      data: s as Session,
-      profile: profile || { id: "demo", username: "moi", full_name: "Moi", avatar_url: null } as Profile,
-    })),
-    ...matches.slice(0, 4).map((m) => ({
-      id: `m-${m.id || Math.random()}`,
-      type: "match" as const,
-      data: m as Match,
-      profile: profile || { id: "demo", username: "moi", full_name: "Moi", avatar_url: null } as Profile,
-    })),
-  ].sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime())
+  const weekStart = useMemo(() => {
+    const now = new Date()
+    const start = new Date(now)
+    start.setDate(now.getDate() - now.getDay() + 1)
+    start.setHours(0, 0, 0, 0)
+    return start
+  }, [])
 
-  const firstName = profile?.full_name?.split(" ")[0] || profile?.username || "joueur"
-  const today = format(new Date(), "EEEE d MMMM", { locale: fr })
+  const weekSessions = sessions.filter((session) => session.date && new Date(session.date) >= weekStart)
+  const weekHours = Math.round((weekSessions.reduce((sum, session) => sum + (session.duration_min || 0), 0) / 60) * 10) / 10
+  const progress = Math.min(100, Math.round((weekHours / targetHours) * 100))
+  const wins = matches.filter((match) => match.result === "win").length
+  const winRate = matches.length ? Math.round((wins / matches.length) * 100) : 0
+  const firstName = profile?.full_name?.split(" ")[0] || profile?.username || "Joueur"
+
+  const feedEntries: FeedEntry[] = [
+    ...sessions.slice(0, 7).map((session, index) => ({
+      key: `s-${session.id || index}`,
+      type: "session" as const,
+      data: session,
+      href: `/session/${session.id || `demo-session-${index}`}`,
+    })),
+    ...matches.slice(0, 5).map((match, index) => ({
+      key: `m-${match.id || index}`,
+      type: "match" as const,
+      data: match,
+      href: `/match/${match.id || `demo-match-${index}`}`,
+    })),
+  ]
+    .sort((a, b) => new Date(b.data.date || "").getTime() - new Date(a.data.date || "").getTime())
+    .slice(0, 8)
 
   return (
-    <PageWrapper>
-      {/* ── Header ── */}
-      <motion.div
-        initial={{ opacity: 0, y: -8 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-start justify-between pt-10 pb-6"
-      >
-        <div>
-          <div className="text-[10px] text-ppp-muted uppercase tracking-[0.16em] font-serif capitalize">{today}</div>
-          <div className="font-serif font-bold text-[2.6rem] text-ppp-text uppercase leading-[0.95] mt-1">
-            {firstName}
-          </div>
-        </div>
-        <div className="flex items-center gap-3 pt-1">
-          <Link href="/profile" className="relative text-ppp-muted hover:text-ppp-text transition-colors p-1">
-            <Bell size={20} strokeWidth={1.5} />
-          </Link>
-          <Link href="/profile">
-            <Avatar src={profile?.avatar_url} name={profile?.full_name} size="sm" />
-          </Link>
-        </div>
-      </motion.div>
+    <PageWrapper size="wide">
+      <section className="grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.55fr)]">
+        <div className="space-y-5">
+          <Card tone="elevated" padding="lg" className="relative overflow-hidden">
+            <div className="absolute inset-y-0 right-0 hidden w-1/2 field-surface opacity-40 md:block" />
+            <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+              <div>
+                <Badge label={format(new Date(), "eeee d MMMM", { locale: fr })} color="gold" />
+                <h1 className="mt-4 max-w-2xl text-4xl font-black tracking-tight text-ppp-text sm:text-5xl">
+                  Salut {firstName}, garde le tempo.
+                </h1>
+                <p className="mt-3 max-w-xl text-sm leading-6 text-ppp-muted">
+                  Ton cockpit regroupe la semaine, les séances, les matchs et les signaux de progression.
+                </p>
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <Button size="lg">
+                    <Link href="/session/new" className="flex items-center gap-2">
+                      <Plus className="h-4 w-4" />
+                      Logger une séance
+                    </Link>
+                  </Button>
+                  <Button size="lg" variant="outline">
+                    <Link href="/match/new" className="flex items-center gap-2">
+                      <Swords className="h-4 w-4" />
+                      Nouveau match
+                    </Link>
+                  </Button>
+                </div>
+              </div>
 
-      {/* ── Week Summary ── */}
-      {!loading && (
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
-          <WeekSummary sessions={sessions} targetHours={targetHours} />
-        </motion.div>
-      )}
+              <div className="rounded-lg border border-white/10 bg-black/24 p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-ppp-muted">Semaine</p>
+                    <div className="mt-2 text-5xl font-black text-ppp-text">
+                      {weekHours}
+                      <span className="text-xl text-ppp-muted">h</span>
+                    </div>
+                  </div>
+                  <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-ppp-forest text-black">
+                    <Target className="h-6 w-6" />
+                  </div>
+                </div>
+                <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/8">
+                  <div className="h-full rounded-full bg-ppp-forest" style={{ width: `${progress}%` }} />
+                </div>
+                <div className="mt-3 flex items-center justify-between text-xs text-ppp-muted">
+                  <span>{progress}% de l'objectif</span>
+                  <span>{targetHours}h visées</span>
+                </div>
+              </div>
+            </div>
+          </Card>
 
-      {/* ── Feed ── */}
-      <div className="mt-7">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-serif font-bold text-xl text-ppp-text uppercase tracking-[0.04em]">Activité récente</h2>
-          <Link href="/stats" className="text-[10px] text-ppp-muted hover:text-ppp-forest transition-colors uppercase tracking-[0.1em] font-serif flex items-center gap-1">
-            Tout voir <ChevronRight size={12} />
-          </Link>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <MetricCard label="Séances" value={sessions.length} detail={`${weekSessions.length} cette semaine`} icon={CalendarDays} tone="green" />
+            <MetricCard label="Heures totales" value={`${Math.round(sessions.reduce((sum, s) => sum + (s.duration_min || 0), 0) / 60)}h`} detail="cumul enregistré" icon={Clock3} />
+            <MetricCard label="Win rate" value={`${winRate}%`} detail={`${wins}/${matches.length} victoires`} icon={Trophy} tone={winRate >= 50 ? "gold" : "red"} />
+            <MetricCard label="Rythme" value={`${weekSessions.length}x`} detail="sessions récentes" icon={Flame} tone="gold" />
+          </div>
+
+          <section>
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-black text-ppp-text">Activité récente</h2>
+                <p className="text-sm text-ppp-muted">Séances et matchs triés par fraîcheur.</p>
+              </div>
+              <Button variant="ghost" size="sm">
+                <Link href="/stats" className="flex items-center gap-1">
+                  Analyse
+                  <ArrowUpRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+
+            {loading ? (
+              <div className="grid gap-3">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <Card key={index} className="h-24 animate-pulse bg-white/5" />
+                ))}
+              </div>
+            ) : (
+              <div className="grid gap-3">
+                {feedEntries.map((entry) => (
+                  <ActivityCard key={entry.key} type={entry.type} item={entry.data} href={entry.href} />
+                ))}
+              </div>
+            )}
+          </section>
         </div>
 
-        {loading ? (
-          <div className="flex flex-col gap-3">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="bg-white border border-gray-100 rounded-2xl p-5 animate-pulse h-28" />
-            ))}
-          </div>
-        ) : feedEntries.length > 0 ? (
-          <div className="flex flex-col gap-3">
-            {feedEntries.map((entry, i) => (
-              <motion.div
-                key={entry.id}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 + i * 0.04 }}
-              >
-                <FeedItem entry={entry} />
-              </motion.div>
-            ))}
-          </div>
-        ) : (
-          <div className="bg-white border border-gray-100 rounded-2xl p-10 text-center shadow-sm">
-            <div className="text-5xl mb-4">🏓</div>
-            <div className="font-serif font-bold text-xl text-ppp-text uppercase mb-1">C&apos;est parti !</div>
-            <div className="text-ppp-muted text-sm font-serif">Enregistre ta première séance</div>
-          </div>
-        )}
-      </div>
+        <aside className="space-y-5">
+          <Card tone="accent" padding="lg">
+            <div className="flex items-center gap-3">
+              <Avatar src={profile?.avatar_url} name={profile?.full_name || profile?.username} size="lg" />
+              <div>
+                <h2 className="text-lg font-black text-ppp-text">{profile?.full_name || "Profil joueur"}</h2>
+                <p className="text-sm text-ppp-muted">@{profile?.username || "pingpang"}</p>
+              </div>
+            </div>
+            <div className="mt-5 grid grid-cols-3 gap-2 text-center">
+              <div className="rounded-lg bg-black/20 p-3">
+                <div className="font-black text-ppp-text">{sessions.length}</div>
+                <div className="text-[0.65rem] uppercase text-ppp-muted">séances</div>
+              </div>
+              <div className="rounded-lg bg-black/20 p-3">
+                <div className="font-black text-ppp-text">{matches.length}</div>
+                <div className="text-[0.65rem] uppercase text-ppp-muted">matchs</div>
+              </div>
+              <div className="rounded-lg bg-black/20 p-3">
+                <div className="font-black text-ppp-text">{winRate}%</div>
+                <div className="text-[0.65rem] uppercase text-ppp-muted">win</div>
+              </div>
+            </div>
+          </Card>
+
+          <Card padding="lg">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="font-black text-ppp-text">Plan du jour</h2>
+              <Activity className="h-4 w-4 text-ppp-forest" />
+            </div>
+            <div className="space-y-3">
+              {["15 min services courts", "20 min revers sur rythme", "3 sets situationnels"].map((task, index) => (
+                <div key={task} className="flex items-center gap-3 rounded-lg border border-white/8 bg-white/4 p-3">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-ppp-forest/12 text-xs font-bold text-ppp-forest">
+                    {index + 1}
+                  </span>
+                  <span className="text-sm text-ppp-text">{task}</span>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          <Card tone="light" padding="lg">
+            <Badge label="Insight" color="dark" />
+            <p className="mt-4 text-2xl font-black leading-tight text-black">
+              Les séances courtes mais décrites créent les meilleures courbes de progression.
+            </p>
+          </Card>
+        </aside>
+      </section>
     </PageWrapper>
   )
 }
