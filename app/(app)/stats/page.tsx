@@ -12,6 +12,7 @@ import TopBar from "@/components/layout/TopBar"
 import PageWrapper from "@/components/layout/PageWrapper"
 import type { Session, Match } from "@/types/database"
 import { demoSessions, demoMatches } from "@/lib/seeds/demoData"
+import { allowDemoData } from "@/lib/demo"
 import { eachWeekOfInterval, subMonths, format } from "date-fns"
 import { fr } from "date-fns/locale"
 
@@ -22,17 +23,13 @@ const FILTERS = [
   { value: "all", label: "Tout" },
 ]
 
-const TYPE_COLORS: Record<string, string> = {
-  technique: "#1A5C4A", physique: "#7A9E8E", match: "#C72927",
-  service: "#D4C9B5", competition: "#D4C9B5", chill: "#2A2A2A",
-}
-
 export default function StatsPage() {
   const supabase = createClient()
   const [filter, setFilter] = useState("month")
   const [sessions, setSessions] = useState<Partial<Session>[]>([])
   const [matches, setMatches] = useState<Partial<Match>[]>([])
   const [loading, setLoading] = useState(true)
+  const [nowMs] = useState(() => Date.now())
 
   useEffect(() => {
     async function load() {
@@ -42,8 +39,8 @@ export default function StatsPage() {
         supabase.from("sessions").select("*").eq("player_id", user.id).order("date", { ascending: false }),
         supabase.from("matches").select("*").eq("player_id", user.id).order("date", { ascending: false }),
       ])
-      setSessions(sRes.data?.length ? sRes.data : demoSessions as Session[])
-      setMatches(mRes.data?.length ? mRes.data : demoMatches as Match[])
+      setSessions(sRes.data?.length ? sRes.data : allowDemoData ? demoSessions as Session[] : [])
+      setMatches(mRes.data?.length ? mRes.data : allowDemoData ? demoMatches as Match[] : [])
       setLoading(false)
     }
     load()
@@ -67,7 +64,7 @@ export default function StatsPage() {
     let count = 0
     const sorted = [...sessions].sort((a, b) => new Date(b.date!).getTime() - new Date(a.date!).getTime())
     for (const s of sorted) {
-      const diff = Math.floor((Date.now() - new Date(s.date!).getTime()) / 86400000)
+      const diff = Math.floor((nowMs - new Date(s.date!).getTime()) / 86400000)
       if (diff <= count + 1) count++
       else break
     }

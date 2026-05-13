@@ -5,6 +5,7 @@ import PageWrapper from "@/components/layout/PageWrapper"
 import Avatar from "@/components/ui/Avatar"
 import Badge from "@/components/ui/Badge"
 import { demoSessions, demoMatches } from "@/lib/seeds/demoData"
+import { allowDemoData } from "@/lib/demo"
 import type { Session, Match } from "@/types/database"
 import { formatDistanceToNow } from "date-fns"
 import { fr } from "date-fns/locale"
@@ -22,6 +23,22 @@ const SESSION_LABELS: Record<string, string> = {
 }
 
 export default function SocialFeedPage() {
+  if (!allowDemoData) {
+    return (
+      <>
+        <TopBar title="Activité" />
+        <PageWrapper>
+          <div className="text-center py-24">
+            <div className="font-display text-6xl font-light text-white/10">Feed</div>
+            <div className="text-[10px] text-sage uppercase tracking-[0.2em] mt-3">
+              Aucune activité partagée
+            </div>
+          </div>
+        </PageWrapper>
+      </>
+    )
+  }
+
   const allSessions = demoSessions as Partial<Session>[]
   const allMatches = demoMatches as Partial<Match>[]
 

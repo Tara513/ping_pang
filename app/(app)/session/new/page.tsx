@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
-import { createClient } from "@/lib/supabase/client"
+import { createTrainingSession } from "@/lib/actions/training"
 import { useToast } from "@/components/ui/Toast"
 import TopBar from "@/components/layout/TopBar"
 import Button from "@/components/ui/Button"
@@ -33,7 +33,6 @@ const EXERCISES = [
 
 export default function NewSessionPage() {
   const router = useRouter()
-  const supabase = createClient()
   const { toast } = useToast()
 
   const [step, setStep] = useState(1)
@@ -55,10 +54,7 @@ export default function NewSessionPage() {
   const save = async (withDescription: boolean) => {
     setLoading(true)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      await supabase.from("sessions").insert({
-        player_id: user.id,
+      const result = await createTrainingSession({
         session_type: sessionType || "technique",
         duration_min: parseInt(duration) || 60,
         date,
@@ -71,6 +67,12 @@ export default function NewSessionPage() {
         confidence: withDescription ? confidence : null,
         has_description: withDescription,
       })
+
+      if (!result.ok) {
+        toast(result.error, "error")
+        return
+      }
+
       toast("Séance enregistrée !", "success")
       router.push("/dashboard")
     } catch {

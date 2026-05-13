@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
+import { updateTrainingProfile } from "@/lib/actions/training"
 import TopBar from "@/components/layout/TopBar"
 import PageWrapper from "@/components/layout/PageWrapper"
 import Input from "@/components/ui/Input"
@@ -48,11 +49,21 @@ export default function SettingsPage() {
 
   const save = async () => {
     setLoading(true)
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-    const { error } = await supabase.from("profiles").upsert({ id: user.id, ...profile })
-    if (error) toast("Erreur lors de la sauvegarde", "error")
-    else toast("Profil mis à jour !", "success")
+    const result = await updateTrainingProfile({
+      username: profile.username || "",
+      full_name: profile.full_name || null,
+      bio: profile.bio || null,
+      country: profile.country || "FR",
+      city: profile.city || null,
+      club: profile.club || null,
+      play_style: profile.play_style || null,
+      dominant_hand: profile.dominant_hand || null,
+      level: profile.level || null,
+    })
+
+    if (result.ok) toast("Profil mis à jour !", "success")
+    else toast(result.error, "error")
+
     setLoading(false)
   }
 

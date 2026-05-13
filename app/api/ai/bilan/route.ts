@@ -2,22 +2,46 @@ import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { Mistral } from "@mistralai/mistralai"
+import { z } from "zod"
+
+const bilanRequestSchema = z.object({
+  type: z.enum(["week", "season"]),
+  period_start: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  period_end: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+}).refine((value) => value.period_start <= value.period_end, {
+  message: "Période invalide",
+})
+
+const recapContentSchema = z.object({
+  resume: z.string(),
+  points_forts: z.array(z.string()),
+  points_amelioration: z.array(z.string()),
+  recommandations: z.array(z.string()),
+  objectif_prochain: z.string(),
+  score_global: z.number().min(0).max(100),
+})
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: "Non authentifié" }, { status: 401 })
 
-  const body = await req.json()
-  const { type, period_start, period_end } = body as {
-    type: "week" | "season"
-    period_start: string
-    period_end: string
+  let body: unknown
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: "JSON invalide" }, { status: 400 })
   }
 
-  if (!type || !period_start || !period_end) {
-    return NextResponse.json({ error: "Paramètres manquants" }, { status: 400 })
+  const parsed = bilanRequestSchema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message || "Paramètres invalides" },
+      { status: 400 }
+    )
   }
+
+  const { type, period_start, period_end } = parsed.data
 
   const [sessionsRes, matchesRes] = await Promise.all([
     supabase.from("sessions").select("*").eq("player_id", user.id)
@@ -25,6 +49,9 @@ export async function POST(req: NextRequest) {
     supabase.from("matches").select("*").eq("player_id", user.id)
       .gte("date", period_start).lte("date", period_end),
   ])
+
+  if (sessionsRes.error) return NextResponse.json({ error: sessionsRes.error.message }, { status: 500 })
+  if (matchesRes.error) return NextResponse.json({ error: matchesRes.error.message }, { status: 500 })
 
   const sessions = sessionsRes.data || []
   const matches = matchesRes.data || []
@@ -49,6 +76,10 @@ Matchs: ${matches.length} matchs (${wins} victoire${wins > 1 ? "s" : ""}, ${loss
 Notes de séances:
 ${sessionNotes || "Aucune note."}
 `.trim()
+
+  if (!process.env.MISTRAL_APIKEY) {
+    return NextResponse.json({ error: "Service IA non configuré" }, { status: 500 })
+  }
 
   const mistral = new Mistral({ apiKey: process.env.MISTRAL_APIKEY! })
 
@@ -75,16 +106,13 @@ ${sessionNotes || "Aucune note."}
 
     const raw = response.choices?.[0]?.message?.content
     const rawStr = typeof raw === "string" ? raw : JSON.stringify(raw)
-    content = JSON.parse(rawStr)
-  } catch {
-    content = {
-      resume: "Bilan généré automatiquement.",
-      points_forts: ["Régularité dans l'entraînement"],
-      points_amelioration: ["Augmenter la diversité des types de séances"],
-      recommandations: ["Continuer sur cette lancée"],
-      objectif_prochain: "Maintenir le rythme la semaine prochaine",
-      score_global: 65,
+    const parsedContent = recapContentSchema.safeParse(JSON.parse(rawStr))
+    if (!parsedContent.success) {
+      return NextResponse.json({ error: "Réponse IA invalide" }, { status: 502 })
     }
+    content = parsedContent.data
+  } catch {
+    return NextResponse.json({ error: "Erreur lors de la génération du bilan" }, { status: 502 })
   }
 
   const { data: recap, error } = await supabase

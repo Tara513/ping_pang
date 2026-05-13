@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { Mistral } from "@mistralai/mistralai"
+import { z } from "zod"
 
 interface ChatMessage {
   role: "user" | "assistant"
@@ -9,33 +10,49 @@ interface ChatMessage {
   timestamp: string
 }
 
+const chatPostSchema = z.object({
+  chat_id: z.string().uuid().optional(),
+  message: z.string().trim().min(1, "Message vide").max(4000),
+  match_id: z.string().uuid().optional(),
+  session_id: z.string().uuid().optional(),
+}).refine((value) => !(value.match_id && value.session_id), {
+  message: "Choisis un match ou une séance, pas les deux",
+})
+
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: "Non authentifié" }, { status: 401 })
 
-  const body = await req.json()
-  const { chat_id, message, match_id, session_id } = body as {
-    chat_id?: string
-    message: string
-    match_id?: string
-    session_id?: string
+  let body: unknown
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: "JSON invalide" }, { status: 400 })
   }
 
-  if (!message?.trim()) {
-    return NextResponse.json({ error: "Message vide" }, { status: 400 })
+  const parsed = chatPostSchema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message || "Paramètres invalides" },
+      { status: 400 }
+    )
   }
 
+  const { chat_id, message, match_id, session_id } = parsed.data
   let existingMessages: ChatMessage[] = []
   let chatId = chat_id
 
   if (chatId) {
-    const { data: chat } = await supabase
+    const { data: chat, error: chatError } = await supabase
       .from("analysis_chats")
       .select("messages")
       .eq("id", chatId)
       .eq("player_id", user.id)
       .single()
+    if (chatError || !chat) {
+      return NextResponse.json({ error: "Chat introuvable" }, { status: 404 })
+    }
     existingMessages = (chat?.messages as ChatMessage[]) || []
   }
 
@@ -44,8 +61,11 @@ export async function POST(req: NextRequest) {
 
   if (existingMessages.length === 0) {
     if (match_id) {
-      const { data: match } = await supabase
-        .from("matches").select("*").eq("id", match_id).single()
+      const { data: match, error: matchError } = await supabase
+        .from("matches").select("*").eq("id", match_id).eq("player_id", user.id).single()
+      if (matchError || !match) {
+        return NextResponse.json({ error: "Match introuvable" }, { status: 404 })
+      }
       if (match) {
         systemContext += `\n\nContexte — Match analysé:
 - Adversaire: ${match.opponent_name}
@@ -56,8 +76,11 @@ export async function POST(req: NextRequest) {
       }
     }
     if (session_id) {
-      const { data: session } = await supabase
-        .from("sessions").select("*").eq("id", session_id).single()
+      const { data: session, error: sessionError } = await supabase
+        .from("sessions").select("*").eq("id", session_id).eq("player_id", user.id).single()
+      if (sessionError || !session) {
+        return NextResponse.json({ error: "Séance introuvable" }, { status: 404 })
+      }
       if (session) {
         systemContext += `\n\nContexte — Séance analysée:
 - Type: ${session.session_type}
@@ -72,6 +95,10 @@ export async function POST(req: NextRequest) {
   const userMsg: ChatMessage = { role: "user", content: message, timestamp: new Date().toISOString() }
   const allMessages = [...existingMessages, userMsg]
 
+  if (!process.env.MISTRAL_APIKEY) {
+    return NextResponse.json({ error: "Service IA non configuré" }, { status: 500 })
+  }
+
   const mistral = new Mistral({ apiKey: process.env.MISTRAL_APIKEY! })
 
   let replyContent: string
@@ -80,7 +107,7 @@ export async function POST(req: NextRequest) {
       model: "mistral-small-latest",
       messages: [
         { role: "system", content: systemContext },
-        ...allMessages.map(m => ({ role: m.role, content: m.content })),
+        ...allMessages.slice(-20).map(m => ({ role: m.role, content: m.content })),
       ],
     })
     const raw = response.choices?.[0]?.message?.content
@@ -97,10 +124,12 @@ export async function POST(req: NextRequest) {
   const updatedMessages = [...allMessages, assistantMsg]
 
   if (chatId) {
-    await supabase
+    const { error } = await supabase
       .from("analysis_chats")
       .update({ messages: updatedMessages, updated_at: new Date().toISOString() })
       .eq("id", chatId)
+      .eq("player_id", user.id)
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   } else {
     const title = match_id
       ? "Analyse de match"
@@ -108,7 +137,7 @@ export async function POST(req: NextRequest) {
       ? "Analyse de séance"
       : "Coaching IA"
 
-    const { data: newChat } = await supabase
+    const { data: newChat, error } = await supabase
       .from("analysis_chats")
       .insert({
         player_id: user.id,
@@ -119,6 +148,7 @@ export async function POST(req: NextRequest) {
       })
       .select()
       .single()
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     chatId = newChat?.id
   }
 

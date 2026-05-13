@@ -6,7 +6,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { Plus, Trash2 } from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
+import { createPersonalMatch } from "@/lib/actions/training"
 import { useToast } from "@/components/ui/Toast"
 import TopBar from "@/components/layout/TopBar"
 import Button from "@/components/ui/Button"
@@ -25,7 +25,6 @@ interface SetScore { player: string; opponent: string }
 
 export default function NewMatchPage() {
   const router = useRouter()
-  const supabase = createClient()
   const { toast } = useToast()
 
   const [step, setStep] = useState(1)
@@ -42,12 +41,6 @@ export default function NewMatchPage() {
   const updateSet = (i: number, field: "player" | "opponent", val: string) =>
     setSets((prev) => prev.map((s, idx) => idx === i ? { ...s, [field]: val } : s))
 
-  const computeResult = () => {
-    const won = sets.filter((s) => parseInt(s.player) > parseInt(s.opponent)).length
-    const lost = sets.filter((s) => parseInt(s.opponent) > parseInt(s.player)).length
-    return { won, lost, result: won > lost ? "win" as const : "loss" as const }
-  }
-
   const setsWon = sets.filter((s) => parseInt(s.player) > parseInt(s.opponent)).length
   const setsLost = sets.filter((s) => parseInt(s.opponent) > parseInt(s.player)).length
   const filledSets = sets.filter((s) => s.player !== "" && s.opponent !== "")
@@ -58,22 +51,23 @@ export default function NewMatchPage() {
     if (!opponentName.trim()) { toast("Renseigne le nom de l'adversaire", "error"); return }
     setLoading(true)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      const { won, lost, result } = computeResult()
-      await supabase.from("matches").insert({
-        player_id: user.id,
+      const result = await createPersonalMatch({
         opponent_name: opponentName.trim(),
         match_type: matchType,
         date,
         location: location || null,
-        result,
-        score_player: filledSets.map((s) => parseInt(s.player) || 0),
-        score_opponent: filledSets.map((s) => parseInt(s.opponent) || 0),
-        sets_won: won,
-        sets_lost: lost,
         notes: notes || null,
+        sets: filledSets.map((s) => ({
+          player: parseInt(s.player) || 0,
+          opponent: parseInt(s.opponent) || 0,
+        })),
       })
+
+      if (!result.ok) {
+        toast(result.error, "error")
+        return
+      }
+
       toast("Match enregistré !", "success")
       router.push("/dashboard")
     } catch {

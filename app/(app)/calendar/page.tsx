@@ -13,6 +13,7 @@ import {
 import { fr } from "date-fns/locale"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { demoSessions, demoMatches } from "@/lib/seeds/demoData"
+import { allowDemoData } from "@/lib/demo"
 import type { Session, Match } from "@/types/database"
 
 const SESSION_COLORS: Record<string, string> = {
@@ -40,8 +41,8 @@ export default function CalendarPage() {
         supabase.from("sessions").select("*").eq("player_id", user.id),
         supabase.from("matches").select("*").eq("player_id", user.id),
       ])
-      setSessions(sessRes.data?.length ? sessRes.data : demoSessions as Session[])
-      setMatches(matchRes.data?.length ? matchRes.data : demoMatches as Match[])
+      setSessions(sessRes.data?.length ? sessRes.data : allowDemoData ? demoSessions as Session[] : [])
+      setMatches(matchRes.data?.length ? matchRes.data : allowDemoData ? demoMatches as Match[] : [])
       setLoading(false)
     }
     load()

@@ -1,7 +1,45 @@
+import { createClient } from "@/lib/supabase/server"
 import { NextRequest, NextResponse } from "next/server"
+import { z } from "zod"
+
+const analyzeMatchRequestSchema = z.object({
+  match_id: z.string().uuid(),
+})
 
 export async function POST(request: NextRequest) {
-  const { match } = await request.json()
+  let body: unknown
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: "JSON invalide" }, { status: 400 })
+  }
+
+  const parsed = analyzeMatchRequestSchema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Paramètres invalides" }, { status: 400 })
+  }
+
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) return NextResponse.json({ error: "Non authentifié" }, { status: 401 })
+
+  const { data: match, error: matchError } = await supabase
+    .from("matches")
+    .select("*")
+    .eq("id", parsed.data.match_id)
+    .eq("player_id", user.id)
+    .single()
+
+  if (matchError || !match) {
+    return NextResponse.json({ error: "Match introuvable" }, { status: 404 })
+  }
+
+  if (!process.env.MISTRAL_APIKEY) {
+    return NextResponse.json({ error: "Service IA non configuré" }, { status: 500 })
+  }
 
   const setsStr = match.score_player?.map((p: number, i: number) =>
     `Set ${i + 1}: ${p}-${(match.score_opponent?.[i]) ?? 0}`
@@ -48,6 +86,10 @@ Réponds UNIQUEMENT en JSON valide avec ce format exact:
 
     const data = await response.json()
     const content = data.choices[0]?.message?.content
+    if (typeof content !== "string") {
+      return NextResponse.json({ error: "Réponse IA invalide" }, { status: 502 })
+    }
+
     return NextResponse.json(JSON.parse(content))
   } catch {
     return NextResponse.json({ error: "Erreur lors de l'analyse" }, { status: 500 })

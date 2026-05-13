@@ -13,6 +13,7 @@ import type { Match } from "@/types/database"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
 import { demoMatches } from "@/lib/seeds/demoData"
+import { allowDemoData } from "@/lib/demo"
 import { Sparkles } from "lucide-react"
 
 const MATCH_LABELS: Record<string, string> = {
@@ -34,13 +35,18 @@ function AnalysisSection({ match }: { match: Match }) {
   const [error, setError] = useState<string | null>(null)
 
   const analyze = async () => {
+    if (!match.id) {
+      setError("Analyse indisponible pour ce match.")
+      return
+    }
+
     setLoading(true)
     setError(null)
     try {
       const res = await fetch("/api/analyze-match", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ match }),
+        body: JSON.stringify({ match_id: match.id }),
       })
       const data = await res.json()
       if (data.error) throw new Error(data.error)
@@ -172,7 +178,7 @@ export default function MatchDetailPage() {
     async function load() {
       const { data } = await supabase.from("matches").select("*").eq("id", id).single()
       if (data) setMatch(data)
-      else {
+      else if (allowDemoData) {
         const demo = (demoMatches as Partial<Match>[]).find((m) => m.id === id)
         if (demo) setMatch(demo as Match)
       }

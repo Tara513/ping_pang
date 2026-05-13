@@ -15,6 +15,7 @@ import { SESSION_TYPE_COLORS } from "@/types/app"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
 import { demoSessions } from "@/lib/seeds/demoData"
+import { allowDemoData } from "@/lib/demo"
 
 const SESSION_LABELS: Record<string, string> = {
   technique: "Technique", physique: "Physique", match: "Match",
@@ -58,7 +59,7 @@ export default function SessionDetailPage() {
       if (data) {
         setSession(data)
         setCoachComment(data.coach_comment || "")
-      } else {
+      } else if (allowDemoData) {
         const demo = (demoSessions as Partial<Session>[]).find((s) => s.id === id)
         if (demo) { setSession(demo as Session); setCoachComment(demo.coach_comment || "") }
       }

@@ -5,15 +5,14 @@ export const dynamic = "force-dynamic"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
-import { createClient } from "@/lib/supabase/client"
+import { completeTrainingOnboarding } from "@/lib/actions/training"
 import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
 import Slider from "@/components/ui/Slider"
-import type { PlayStyle, DominantHand, PlayerLevel, Federation } from "@/types/database"
-import { FEDERATION_META } from "@/lib/elo/calculator"
+import type { PlayStyle, DominantHand, PlayerLevel } from "@/types/database"
 import { cn } from "@/lib/utils/cn"
 
-const TOTAL_STEPS = 5
+const TOTAL_STEPS = 4
 
 const LEVELS: { value: PlayerLevel; label: string; sub: string }[] = [
   { value: "beginner",     label: "Débutant",       sub: "Je découvre le jeu" },
@@ -31,8 +30,6 @@ const PLAY_STYLES: { value: PlayStyle; label: string; sub: string }[] = [
   { value: "other",     label: "Autre",      sub: "Style libre" },
 ]
 
-const FEDERATIONS = Object.keys(FEDERATION_META) as Federation[]
-
 interface OnboardingData {
   full_name: string
   username: string
@@ -48,8 +45,6 @@ interface OnboardingData {
   thickness_fh: number
   thickness_bh: number
   skip_equipment: boolean
-  federations: Federation[]
-  federation_ratings: Record<string, number>
   target_hours: number
   main_goal: string
 }
@@ -105,14 +100,11 @@ function SelectionRow({
 
 export default function OnboardingPage() {
   const router = useRouter()
-  const supabase = createClient()
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [data, setData] = useState<Partial<OnboardingData>>({
     country: "FR",
     target_hours: 5,
-    federations: [],
-    federation_ratings: {},
     dominant_hand: "right",
   })
 
@@ -126,53 +118,27 @@ export default function OnboardingPage() {
   const finish = async () => {
     setLoading(true)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-
-      await supabase.from("profiles").upsert({
-        id: user.id,
-        username: data.username || user.email?.split("@")[0] || "player",
-        full_name: data.full_name,
-        city: data.city,
-        club: data.club,
+      const result = await completeTrainingOnboarding({
+        username: data.username || "player",
+        full_name: data.full_name || null,
+        city: data.city || null,
+        club: data.club || null,
         country: data.country || "FR",
-        level: data.level,
-        play_style: data.play_style,
-        dominant_hand: data.dominant_hand,
-        is_coach: false,
+        level: data.level || null,
+        play_style: data.play_style || null,
+        dominant_hand: data.dominant_hand || "right",
+        skip_equipment: data.skip_equipment ?? false,
+        blade: data.blade || null,
+        rubber_fh: data.rubber_fh || null,
+        rubber_bh: data.rubber_bh || null,
+        thickness_fh: Number.isFinite(data.thickness_fh) ? data.thickness_fh : null,
+        thickness_bh: Number.isFinite(data.thickness_bh) ? data.thickness_bh : null,
+        target_hours: data.target_hours || 5,
       })
 
-      if (!data.skip_equipment && data.blade) {
-        await supabase.from("equipment").insert({
-          player_id: user.id,
-          blade: data.blade,
-          rubber_fh: data.rubber_fh,
-          rubber_bh: data.rubber_bh,
-          thickness_fh: data.thickness_fh,
-          thickness_bh: data.thickness_bh,
-          is_current: true,
-          started_at: new Date().toISOString().split("T")[0],
-        })
-      }
-
-      if (data.federations?.length) {
-        for (const fed of data.federations) {
-          await supabase.from("elo_ratings").upsert({
-            player_id: user.id,
-            federation: fed,
-            elo: data.federation_ratings?.[fed] || 1500,
-          })
-        }
-      }
-
-      if (data.target_hours) {
-        const monday = new Date()
-        monday.setDate(monday.getDate() - monday.getDay() + 1)
-        await supabase.from("weekly_goals").insert({
-          player_id: user.id,
-          week_start: monday.toISOString().split("T")[0],
-          target_hours: data.target_hours,
-        })
+      if (!result.ok) {
+        setLoading(false)
+        return
       }
 
       router.push("/dashboard")
@@ -214,8 +180,7 @@ export default function OnboardingPage() {
             {step === 1 && <Step1 data={data} update={update} />}
             {step === 2 && <Step2 data={data} update={update} />}
             {step === 3 && <Step3 data={data} update={update} />}
-            {step === 4 && <Step4 data={data} update={update} />}
-            {step === 5 && <Step5 data={data} update={update} />}
+            {step === 4 && <Step5 data={data} update={update} />}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -407,68 +372,6 @@ function Step3({ data, update }: { data: Partial<OnboardingData>; update: (p: Pa
       >
         Passer cette étape →
       </button>
-    </div>
-  )
-}
-
-function Step4({ data, update }: { data: Partial<OnboardingData>; update: (p: Partial<OnboardingData>) => void }) {
-  const toggleFed = (fed: Federation) => {
-    const current = data.federations || []
-    if (current.includes(fed)) {
-      update({ federations: current.filter((f) => f !== fed) })
-    } else {
-      update({ federations: [...current, fed] })
-    }
-  }
-
-  return (
-    <div className="flex flex-col gap-6">
-      <StepHeading title="ELO & Fédérations" sub="Sélectionne tes fédérations actives" />
-
-      <div>
-        {FEDERATIONS.map((fed) => {
-          const meta = FEDERATION_META[fed]
-          const isSelected = data.federations?.includes(fed)
-          return (
-            <div key={fed}>
-              <button
-                onClick={() => toggleFed(fed)}
-                className={cn(
-                  "w-full flex items-center text-left py-4 border-b border-white/[0.05] transition-all",
-                  "border-l-2 pl-4",
-                  isSelected
-                    ? "border-l-green-light text-white"
-                    : "border-l-transparent text-sage hover:text-white"
-                )}
-              >
-                <span className="text-xl mr-4">{meta.flag}</span>
-                <div className="flex-1">
-                  <div className="font-sans text-sm font-medium">{meta.name}</div>
-                  <div className="text-[10px] text-sage/60">{meta.country}</div>
-                </div>
-                {isSelected && <div className="w-1.5 h-1.5 bg-green-light mr-2 flex-shrink-0" />}
-              </button>
-
-              {isSelected && (
-                <div className="pl-4 pb-4 border-b border-white/[0.05]">
-                  <Input
-                    label={`Classement ${meta.name} actuel`}
-                    type="number"
-                    placeholder="1500 (si inconnu)"
-                    value={data.federation_ratings?.[fed] || ""}
-                    onChange={(e) => update({
-                      federation_ratings: {
-                        ...(data.federation_ratings || {}),
-                        [fed]: parseInt(e.target.value) || 1500,
-                      }
-                    })}
-                  />
-                </div>
-              )}
-            </div>
-          )
-        })}
-      </div>
     </div>
   )
 }

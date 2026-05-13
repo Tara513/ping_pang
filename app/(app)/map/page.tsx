@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client"
 import TopBar from "@/components/layout/TopBar"
 import type { Session, Match } from "@/types/database"
 import { demoSessions, demoMatches } from "@/lib/seeds/demoData"
+import { allowDemoData } from "@/lib/demo"
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || ""
 
@@ -40,11 +41,11 @@ export default function MapPage() {
           supabase.from("sessions").select("*").eq("player_id", user.id),
           supabase.from("matches").select("*").eq("player_id", user.id),
         ])
-        sessions = sRes.data?.length ? sRes.data : demoSessions as Session[]
-        matches = mRes.data?.length ? mRes.data : demoMatches as Match[]
+        sessions = sRes.data?.length ? sRes.data : allowDemoData ? demoSessions as Session[] : []
+        matches = mRes.data?.length ? mRes.data : allowDemoData ? demoMatches as Match[] : []
       } else {
-        sessions = demoSessions as Session[]
-        matches = demoMatches as Match[]
+        sessions = allowDemoData ? demoSessions as Session[] : []
+        matches = allowDemoData ? demoMatches as Match[] : []
       }
 
       const parisLocations = [
@@ -56,20 +57,26 @@ export default function MapPage() {
       ]
 
       const locationPoints: LocationPoint[] = [
-        ...sessions.map((s, i) => {
+        ...sessions.flatMap((s, i) => {
           const loc = parisLocations[i % parisLocations.length]
-          return {
+          const hasCoordinates = typeof s.location_lat === "number" && typeof s.location_lng === "number"
+          if (!hasCoordinates && !allowDemoData) return []
+
+          return [{
             id: `s-${s.id || i}`,
             type: "session" as const,
             lat: s.location_lat ?? loc.lat + (Math.random() - 0.5) * 0.02,
             lng: s.location_lng ?? loc.lng + (Math.random() - 0.5) * 0.02,
             label: s.location || loc.label,
             date: s.date || "",
-          }
+          }]
         }),
-        ...matches.map((m, i) => {
+        ...matches.flatMap((m, i) => {
           const loc = parisLocations[i % parisLocations.length]
-          return {
+          const hasCoordinates = typeof m.location_lat === "number" && typeof m.location_lng === "number"
+          if (!hasCoordinates && !allowDemoData) return []
+
+          return [{
             id: `m-${m.id || i}`,
             type: "match" as const,
             lat: m.location_lat ?? loc.lat + (Math.random() - 0.5) * 0.02,
@@ -77,7 +84,7 @@ export default function MapPage() {
             label: m.location || loc.label,
             date: m.date || "",
             result: m.result ?? undefined,
-          }
+          }]
         }),
       ]
 
@@ -117,16 +124,23 @@ export default function MapPage() {
               cursor: pointer;
             `
 
+            const popupContent = document.createElement("div")
+            popupContent.style.cssText = "font-family: system-ui; color: #F0EDE6; padding: 2px;"
+
+            const popupTitle = document.createElement("div")
+            popupTitle.style.cssText = "font-size: 12px; font-weight: 500;"
+            popupTitle.textContent = point.label
+
+            const popupMeta = document.createElement("div")
+            popupMeta.style.cssText = "font-size: 10px; color: #7A9E8E; margin-top: 2px;"
+            popupMeta.textContent = `${point.type === "session" ? "Séance" : "Match"}${
+              point.result ? (point.result === "win" ? " · Victoire" : " · Défaite") : ""
+            }`
+
+            popupContent.append(popupTitle, popupMeta)
+
             const popup = new mapboxgl.Popup({ offset: 16, className: "pingtrack-popup" })
-              .setHTML(`
-                <div style="font-family: system-ui; color: #F0EDE6; padding: 2px;">
-                  <div style="font-size: 12px; font-weight: 500;">${point.label}</div>
-                  <div style="font-size: 10px; color: #7A9E8E; margin-top: 2px;">
-                    ${point.type === "session" ? "Séance" : "Match"}
-                    ${point.result ? (point.result === "win" ? " · Victoire" : " · Défaite") : ""}
-                  </div>
-                </div>
-              `)
+              .setDOMContent(popupContent)
 
             new mapboxgl.Marker(el)
               .setLngLat([point.lng, point.lat])

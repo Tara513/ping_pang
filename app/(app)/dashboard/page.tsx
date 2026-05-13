@@ -15,6 +15,7 @@ import { SESSION_TYPE_COLORS } from "@/types/app"
 import { formatDistanceToNow } from "date-fns"
 import { fr } from "date-fns/locale"
 import { demoSessions, demoMatches } from "@/lib/seeds/demoData"
+import { allowDemoData } from "@/lib/demo"
 
 interface FeedEntry {
   id: string
@@ -199,8 +200,8 @@ export default function DashboardPage() {
       ])
 
       setProfile(profileRes.data)
-      setSessions(sessionsRes.data?.length ? sessionsRes.data : demoSessions as Session[])
-      setMatches(matchesRes.data?.length ? matchesRes.data : demoMatches as Match[])
+      setSessions(sessionsRes.data?.length ? sessionsRes.data : allowDemoData ? demoSessions as Session[] : [])
+      setMatches(matchesRes.data?.length ? matchesRes.data : allowDemoData ? demoMatches as Match[] : [])
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if (goalRes.data?.[0]) setTargetHours((goalRes.data[0] as any).target_hours || 5)
       setLoading(false)
@@ -209,14 +210,14 @@ export default function DashboardPage() {
   }, [supabase])
 
   const feedEntries: FeedEntry[] = [
-    ...sessions.slice(0, 5).map((s) => ({
-      id: `s-${s.id || Math.random()}`,
+    ...sessions.slice(0, 5).map((s, index) => ({
+      id: `s-${s.id || index}`,
       type: "session" as const,
       data: s as Session,
       profile: profile || { id: "demo", username: "moi", full_name: "Moi", avatar_url: null } as Profile,
     })),
-    ...matches.slice(0, 3).map((m) => ({
-      id: `m-${m.id || Math.random()}`,
+    ...matches.slice(0, 3).map((m, index) => ({
+      id: `m-${m.id || index}`,
       type: "match" as const,
       data: m as Match,
       profile: profile || { id: "demo", username: "moi", full_name: "Moi", avatar_url: null } as Profile,

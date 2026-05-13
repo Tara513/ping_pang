@@ -8,12 +8,12 @@ import { createClient } from "@/lib/supabase/client"
 import TopBar from "@/components/layout/TopBar"
 import PageWrapper from "@/components/layout/PageWrapper"
 import Avatar from "@/components/ui/Avatar"
-import Badge from "@/components/ui/Badge"
 import { Settings } from "lucide-react"
 import type { Profile, Session, Match, Equipment, EloRating } from "@/types/database"
 import { FEDERATION_META } from "@/lib/elo/calculator"
 import { BADGE_DEFINITIONS } from "@/types/app"
 import { demoSessions, demoMatches, demoEloRatings } from "@/lib/seeds/demoData"
+import { allowDemoData } from "@/lib/demo"
 import { formatDistanceToNow } from "date-fns"
 import { fr } from "date-fns/locale"
 
@@ -38,6 +38,7 @@ export default function ProfilePage() {
   const [matches, setMatches] = useState<Partial<Match>[]>([])
   const [equipment, setEquipment] = useState<Equipment[]>([])
   const [elos, setElos] = useState<Partial<EloRating>[]>([])
+  const [earnedBadgeTypes, setEarnedBadgeTypes] = useState<string[]>([])
   const [tab, setTab] = useState(0)
   const [loading, setLoading] = useState(true)
 
@@ -45,18 +46,20 @@ export default function ProfilePage() {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
-      const [pRes, sRes, mRes, eqRes, eloRes] = await Promise.all([
+      const [pRes, sRes, mRes, eqRes, eloRes, badgeRes] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", user.id).single(),
         supabase.from("sessions").select("*").eq("player_id", user.id).order("date", { ascending: false }),
         supabase.from("matches").select("*").eq("player_id", user.id).order("date", { ascending: false }),
         supabase.from("equipment").select("*").eq("player_id", user.id).order("started_at", { ascending: false }),
         supabase.from("elo_ratings").select("*").eq("player_id", user.id),
+        supabase.from("badges").select("badge_type").eq("player_id", user.id),
       ])
       setProfile(pRes.data)
-      setSessions(sRes.data?.length ? sRes.data : demoSessions as Session[])
-      setMatches(mRes.data?.length ? mRes.data : demoMatches as Match[])
+      setSessions(sRes.data?.length ? sRes.data : allowDemoData ? demoSessions as Session[] : [])
+      setMatches(mRes.data?.length ? mRes.data : allowDemoData ? demoMatches as Match[] : [])
       setEquipment(eqRes.data || [])
-      setElos(eloRes.data?.length ? eloRes.data : demoEloRatings as EloRating[])
+      setElos(eloRes.data?.length ? eloRes.data : allowDemoData ? demoEloRatings as EloRating[] : [])
+      setEarnedBadgeTypes((badgeRes.data || []).map((badge) => badge.badge_type))
       setLoading(false)
     }
     load()
@@ -65,11 +68,6 @@ export default function ProfilePage() {
   const totalHours = Math.round(sessions.reduce((a, s) => a + (s.duration_min || 0), 0) / 60)
   const wins = matches.filter((m) => m.result === "win").length
   const winRate = matches.length > 0 ? Math.round((wins / matches.length) * 100) : 0
-  const earnedBadges = [
-    sessions.length >= 10 && BADGE_DEFINITIONS.find((b) => b.type === "centurion"),
-    wins >= 5 && BADGE_DEFINITIONS.find((b) => b.type === "precision"),
-  ].filter(Boolean)
-
   return (
     <>
       <TopBar
@@ -271,7 +269,7 @@ export default function ProfilePage() {
               {tab === 4 && (
                 <div className="flex flex-col gap-0">
                   {BADGE_DEFINITIONS.map((b) => {
-                    const earned = earnedBadges.some((e) => e && e.type === b.type)
+                    const earned = earnedBadgeTypes.includes(b.type)
                     return (
                       <div
                         key={b.type}
