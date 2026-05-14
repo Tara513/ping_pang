@@ -4,17 +4,22 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { PageLoader } from '@/components/ui/LoadingSpinner'
-import { Plus, Dumbbell, Filter } from 'lucide-react'
+import { Plus, Dumbbell } from 'lucide-react'
 import type { TrainingSession, SessionType } from '@/lib/types'
 import { getSessions } from '@/lib/api'
 import { formatDateShort, formatDuration, FEELING_EMOJIS, SESSION_TYPE_LABELS } from '@/lib/utils/format'
 
-const ALL_TYPES: SessionType[] = ['solo', 'multi-balls', 'partner', 'match-training', 'physical', 'mental']
+const ALL_TYPES: SessionType[] = ['technique', 'service', 'match', 'physique', 'competition', 'chill']
 
 const TYPE_COLORS: Record<SessionType, string> = {
+  technique: 'bg-evergreen/10 text-evergreen',
+  service: 'bg-blue-pp/20 text-blue-pp-dark',
+  match: 'bg-mauve-light text-mauve',
+  physique: 'bg-lime/40 text-lime-dark',
+  competition: 'bg-[#f3e8ff] text-[#7c3aed]',
+  chill: 'bg-onyx-100 text-onyx-600',
   solo: 'bg-onyx-100 text-onyx-600',
   'multi-balls': 'bg-blue-pp/20 text-blue-pp-dark',
   partner: 'bg-evergreen/10 text-evergreen',

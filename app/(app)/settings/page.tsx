@@ -5,10 +5,11 @@ import { Card, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import {
   User, Target, Wrench, Eye, GraduationCap, Bell,
-  Link2, LogOut, ChevronRight,
+  LogOut, ChevronRight,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import Link from 'next/link'
+import { signOut } from '@/lib/actions/auth'
 
 const SECTIONS = [
   {
@@ -30,12 +31,6 @@ const SECTIONS = [
     items: [
       { href: '/settings/coach', icon: GraduationCap, label: 'Mode coach' },
       { href: '/settings/notifications', icon: Bell, label: 'Notifications' },
-    ],
-  },
-  {
-    label: 'Connexions',
-    items: [
-      { href: '/settings/ranking', icon: Link2, label: 'Connecter Ranking App' },
     ],
   },
 ]
@@ -93,9 +88,11 @@ export default function SettingsPage() {
       ))}
 
       {/* Logout */}
-      <Button variant="danger" fullWidth icon={LogOut}>
-        Se déconnecter
-      </Button>
+      <form action={signOut}>
+        <Button type="submit" variant="danger" fullWidth icon={LogOut}>
+          Se déconnecter
+        </Button>
+      </form>
 
       <p className="text-center text-xs text-onyx-300">Ping Pang Training v0.1.0</p>
     </div>

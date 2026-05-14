@@ -12,7 +12,7 @@ const pageTitles: Record<string, string> = {
   '/matches/new': 'Nouveau match',
   '/stats': 'Statistiques',
   '/calendar': 'Calendrier',
-  '/elo': 'Classement ELO',
+  '/elo': 'ELO joueur',
   '/profile': 'Profil',
   '/profile/edit': 'Modifier',
   '/equipment': 'Matériel',

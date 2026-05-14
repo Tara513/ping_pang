@@ -2,16 +2,8 @@ import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
 export async function updateSession(request: NextRequest) {
-  // DEV BYPASS — active avec NEXT_PUBLIC_DEV_MODE=true dans .env.local
-  if (process.env.NEXT_PUBLIC_DEV_MODE === "true") {
-    const { pathname } = request.nextUrl
-    const publicPaths = ["/login", "/register"]
-    const isPublicPath = publicPaths.some((p) => pathname.startsWith(p))
-    if (isPublicPath) {
-      const url = request.nextUrl.clone()
-      url.pathname = "/dashboard"
-      return NextResponse.redirect(url)
-    }
+  // Local-only bypass for manual UI work. Never active in production builds.
+  if (process.env.NODE_ENV !== "production" && process.env.NEXT_PUBLIC_DEV_MODE === "true") {
     return NextResponse.next({ request })
   }
 

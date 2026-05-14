@@ -4,13 +4,12 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
-import { Card, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Badge } from '@/components/ui/Badge'
+import { Card, CardTitle } from '@/components/ui/Card'
 import { PageLoader } from '@/components/ui/LoadingSpinner'
 import { Brain, MapPin, Calendar, TrendingUp, TrendingDown } from 'lucide-react'
 import type { Match } from '@/lib/types'
 import { getMatch } from '@/lib/api'
-import { formatDate, formatSetsResult, LEVEL_LABELS } from '@/lib/utils/format'
+import { formatDate, formatSetsResult } from '@/lib/utils/format'
 
 export default function MatchDetailPage() {
   const { id } = useParams()
@@ -37,12 +36,8 @@ export default function MatchDetailPage() {
           <span className={`text-sm font-semibold ${isWin ? 'text-lime' : 'text-mauve'}`}>
             {isWin ? 'Victoire' : 'Défaite'}
           </span>
-          {match.source === 'ranking-import' && <Badge variant="info" size="sm">Ranking</Badge>}
         </div>
         <h2 className="font-heading font-bold text-2xl mb-0.5">vs {match.opponent_name}</h2>
-        {match.opponent_level && (
-          <p className="text-sm opacity-70">{LEVEL_LABELS[match.opponent_level]}</p>
-        )}
         <div className="flex items-center gap-4 mt-3 text-sm opacity-70">
           <span className="flex items-center gap-1"><Calendar size={13} />{formatDate(match.date)}</span>
           {match.location && <span className="flex items-center gap-1"><MapPin size={13} />{match.location}</span>}

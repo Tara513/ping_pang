@@ -2,12 +2,24 @@
 // Ping Pang Training — TypeScript Types
 // ============================================================
 
-export type Level = 'beginner' | 'intermediate' | 'advanced' | 'expert' | 'pro'
-export type PlayingStyle = 'attacker' | 'all-round' | 'defender' | 'blocker' | 'offensive-defender'
+export type Level = 'beginner' | 'intermediate' | 'advanced' | 'competitive' | 'elite' | 'expert' | 'pro'
+export type PlayingStyle = 'attacker' | 'allround' | 'all-round' | 'defender' | 'penhold' | 'other' | 'blocker' | 'offensive-defender'
 export type DominantHand = 'left' | 'right'
-export type SessionType = 'solo' | 'multi-balls' | 'partner' | 'match-training' | 'physical' | 'mental'
+export type SessionType =
+  | 'technique'
+  | 'physique'
+  | 'match'
+  | 'service'
+  | 'competition'
+  | 'chill'
+  | 'solo'
+  | 'multi-balls'
+  | 'partner'
+  | 'match-training'
+  | 'physical'
+  | 'mental'
 export type ExerciseCategory = 'service' | 'return' | 'topspin' | 'block' | 'footwork' | 'regularity' | 'mental' | 'physical'
-export type MatchType = 'friendly' | 'tournament' | 'ranking' | 'training'
+export type MatchType = 'friendly' | 'league' | 'tournament' | 'ranking' | 'training'
 export type MatchResult = 'win' | 'loss'
 export type Federation = 'FFTT' | 'WTT' | 'TTR' | 'PGR' | 'ITTF'
 export type BadgeCategory = 'regularity' | 'volume' | 'matches' | 'progression'

@@ -29,6 +29,8 @@ export interface Profile {
   level: PlayerLevel | null
   is_coach: boolean
   created_at: string
+  updated_at: string
+  onboarding_completed: boolean
 }
 
 export interface Equipment {
@@ -269,7 +271,11 @@ export interface Database {
     Tables: {
       profiles: {
         Row: Profile
-        Insert: Omit<Profile, "created_at"> & { created_at?: string }
+        Insert: Omit<Profile, "created_at" | "updated_at" | "onboarding_completed"> & {
+          created_at?: string
+          updated_at?: string
+          onboarding_completed?: boolean
+        }
         Update: Partial<Omit<Profile, "id">>
       }
       equipment: {

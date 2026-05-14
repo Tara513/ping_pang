@@ -4,13 +4,12 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { PageLoader } from '@/components/ui/LoadingSpinner'
 import { Plus, Trophy, TrendingUp, TrendingDown } from 'lucide-react'
 import type { Match } from '@/lib/types'
 import { getMatches } from '@/lib/api'
-import { formatDateShort, formatSetsResult, LEVEL_LABELS } from '@/lib/utils/format'
+import { formatDateShort, formatSetsResult } from '@/lib/utils/format'
 
 export default function MatchesPage() {
   const [matches, setMatches] = useState<Match[]>([])
@@ -88,12 +87,6 @@ function MatchCard({ match }: { match: Match }) {
           <p className="text-sm font-medium text-onyx truncate">vs {match.opponent_name}</p>
           <div className="flex items-center gap-1.5 mt-0.5">
             <span className="text-xs text-onyx-400">{formatDateShort(match.date)}</span>
-            {match.opponent_level && (
-              <Badge variant="outline" size="sm">{LEVEL_LABELS[match.opponent_level]}</Badge>
-            )}
-            {match.source === 'ranking-import' && (
-              <Badge variant="info" size="sm">Ranking</Badge>
-            )}
           </div>
         </div>
         <div className="text-right shrink-0">

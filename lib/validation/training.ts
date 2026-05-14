@@ -93,6 +93,7 @@ export const updateTrainingProfileSchema = z.object({
   username: z
     .string()
     .trim()
+    .toLowerCase()
     .regex(/^[a-z0-9_]{2,32}$/, "Nom d'utilisateur invalide"),
   full_name: optionalText(120),
   bio: optionalText(500),
@@ -112,4 +113,5 @@ export const completeTrainingOnboardingSchema = updateTrainingProfileSchema.exte
   thickness_fh: z.number().min(0.5).max(5).nullable().optional(),
   thickness_bh: z.number().min(0.5).max(5).nullable().optional(),
   target_hours: z.number().min(1).max(40).nullable().optional(),
+  target_sessions: z.number().int().min(1).max(14).nullable().optional(),
 })

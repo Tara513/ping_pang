@@ -3,19 +3,19 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
-import { Card, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Card, CardTitle } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
-import { Select } from '@/components/ui/Select'
 import { Textarea } from '@/components/ui/Textarea'
 import { Slider } from '@/components/ui/Slider'
-import { Check, X, Plus, Book } from 'lucide-react'
+import { Check, Plus, Book } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
-import type { SessionType, RubberThickness } from '@/lib/types'
 import { mockExercises } from '@/lib/mock-data'
-import { createSession } from '@/lib/api'
+import { createTrainingSession } from '@/lib/actions/training'
 import { SESSION_TYPE_LABELS, EXERCISE_CATEGORY_LABELS, FEELING_EMOJIS } from '@/lib/utils/format'
 
-const SESSION_TYPES: SessionType[] = ['solo', 'multi-balls', 'partner', 'match-training', 'physical', 'mental']
+type TrainingSessionType = 'technique' | 'physique' | 'match' | 'service' | 'competition' | 'chill'
+
+const SESSION_TYPES: TrainingSessionType[] = ['technique', 'service', 'match', 'physique', 'competition', 'chill']
 
 export default function NewSessionPage() {
   const router = useRouter()
@@ -23,7 +23,7 @@ export default function NewSessionPage() {
   const [step, setStep] = useState<'main' | 'exercises' | 'feeling'>('main')
 
   const [form, setForm] = useState({
-    type: 'partner' as SessionType,
+    type: 'technique' as TrainingSessionType,
     date: new Date().toISOString().split('T')[0],
     duration: 90,
     location: 'Racing Club de France',
@@ -48,21 +48,24 @@ export default function NewSessionPage() {
     setLoading(true)
     const exercises = form.selectedExercises.map(id => {
       const ex = mockExercises.find(e => e.id === id)!
-      return { exercise_id: id, exercise: ex, duration: ex.duration_estimate }
+      return { name: ex.name, notes: ex.objective }
     })
-    await createSession({
-      user_id: 'user-1',
+    const toRating = (value: number) => Math.max(1, Math.min(5, Math.round(value / 25) + 1))
+    const result = await createTrainingSession({
       date: form.date,
-      duration: form.duration,
-      type: form.type,
-      location: form.location || undefined,
+      duration_min: form.duration,
+      session_type: form.type,
+      location: form.location || null,
       exercises,
-      notes: form.notes || undefined,
+      notes: form.notes || null,
       feeling: form.feeling,
-      fatigue: form.fatigue,
-      motivation: form.motivation,
-      confidence: form.confidence,
+      fatigue: toRating(form.fatigue),
+      motivation: toRating(form.motivation),
+      confidence: toRating(form.confidence),
+      has_description: true,
     })
+    setLoading(false)
+    if (!result.ok) return
     router.push('/sessions')
   }
 

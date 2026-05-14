@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
+import { ensureSharedProfile } from "@/lib/data/shared-profile"
 import {
   completeTrainingOnboardingSchema,
   createPersonalMatchSchema,
@@ -129,6 +130,8 @@ export async function updateTrainingProfile(input: unknown): Promise<ActionResul
     return { ok: false, error: firstValidationError(parsed.error) }
   }
 
+  await ensureSharedProfile(supabase, user)
+
   const { error } = await supabase
     .from("profiles")
     .update(parsed.data)
@@ -137,7 +140,8 @@ export async function updateTrainingProfile(input: unknown): Promise<ActionResul
   if (error) return { ok: false, error: error.message }
 
   revalidatePath("/profile")
-  revalidatePath("/profile/settings")
+  revalidatePath("/profile/edit")
+  revalidatePath("/dashboard")
 
   return { ok: true, data: { id: user.id } }
 }
@@ -152,6 +156,8 @@ export async function completeTrainingOnboarding(input: unknown): Promise<Action
   }
 
   const onboarding = parsed.data
+  await ensureSharedProfile(supabase, user)
+
   const username =
     onboarding.username === "player"
       ? `player_${user.id.slice(0, 8)}`
@@ -171,6 +177,7 @@ export async function completeTrainingOnboarding(input: unknown): Promise<Action
       play_style: onboarding.play_style ?? null,
       dominant_hand: onboarding.dominant_hand ?? null,
       is_coach: false,
+      onboarding_completed: true,
     })
 
   if (profileError) return { ok: false, error: profileError.message }
@@ -210,12 +217,16 @@ export async function completeTrainingOnboarding(input: unknown): Promise<Action
       player_id: user.id,
       week_start: weekStart,
       target_hours: onboarding.target_hours,
+      target_sessions: onboarding.target_sessions ?? null,
     }
 
     const { error: goalError } = existingGoal
       ? await supabase
           .from("weekly_goals")
-          .update({ target_hours: onboarding.target_hours })
+          .update({
+            target_hours: onboarding.target_hours,
+            target_sessions: onboarding.target_sessions ?? null,
+          })
           .eq("id", existingGoal.id)
           .eq("player_id", user.id)
       : await supabase
@@ -227,7 +238,7 @@ export async function completeTrainingOnboarding(input: unknown): Promise<Action
 
   revalidatePath("/dashboard")
   revalidatePath("/profile")
-  revalidatePath("/program")
+  revalidatePath("/programs")
 
   return { ok: true, data: { id: user.id } }
 }

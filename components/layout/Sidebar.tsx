@@ -24,7 +24,7 @@ const navGroups = [
     items: [
       { href: '/stats', icon: BarChart2, label: 'Statistiques' },
       { href: '/calendar', icon: CalendarDays, label: 'Calendrier' },
-      { href: '/elo', icon: TrendingUp, label: 'Classement ELO' },
+      { href: '/elo', icon: TrendingUp, label: 'ELO joueur' },
     ],
   },
   {
@@ -103,17 +103,17 @@ export function Sidebar() {
         ))}
       </nav>
 
-      {/* User snippet */}
+      {/* Account snippet */}
       <div className="px-4 py-3 border-t border-onyx-100">
-        <div className="flex items-center gap-2">
+        <Link href="/profile" className="flex items-center gap-2">
           <div className="size-7 rounded-full bg-evergreen flex items-center justify-center text-[10px] font-bold text-lime">
-            LM
+            PP
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-semibold text-onyx truncate">Lucas Martin</p>
-            <p className="text-[10px] text-onyx-400 truncate">@lucas.pp</p>
+            <p className="text-xs font-semibold text-onyx truncate">Profil</p>
+            <p className="text-[10px] text-onyx-400 truncate">Compte Supabase</p>
           </div>
-        </div>
+        </Link>
       </div>
     </aside>
   )

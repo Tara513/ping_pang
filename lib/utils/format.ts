@@ -51,19 +51,30 @@ export const LEVEL_LABELS: Record<string, string> = {
   beginner: 'Débutant',
   intermediate: 'Intermédiaire',
   advanced: 'Avancé',
+  competitive: 'Compétiteur',
+  elite: 'Élite',
   expert: 'Expert',
   pro: 'Pro',
 }
 
 export const STYLE_LABELS: Record<string, string> = {
   attacker: 'Attaquant',
+  allround: 'Polyvalent',
   'all-round': 'Polyvalent',
   defender: 'Défenseur',
+  penhold: 'Prise porte-plume',
+  other: 'Autre',
   blocker: 'Bloqueur',
   'offensive-defender': 'Défenseur offensif',
 }
 
 export const SESSION_TYPE_LABELS: Record<string, string> = {
+  technique: 'Technique',
+  physique: 'Physique',
+  match: 'Match',
+  service: 'Service',
+  competition: 'Compétition',
+  chill: 'Libre',
   solo: 'Solo',
   'multi-balls': 'Multi-balles',
   partner: 'Partenaire',
@@ -93,8 +104,12 @@ export const FEELING_EMOJIS: Record<number, string> = {
 
 export const FEDERATION_LABELS: Record<string, string> = {
   FFTT: 'Fédération Française (FFTT)',
+  RFETM: 'Fédération espagnole (RFETM)',
+  DTTB: 'Fédération allemande (DTTB)',
+  ETTU: 'Europe (ETTU)',
   WTT: 'World Table Tennis',
   TTR: 'Table Tennis Rating',
   PGR: 'Pro Global Ranking',
   ITTF: 'ITTF World Ranking',
+  custom: 'ELO personnalisé',
 }

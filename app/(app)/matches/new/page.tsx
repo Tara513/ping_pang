@@ -8,14 +8,16 @@ import { Select } from '@/components/ui/Select'
 import { Card } from '@/components/ui/Card'
 import { Check, Plus, Minus } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
-import type { MatchType, Level, SetScore } from '@/lib/types'
-import { createMatch } from '@/lib/api'
+import type { Level, SetScore } from '@/lib/types'
+import { createPersonalMatch } from '@/lib/actions/training'
 import { LEVEL_LABELS } from '@/lib/utils/format'
 
-const MATCH_TYPES: { value: MatchType; label: string }[] = [
+type PersonalMatchType = 'friendly' | 'league' | 'tournament' | 'training'
+
+const MATCH_TYPES: { value: PersonalMatchType; label: string }[] = [
   { value: 'friendly', label: 'Amical' },
+  { value: 'league', label: 'Championnat' },
   { value: 'tournament', label: 'Tournoi' },
-  { value: 'ranking', label: 'Classement' },
   { value: 'training', label: 'Entraînement' },
 ]
 
@@ -29,7 +31,7 @@ export default function NewMatchPage() {
   const [form, setForm] = useState({
     opponent_name: '',
     opponent_level: '' as Level | '',
-    match_type: 'friendly' as MatchType,
+    match_type: 'friendly' as PersonalMatchType,
     date: new Date().toISOString().split('T')[0],
     location: '',
     sets: [emptySet()],
@@ -54,17 +56,15 @@ export default function NewMatchPage() {
   const submit = async () => {
     if (!form.opponent_name || !form.sets.length) return
     setLoading(true)
-    await createMatch({
-      user_id: 'user-1',
+    const result = await createPersonalMatch({
       opponent_name: form.opponent_name,
-      opponent_level: (form.opponent_level || undefined) as Level | undefined,
       match_type: form.match_type,
       date: form.date,
-      location: form.location || undefined,
+      location: form.location || null,
       sets: form.sets,
-      result: calcResult(),
-      source: 'manual',
     })
+    setLoading(false)
+    if (!result.ok) return
     router.push('/matches')
   }
 

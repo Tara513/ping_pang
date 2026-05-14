@@ -6,27 +6,32 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { cn } from '@/lib/utils/cn'
+import { completeTrainingOnboarding } from '@/lib/actions/training'
 import {
-  User, MapPin, Activity, Hand, Wrench, Target,
+  User, Activity, Hand, Wrench, Target,
   ChevronRight, ChevronLeft, Check, GraduationCap,
 } from 'lucide-react'
-import type { Level, PlayingStyle, DominantHand, RubberThickness } from '@/lib/types'
+
+type Level = 'beginner' | 'intermediate' | 'advanced' | 'competitive' | 'elite'
+type PlayingStyle = 'attacker' | 'allround' | 'defender' | 'penhold' | 'other'
+type DominantHand = 'left' | 'right'
+type RubberThickness = '1.5' | '1.8' | '2.0' | '2.1' | 'max'
 
 const STEPS = 8
 const LEVELS: { value: Level; label: string; desc: string }[] = [
   { value: 'beginner', label: 'Débutant', desc: 'Je commence le tennis de table' },
   { value: 'intermediate', label: 'Intermédiaire', desc: 'Je maîtrise les bases, je joue en club' },
   { value: 'advanced', label: 'Avancé', desc: 'Je suis compétiteur régulier' },
-  { value: 'expert', label: 'Expert', desc: 'Classé FFTT 1000+, compétition nationale' },
-  { value: 'pro', label: 'Pro', desc: 'Joueur professionnel ou semi-pro' },
+  { value: 'competitive', label: 'Compétiteur', desc: 'Classé FFTT 1000+, compétition nationale' },
+  { value: 'elite', label: 'Élite', desc: 'Joueur professionnel ou semi-pro' },
 ]
 
 const STYLES: { value: PlayingStyle; label: string; desc: string }[] = [
   { value: 'attacker', label: 'Attaquant', desc: 'Top spin dominant, jeu offensif' },
-  { value: 'all-round', label: 'Polyvalent', desc: 'Équilibre attaque-défense' },
+  { value: 'allround', label: 'Polyvalent', desc: 'Équilibre attaque-défense' },
   { value: 'defender', label: 'Défenseur', desc: 'Jeu à distance, anti-spin' },
-  { value: 'blocker', label: 'Bloqueur', desc: 'Contre-attaque par le bloc' },
-  { value: 'offensive-defender', label: 'Défenseur offensif', desc: 'Défense avec contre-attaques' },
+  { value: 'penhold', label: 'Prise porte-plume', desc: 'Style basé sur la prise penhold' },
+  { value: 'other', label: 'Autre', desc: 'Style hybride ou spécifique' },
 ]
 
 const THICKNESS_OPTIONS: { value: RubberThickness; label: string }[] = [
@@ -41,6 +46,7 @@ export default function OnboardingPage() {
   const router = useRouter()
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const [profile, setProfile] = useState({
     name: '', username: '', country: 'France', city: '', club: '',
@@ -59,7 +65,34 @@ export default function OnboardingPage() {
 
   const finish = async () => {
     setLoading(true)
-    await new Promise(r => setTimeout(r, 1000))
+    setError(null)
+
+    const thickness = (value: RubberThickness) => value === 'max' ? null : Number(value)
+    const result = await completeTrainingOnboarding({
+      full_name: profile.name,
+      username: profile.username || 'player',
+      country: profile.country || 'FR',
+      city: profile.city,
+      club: profile.club,
+      level: profile.level || null,
+      play_style: profile.playing_style || null,
+      dominant_hand: profile.dominant_hand || null,
+      skip_equipment: !profile.blade_brand && !profile.blade_model && !profile.fd_rubber_brand && !profile.bh_rubber_brand,
+      blade: [profile.blade_brand, profile.blade_model].filter(Boolean).join(' '),
+      rubber_fh: [profile.fd_rubber_brand, profile.fd_rubber_model].filter(Boolean).join(' '),
+      rubber_bh: [profile.bh_rubber_brand, profile.bh_rubber_model].filter(Boolean).join(' '),
+      thickness_fh: thickness(profile.fd_thickness),
+      thickness_bh: thickness(profile.bh_thickness),
+      target_hours: profile.hours_per_week,
+      target_sessions: profile.sessions_per_week,
+    })
+
+    setLoading(false)
+    if (!result.ok) {
+      setError(result.error)
+      return
+    }
+
     router.push('/dashboard')
   }
 
@@ -88,6 +121,12 @@ export default function OnboardingPage() {
 
       {/* Content */}
       <div className="flex-1 px-4 max-w-md mx-auto w-full">
+        {error && (
+          <div className="rounded-[8px] border border-mauve/30 bg-mauve-light px-3 py-2 text-sm text-mauve">
+            {error}
+          </div>
+        )}
+
         {step === 1 && (
           <StepShell icon={User} title="Ton profil" subtitle="Comment tu t'appelles ?">
             <Input label="Prénom et nom" value={profile.name} onChange={e => setProfile(p => ({ ...p, name: e.target.value }))} placeholder="Lucas Martin" />
