@@ -3,13 +3,14 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils/cn'
-import { LayoutDashboard, Calendar, BarChart2, Trophy, User } from 'lucide-react'
+import { LayoutDashboard, Calendar, BarChart2, Trophy, Brain, User } from 'lucide-react'
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Accueil' },
   { href: '/sessions', icon: Calendar, label: 'Séances' },
   { href: '/stats', icon: BarChart2, label: 'Stats' },
   { href: '/matches', icon: Trophy, label: 'Matchs' },
+  { href: '/coach', icon: Brain, label: 'Coach' },
   { href: '/profile', icon: User, label: 'Profil' },
 ]
 
@@ -26,12 +27,12 @@ export function BottomNav() {
               key={href}
               href={href}
               className={cn(
-                'flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors',
+                'flex-1 flex flex-col items-center justify-center gap-0 transition-colors min-w-0',
                 active ? 'text-evergreen' : 'text-onyx-400',
               )}
             >
-              <Icon size={22} strokeWidth={active ? 2.5 : 1.75} />
-              <span className={cn('text-[10px]', active ? 'font-bold' : 'font-medium')}>
+              <Icon size={20} strokeWidth={active ? 2.5 : 1.75} />
+              <span className={cn('text-[9px] leading-tight truncate max-w-full px-0.5', active ? 'font-bold' : 'font-medium')}>
                 {label}
               </span>
             </Link>

@@ -1,4 +1,4 @@
-import type { Session, Match, EloRating } from "@/types/database"
+import type { Session, Match } from "@/types/database"
 import { generateFakeBallData } from "@/lib/utils/generateFakeBallData"
 
 const today = new Date()
@@ -84,18 +84,4 @@ export const demoMatches: Partial<Match>[] = [
     match_type: "friendly",
     date: daysAgo(20),
   },
-]
-
-export const demoEloRatings: Partial<EloRating>[] = [
-  { federation: "FFTT", elo: 1423, rank_points: 1423 },
-  { federation: "custom", elo: 1567, rank_points: 0 },
-]
-
-export const demoEloHistory = [
-  { federation: "custom", elo_before: 1500, elo_after: 1512, delta: 12 },
-  { federation: "custom", elo_before: 1512, elo_after: 1498, delta: -14 },
-  { federation: "custom", elo_before: 1498, elo_after: 1522, delta: 24 },
-  { federation: "custom", elo_before: 1522, elo_after: 1545, delta: 23 },
-  { federation: "custom", elo_before: 1545, elo_after: 1533, delta: -12 },
-  { federation: "custom", elo_before: 1533, elo_after: 1567, delta: 34 },
 ]

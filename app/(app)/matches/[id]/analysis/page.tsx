@@ -16,6 +16,7 @@ export default function MatchAnalysisPage() {
   const [analysis, setAnalysis] = useState<MatchAnalysis | null>(null)
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     getAnalysis(id as string).then(a => { setAnalysis(a); setLoading(false) })
@@ -23,9 +24,15 @@ export default function MatchAnalysisPage() {
 
   const generate = async () => {
     setGenerating(true)
-    const a = await generateAnalysis(id as string)
-    setAnalysis(a)
-    setGenerating(false)
+    setError(null)
+    try {
+      const a = await generateAnalysis(id as string)
+      setAnalysis(a)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Analyse impossible")
+    } finally {
+      setGenerating(false)
+    }
   }
 
   if (loading) return <PageLoader />
@@ -55,6 +62,7 @@ export default function MatchAnalysisPage() {
         <p className="text-sm text-onyx-400 text-center max-w-[240px]">
           Lance l&apos;analyse IA pour obtenir un retour détaillé sur ce match
         </p>
+        {error && <p className="text-xs text-mauve text-center max-w-[260px]">{error}</p>}
         <Button variant="primary" icon={Brain} onClick={generate}>Analyser avec l&apos;IA</Button>
       </div>
     )

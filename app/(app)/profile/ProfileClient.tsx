@@ -8,14 +8,38 @@ import { Badge } from "@/components/ui/Badge"
 import { Avatar } from "@/components/ui/Avatar"
 import { Edit, MapPin, Zap, Wrench } from "lucide-react"
 import type { TrainingProfileData } from "@/lib/data/shared-profile"
-import { LEVEL_LABELS, STYLE_LABELS, formatDate, formatElo, FEDERATION_LABELS } from "@/lib/utils/format"
+import type { PgrProfile } from "@/types/database"
+import { LEVEL_LABELS, STYLE_LABELS, formatDate, formatElo } from "@/lib/utils/format"
 
-const TABS = ["Activité", "Stats", "ELO", "Matériel", "Badges"] as const
+const TABS = ["Activité", "Stats", "PGR", "Matériel", "Badges"] as const
 type Tab = (typeof TABS)[number]
+
+function pgrDisplayName(profile: PgrProfile) {
+  return profile.display_name || [profile.first_name, profile.last_name].filter(Boolean).join(" ") || "Profil PGR lié"
+}
+
+function pgrText(value: string | null | undefined, fallback = "Non renseigné") {
+  return value && value.trim() !== "" ? value : fallback
+}
+
+function pgrClub(profile: PgrProfile) {
+  return [profile.club_name, profile.club_city].filter(Boolean).join(" · ") || "Non renseigné"
+}
+
+function pgrExternalRanking(profile: PgrProfile) {
+  const parts = [
+    profile.last_external_source,
+    profile.last_external_rank !== null ? `#${profile.last_external_rank}` : null,
+    profile.last_external_value !== null ? String(profile.last_external_value) : null,
+    profile.last_external_date ? formatDate(profile.last_external_date) : null,
+  ]
+
+  return parts.filter(Boolean).join(" · ") || "Non disponible"
+}
 
 export function ProfileClient({ data }: { data: TrainingProfileData }) {
   const [tab, setTab] = useState<Tab>("Activité")
-  const { profile, sessions, matches, equipment, badges, eloRatings } = data
+  const { profile, sessions, matches, equipment, badges, pgrProfile } = data
   const displayName = profile.full_name || profile.username
   const wins = matches.filter((match) => match.result === "win").length
   const totalHours = sessions.reduce((sum, session) => sum + Number(session.duration_min || 0), 0) / 60
@@ -116,25 +140,56 @@ export function ProfileClient({ data }: { data: TrainingProfileData }) {
         </div>
       )}
 
-      {tab === "ELO" && (
+      {tab === "PGR" && (
         <div className="space-y-3">
-          {eloRatings.length > 0 ? (
-            eloRatings.map((rating) => (
-              <Card key={rating.id} padding="sm" className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-onyx-400 mb-0.5">
-                    {FEDERATION_LABELS[rating.federation] || rating.federation}
+          {pgrProfile ? (
+            <>
+              <Card padding="sm" className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-xs text-onyx-400 mb-0.5">Profil PGR lié</p>
+                  <p className="break-words text-sm font-semibold text-onyx">{pgrDisplayName(pgrProfile)}</p>
+                  <p className="font-heading font-bold text-xl text-onyx">
+                    {pgrProfile.rating !== null ? formatElo(pgrProfile.rating) : "Rating pas encore disponible"}
                   </p>
-                  <p className="font-heading font-bold text-xl text-onyx">{formatElo(rating.elo)}</p>
+                  {pgrProfile.rating === null && (
+                    <p className="text-xs text-onyx-500 mt-1">Les informations joueur sont disponibles, mais aucun snapshot de rating n’est encore publié.</p>
+                  )}
                 </div>
                 <Badge variant="outline" size="sm">
-                  Lecture Supabase
+                  {pgrProfile.last_external_rank !== null ? `#${pgrProfile.last_external_rank}` : "PGR"}
                 </Badge>
               </Card>
-            ))
+
+              <Card>
+                <CardTitle className="mb-3">Détails PGR</CardTitle>
+                <div className="space-y-2 text-sm">
+                  <Row label="Nom PGR" value={pgrDisplayName(pgrProfile)} />
+                  <Row label="Pays" value={pgrText(pgrProfile.country_code)} />
+                  <Row label="Genre" value={pgrText(pgrProfile.gender)} />
+                  <Row label="Catégorie" value={pgrText(pgrProfile.category)} />
+                  <Row label="Club" value={pgrClub(pgrProfile)} />
+                  <Row label="Rating" value={pgrProfile.rating !== null ? formatElo(pgrProfile.rating) : "Rating pas encore disponible"} />
+                  <Row
+                    label="Matchs PGR"
+                    value={pgrProfile.match_count !== null ? String(pgrProfile.match_count) : "Non disponible"}
+                  />
+                  <Row label="Confiance" value={pgrText(pgrProfile.confidence_status, "Non disponible")} />
+                  <Row label="Provisoire" value={pgrProfile.is_provisional === null ? "Non disponible" : pgrProfile.is_provisional ? "Oui" : "Non"} />
+                  <Row label="Initialisation" value={pgrText(pgrProfile.initialization_source, "Non disponible")} />
+                  <Row
+                    label="Snapshot"
+                    value={pgrProfile.snapshot_date ? formatDate(pgrProfile.snapshot_date) : "Pas encore disponible"}
+                  />
+                  <Row label="Ranking externe" value={pgrExternalRanking(pgrProfile)} />
+                </div>
+              </Card>
+            </>
           ) : (
             <Card padding="sm">
-              <p className="text-sm text-onyx-500">Aucun ELO lié à ce profil pour l’instant.</p>
+              <p className="text-sm font-medium text-onyx">Aucun profil PGR lié</p>
+              <p className="mt-1 text-sm text-onyx-500">
+                Lie ton profil PGR pour récupérer ton classement officiel.
+              </p>
             </Card>
           )}
         </div>

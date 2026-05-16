@@ -5,12 +5,18 @@
 
 import type {
   UserProfile, TrainingSession, Exercise, Match, MatchAnalysis,
-  EloRating, Equipment, Badge, TrainingProgram, ProRoutine,
+  Equipment, Badge, TrainingProgram, ProRoutine,
   FollowActivity, Location, AIReport, ChatMessage,
   DashboardStats, AggregatedStats, StatsPeriod, ActivityFeedItem,
+  MatchSource,
 } from '@/lib/types'
 
 import { createClient } from '@/lib/supabase/client'
+import {
+  extractSetsFromBallData,
+  extractSetsFromScoreArrays,
+  isPlainRecord,
+} from '@/lib/utils/match-sets'
 import {
   mockAnalyses, mockPrograms,
   mockProRoutines, mockFollowActivities, mockLocations,
@@ -41,12 +47,21 @@ type MatchRow = {
   id: string
   player_id: string
   opponent_name: string
-  match_type: Match['match_type']
+  opponent_id?: string | null
+  match_type: Match['match_type'] | null
   date: string
   location: string | null
-  score_player: number[] | null
-  score_opponent: number[] | null
-  result: Match['result']
+  score_player?: number[] | null
+  score_opponent?: number[] | null
+  sets_won?: number | null
+  sets_lost?: number | null
+  result: Match['result'] | null
+  notes?: string | null
+  ball_data?: unknown
+  status?: string | null
+  source?: MatchSource | null
+  ranking_match_id?: string | null
+  visibility?: string | null
   created_at: string
 }
 
@@ -60,22 +75,6 @@ type EquipmentRow = {
   thickness_bh: number | null
   started_at: string
   is_current: boolean | null
-}
-
-type EloRatingRow = {
-  id: string
-  player_id: string
-  federation: EloRating['federation']
-  elo: number | null
-  updated_at: string
-}
-
-type EloHistoryRow = {
-  federation: EloRating['federation']
-  recorded_at: string
-  elo_after: number | null
-  delta: number | null
-  match_id: string | null
 }
 
 type BadgeRow = {
@@ -126,23 +125,38 @@ function mapSession(row: SessionRow): TrainingSession {
   }
 }
 
+function normalizeMatchSource(source: MatchRow['source']): MatchSource {
+  if (source === 'manual' || source === 'import' || source === 'api' || source === 'ranking') return source
+  return 'manual'
+}
+
 function mapMatch(row: MatchRow): Match {
-  const scorePlayer = Array.isArray(row.score_player) ? row.score_player : []
-  const scoreOpponent = Array.isArray(row.score_opponent) ? row.score_opponent : []
+  const setsFromBallData = extractSetsFromBallData(row.ball_data)
+  const setsFromArrays =
+    setsFromBallData.length > 0 ? [] : extractSetsFromScoreArrays(row.score_player, row.score_opponent)
+  const sets = setsFromBallData.length > 0 ? setsFromBallData : setsFromArrays
+  const setsWon = row.sets_won ?? sets.filter((set) => set.player > set.opponent).length
+  const setsLost = row.sets_lost ?? sets.filter((set) => set.opponent > set.player).length
+  const source = normalizeMatchSource(row.source)
 
   return {
     id: row.id,
     user_id: row.player_id,
     opponent_name: row.opponent_name,
-    match_type: row.match_type,
+    opponent_id: row.opponent_id ?? null,
+    match_type: row.match_type || (source === 'ranking' ? 'ranking' : 'friendly'),
     date: row.date,
     location: row.location || undefined,
-    sets: scorePlayer.map((player: number, index: number) => ({
-      player,
-      opponent: Number(scoreOpponent[index] || 0),
-    })),
-    result: row.result,
-    source: 'manual',
+    sets,
+    sets_won: setsWon,
+    sets_lost: setsLost,
+    result: row.result || (setsWon > setsLost ? 'win' : 'loss'),
+    source,
+    ranking_match_id: row.ranking_match_id ?? null,
+    visibility: row.visibility ?? null,
+    status: row.status ?? null,
+    ball_data: isPlainRecord(row.ball_data) ? row.ball_data : null,
+    has_set_details: setsFromBallData.length > 0 || setsFromArrays.length > 0,
     created_at: row.created_at,
   }
 }
@@ -352,59 +366,92 @@ export async function createMatch(data: Omit<Match, 'id' | 'created_at'>): Promi
 // Analysis
 // ────────────────────────────────────────────────────────────
 export async function getAnalysis(matchId: string): Promise<MatchAnalysis | null> {
-  await delay()
+  const { supabase, user } = await requireClientUser()
+  const { data, error } = await supabase
+    .from('match_analyses')
+    .select('id, match_id, player_id, rating, summary, strengths, weaknesses, critical_moments, recommendations, model_used, created_at')
+    .eq('match_id', matchId)
+    .eq('player_id', user.id)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (!error && data) {
+    return {
+      id: data.id,
+      match_id: data.match_id,
+      user_id: data.player_id,
+      rating: typeof data.rating === 'number' ? data.rating : null,
+      summary: typeof data.summary === 'string' ? data.summary : 'Analyse enregistrée.',
+      strengths: stringArray(data.strengths),
+      weaknesses: stringArray(data.weaknesses),
+      critical_moments: stringArray(data.critical_moments),
+      recommendations: stringArray(data.recommendations),
+      model_used: typeof data.model_used === 'string' ? data.model_used : null,
+      suggested_exercise_ids: [],
+      generated_at: data.created_at,
+      status: 'done',
+    }
+  }
+
+  if (error) console.warn(`[api] match_analyses unavailable: ${error.message}`)
   return mockAnalyses.find(a => a.match_id === matchId) ?? null
+}
+
+function stringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : []
 }
 
 export async function generateAnalysis(matchId: string): Promise<MatchAnalysis> {
   const { user } = await requireClientUser()
-  await delay(3000)
+  const response = await fetch('/api/analyze-match', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ match_id: matchId }),
+  })
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null) as { error?: string } | null
+    throw new Error(payload?.error || 'Analyse impossible')
+  }
+
+  const payload = await response.json() as {
+    id?: unknown
+    player_id?: unknown
+    user_id?: unknown
+    rating?: unknown
+    summary?: unknown
+    strengths?: unknown
+    weaknesses?: unknown
+    critical_moments?: unknown
+    recommendations?: unknown
+    model_used?: unknown
+    created_at?: unknown
+    generated_at?: unknown
+  }
+
   return {
-    id: `analysis-${Date.now()}`,
+    id: typeof payload.id === 'string' ? payload.id : `analysis-${Date.now()}`,
     match_id: matchId,
-    user_id: user.id,
-    summary: 'Analyse générée par l\'IA. Match solide avec des points forts identifiés et des axes d\'amélioration clairs.',
-    strengths: ['Bonne agressivité en premier temps', 'Service efficace'],
-    weaknesses: ['Constance en fin de set', 'Gestion du stress'],
-    recommendations: ['Travailler les situations de balle décisive', 'Renforcer la régularité sous pression'],
-    suggested_exercise_ids: ['ex-13', 'ex-14', 'ex-15'],
-    generated_at: new Date().toISOString(),
+    user_id: typeof payload.user_id === 'string' ? payload.user_id : typeof payload.player_id === 'string' ? payload.player_id : user.id,
+    rating: typeof payload.rating === 'number' ? payload.rating : null,
+    summary: typeof payload.summary === 'string' ? payload.summary : 'Analyse générée.',
+    strengths: stringArray(payload.strengths),
+    weaknesses: stringArray(payload.weaknesses),
+    critical_moments: stringArray(payload.critical_moments),
+    recommendations: stringArray(payload.recommendations),
+    model_used: typeof payload.model_used === 'string' ? payload.model_used : null,
+    suggested_exercise_ids: [],
+    generated_at:
+      typeof payload.generated_at === 'string'
+        ? payload.generated_at
+        : typeof payload.created_at === 'string'
+        ? payload.created_at
+        : new Date().toISOString(),
     status: 'done',
   }
 }
 
-// ────────────────────────────────────────────────────────────
-// ELO
-// ────────────────────────────────────────────────────────────
-export async function getEloRatings(): Promise<EloRating[]> {
-  const { supabase, user } = await requireClientUser()
-  const [{ data: ratings, error: ratingsError }, { data: history, error: historyError }] = await Promise.all([
-    supabase.from('elo_ratings').select('*').eq('player_id', user.id).order('federation', { ascending: true }),
-    supabase.from('elo_history').select('*').eq('player_id', user.id).order('recorded_at', { ascending: true }),
-  ])
-
-  if (ratingsError) throw new Error(ratingsError.message)
-  if (historyError) throw new Error(historyError.message)
-
-  return ((ratings || []) as EloRatingRow[]).map((rating) => ({
-    id: rating.id,
-    user_id: rating.player_id,
-    federation: rating.federation,
-    rating: Number(rating.elo || 0),
-    confidence: 'high',
-    history: (history || [])
-      .filter((point: EloHistoryRow) => point.federation === rating.federation)
-      .map((point: EloHistoryRow) => ({
-        date: point.recorded_at,
-        rating: Number(point.elo_after || rating.elo || 0),
-        delta: point.delta ?? undefined,
-        match_id: point.match_id ?? undefined,
-      })),
-    last_updated: rating.updated_at,
-  }))
-}
-
-// ────────────────────────────────────────────────────────────
 // Equipment
 // ────────────────────────────────────────────────────────────
 export async function getEquipments(): Promise<Equipment[]> {
@@ -488,7 +535,7 @@ export async function generateWeeklyReport(): Promise<AIReport> {
     period_start: '2025-05-06',
     period_end: '2025-05-12',
     summary: 'Bilan généré par l\'IA pour cette semaine.',
-    positives: ['Régularité maintenue', 'Bonne progression ELO'],
+    positives: ['Régularité maintenue', 'Bonne progression ranking'],
     improvements: ['Volume de matchs en dessous de l\'objectif'],
     generated_at: new Date().toISOString(),
   }

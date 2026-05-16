@@ -24,12 +24,13 @@ const navGroups = [
     items: [
       { href: '/stats', icon: BarChart2, label: 'Statistiques' },
       { href: '/calendar', icon: CalendarDays, label: 'Calendrier' },
-      { href: '/elo', icon: TrendingUp, label: 'ELO joueur' },
+      { href: '/elo', icon: TrendingUp, label: 'Ranking PGR' },
     ],
   },
   {
     label: 'IA & Programmes',
     items: [
+      { href: '/coach', icon: Brain, label: 'Coach IA' },
       { href: '/ai-reports', icon: Brain, label: 'Bilans IA' },
       { href: '/programs', icon: ListTodo, label: 'Programmes' },
       { href: '/chat', icon: MessageSquare, label: 'Chatbot IA' },

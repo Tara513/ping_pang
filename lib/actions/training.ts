@@ -105,6 +105,7 @@ export async function createPersonalMatch(input: unknown): Promise<ActionResult<
       score_opponent: match.sets.map((set) => set.opponent),
       sets_won: setsWon,
       sets_lost: setsLost,
+      source: "manual",
       notes: match.notes,
     })
     .select("id")

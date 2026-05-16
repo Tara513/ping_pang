@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation"
-import { Check } from "lucide-react"
 import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
 import { Select } from "@/components/ui/Select"
@@ -101,7 +100,7 @@ export default async function ProfileEditPage({ searchParams }: ProfileEditPageP
         </div>
       </Card>
 
-      <Button type="submit" variant="primary" icon={Check} fullWidth>
+      <Button type="submit" variant="primary" fullWidth>
         Sauvegarder
       </Button>
     </form>

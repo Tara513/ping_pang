@@ -1,4 +1,4 @@
-import type { Profile, Session, Match, EloRating } from "./database"
+import type { Profile, Session, Match, PgrProfile } from "./database"
 
 export interface SessionWithProfile extends Session {
   profiles?: Profile
@@ -17,7 +17,7 @@ export interface ProfileWithStats extends Profile {
     win_rate: number
     current_streak: number
   }
-  elo_ratings?: EloRating[]
+  pgr_profile?: PgrProfile | null
   is_following?: boolean
   follower_count?: number
   following_count?: number

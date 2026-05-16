@@ -10,10 +10,11 @@ export type PlayStyle = "attacker" | "defender" | "allround" | "penhold" | "othe
 export type DominantHand = "right" | "left"
 export type PlayerLevel = "beginner" | "intermediate" | "advanced" | "competitive" | "elite"
 export type SessionType = "technique" | "physique" | "match" | "service" | "competition" | "chill"
-export type MatchType = "friendly" | "league" | "tournament" | "training"
+export type MatchType = "friendly" | "league" | "tournament" | "training" | "ranking"
 export type MatchResult = "win" | "loss"
 export type Federation = "FFTT" | "RFETM" | "DTTB" | "ETTU" | "ITTF" | "custom"
 export type RecapType = "week" | "season"
+export type MatchSource = "manual" | "import" | "api" | "ranking"
 
 export interface Profile {
   id: string
@@ -79,68 +80,108 @@ export interface Match {
   id: string
   player_id: string
   opponent_name: string
-  opponent_id: string | null
+  opponent_id?: string | null
   result: MatchResult | null
-  score_player: number[]
-  score_opponent: number[]
+  score_player?: number[] | null
+  score_opponent?: number[] | null
   sets_won: number | null
   sets_lost: number | null
-  match_type: MatchType
+  match_type: MatchType | null
   date: string
   location: string | null
   location_lat: number | null
   location_lng: number | null
   notes: string | null
   ball_data: BallData | null
+  status?: string | null
+  source?: MatchSource | null
+  ranking_match_id?: string | null
+  visibility?: string | null
   created_at: string
 }
 
 export interface BallDataSet {
-  set_number: number
-  avg_speed: number
-  max_speed: number
-  avg_spin: number
-  rallies: number
+  set_number?: number
+  avg_speed?: number
+  max_speed?: number
+  avg_spin?: number
+  rallies?: number
+  [key: string]: Json | undefined
 }
 
 export interface BallData {
-  match_id: string
-  recorded_at: string
-  summary: {
-    avg_speed_kmh: number
-    max_speed_kmh: number
-    avg_spin_rpm: number
-    max_spin_rpm: number
-    total_rallies: number
-    avg_rally_length: number
-    longest_rally: number
-    serve_accuracy_pct: number
-    topspin_count: number
-    backspin_count: number
-    sidespin_count: number
-    flat_hit_count: number
+  match_id?: string
+  recorded_at?: string
+  summary?: {
+    [key: string]: Json | undefined
   }
-  by_set: BallDataSet[]
+  by_set?: BallDataSet[]
+  sets_detail?: Json[]
+  [key: string]: Json | undefined
 }
 
-export interface EloRating {
-  id: string
-  player_id: string
-  federation: Federation
-  elo: number
-  rank_points: number
-  updated_at: string
+export interface PgrProfile {
+  player_id: string | null
+  display_name: string | null
+  first_name: string | null
+  last_name: string | null
+  country_code: string | null
+  gender: string | null
+  category: string | null
+  club_name: string | null
+  club_city: string | null
+  rating: number | null
+  rating_deviation: number | null
+  volatility: number | null
+  match_count: number | null
+  confidence_status: string | null
+  is_provisional: boolean | null
+  initialization_source: string | null
+  snapshot_date: string | null
+  last_external_source: string | null
+  last_external_rank: number | null
+  last_external_value: number | null
+  last_external_date: string | null
+  [key: string]: Json | undefined
 }
 
-export interface EloHistory {
-  id: string
-  player_id: string
-  federation: Federation
-  elo_before: number
-  elo_after: number
-  delta: number
-  match_id: string | null
-  recorded_at: string
+export interface PgrRatingHistoryPoint {
+  date?: string | null
+  recorded_at?: string | null
+  rating?: number | null
+  rating_before?: number | null
+  rating_after?: number | null
+  delta?: number | null
+  match_id?: string | null
+  [key: string]: Json | undefined
+}
+
+export interface PgrMatch {
+  match_id?: string | null
+  pgr_match_id?: string | null
+  training_match_id?: string | null
+  opponent_name?: string | null
+  result?: MatchResult | null
+  validation_status?: string | null
+  date?: string | null
+  played_at?: string | null
+  rating_delta?: number | null
+  [key: string]: Json | undefined
+}
+
+export interface PgrLeaderboardEntry {
+  player_id?: string | null
+  display_name?: string | null
+  first_name?: string | null
+  last_name?: string | null
+  country_code?: string | null
+  gender?: string | null
+  category?: string | null
+  rating?: number | null
+  rank?: number | null
+  match_count?: number | null
+  confidence_status?: string | null
+  [key: string]: Json | undefined
 }
 
 export interface WeeklyGoal {
@@ -264,6 +305,20 @@ export interface AnalysisChat {
   updated_at: string
 }
 
+export interface MatchAnalysis {
+  id: string
+  match_id: string
+  player_id: string
+  rating: number | null
+  summary: string | null
+  strengths: Json | null
+  weaknesses: Json | null
+  critical_moments: Json | null
+  recommendations: Json | null
+  model_used: string | null
+  created_at: string
+}
+
 // ── Supabase Database type ─────────────────────────────────────────────────
 
 export interface Database {
@@ -292,16 +347,6 @@ export interface Database {
         Row: Match
         Insert: Omit<Match, "id" | "created_at"> & { id?: string; created_at?: string }
         Update: Partial<Omit<Match, "id">>
-      }
-      elo_ratings: {
-        Row: EloRating
-        Insert: Omit<EloRating, "id" | "updated_at"> & { id?: string; updated_at?: string }
-        Update: Partial<Omit<EloRating, "id">>
-      }
-      elo_history: {
-        Row: EloHistory
-        Insert: Omit<EloHistory, "id" | "recorded_at"> & { id?: string; recorded_at?: string }
-        Update: Partial<Omit<EloHistory, "id">>
       }
       weekly_goals: {
         Row: WeeklyGoal
@@ -343,12 +388,41 @@ export interface Database {
         Insert: Omit<AnalysisChat, "id" | "created_at" | "updated_at"> & { id?: string; created_at?: string; updated_at?: string }
         Update: Partial<Omit<AnalysisChat, "id">>
       }
+      match_analyses: {
+        Row: MatchAnalysis
+        Insert: Omit<MatchAnalysis, "id" | "created_at"> & { id?: string; created_at?: string }
+        Update: Partial<Omit<MatchAnalysis, "id">>
+      }
     }
     Views: Record<string, never>
     Functions: {
       check_and_award_badges: {
         Args: { p_player_id: string }
         Returns: void
+      }
+      get_pgr_leaderboard: {
+        Args: { p_limit?: number; p_country_code?: string | null; p_gender?: string | null }
+        Returns: PgrLeaderboardEntry[]
+      }
+      get_my_pgr_profile: {
+        Args: Record<string, never>
+        Returns: PgrProfile[]
+      }
+      get_my_pgr_matches: {
+        Args: { p_limit?: number; p_validation_status?: string | null }
+        Returns: PgrMatch[]
+      }
+      get_my_pgr_rating_history: {
+        Args: { p_limit?: number }
+        Returns: PgrRatingHistoryPoint[]
+      }
+      claim_pgr_player: {
+        Args: { p_pgr_player_id: string }
+        Returns: PgrProfile | null
+      }
+      unclaim_pgr_player: {
+        Args: Record<string, never>
+        Returns: PgrProfile | null
       }
     }
     Enums: Record<string, never>

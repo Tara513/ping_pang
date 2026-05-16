@@ -1,26 +1,22 @@
 import { redirect } from "next/navigation"
 import type { User } from "@supabase/supabase-js"
 import { createClient } from "@/lib/supabase/server"
-import type { Database, Profile } from "@/types/database"
+import {
+  getMyPgrMatchesSafe,
+  getMyPgrProfileSafe,
+  getMyPgrRatingHistorySafe,
+  getPgrLeaderboardSafe,
+} from "@/lib/data/pgr"
+import type {
+  Database,
+  PgrLeaderboardEntry,
+  PgrMatch,
+  PgrProfile,
+  PgrRatingHistoryPoint,
+  Profile,
+} from "@/types/database"
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>
-
-export interface SharedEloHistoryPoint {
-  date: string
-  rating: number
-  delta: number | null
-  match_id: string | null
-}
-
-export interface SharedEloRating {
-  id: string
-  player_id: string
-  federation: string
-  elo: number
-  rank_points: number
-  updated_at: string
-  history: SharedEloHistoryPoint[]
-}
 
 export interface TrainingDashboardActivity {
   id: string
@@ -58,7 +54,15 @@ export interface TrainingProfileData {
   matches: Array<Database["public"]["Tables"]["matches"]["Row"]>
   equipment: Database["public"]["Tables"]["equipment"]["Row"] | null
   badges: Array<Database["public"]["Tables"]["badges"]["Row"]>
-  eloRatings: SharedEloRating[]
+  pgrProfile: PgrProfile | null
+}
+
+export interface PgrPageData {
+  profile: Profile
+  pgrProfile: PgrProfile | null
+  ratingHistory: PgrRatingHistoryPoint[]
+  pgrMatches: PgrMatch[]
+  leaderboard: PgrLeaderboardEntry[]
 }
 
 function sanitizeUsername(value: string | null | undefined, fallback: string) {
@@ -158,45 +162,6 @@ function getStreakDays(sessions: Array<{ date: string }>) {
   }
 
   return streak
-}
-
-export async function getSharedEloRatings(
-  supabase: SupabaseServerClient,
-  playerId: string
-): Promise<SharedEloRating[]> {
-  const [{ data: ratings, error: ratingsError }, { data: history, error: historyError }] =
-    await Promise.all([
-      supabase
-        .from("elo_ratings")
-        .select("*")
-        .eq("player_id", playerId)
-        .order("federation", { ascending: true }),
-      supabase
-        .from("elo_history")
-        .select("*")
-        .eq("player_id", playerId)
-        .order("recorded_at", { ascending: true }),
-    ])
-
-  if (ratingsError) throw new Error(ratingsError.message)
-  if (historyError) throw new Error(historyError.message)
-
-  return (ratings || []).map((rating) => ({
-    id: rating.id,
-    player_id: rating.player_id,
-    federation: rating.federation,
-    elo: rating.elo,
-    rank_points: rating.rank_points,
-    updated_at: rating.updated_at,
-    history: (history || [])
-      .filter((point) => point.federation === rating.federation)
-      .map((point) => ({
-        date: point.recorded_at,
-        rating: point.elo_after,
-        delta: point.delta,
-        match_id: point.match_id,
-      })),
-  }))
 }
 
 export async function getTrainingDashboardData(): Promise<TrainingDashboardData> {
@@ -319,7 +284,7 @@ export async function getTrainingProfileData(): Promise<TrainingProfileData> {
     { data: matches, error: matchesError },
     { data: equipment, error: equipmentError },
     { data: badges, error: badgesError },
-    eloRatings,
+    pgrProfile,
   ] = await Promise.all([
     supabase
       .from("sessions")
@@ -344,7 +309,7 @@ export async function getTrainingProfileData(): Promise<TrainingProfileData> {
       .select("*")
       .eq("player_id", profile.id)
       .order("earned_at", { ascending: false }),
-    getSharedEloRatings(supabase, profile.id),
+    getMyPgrProfileSafe(),
   ])
 
   if (sessionsError) throw new Error(sessionsError.message)
@@ -358,14 +323,24 @@ export async function getTrainingProfileData(): Promise<TrainingProfileData> {
     matches: matches || [],
     equipment: equipment || null,
     badges: badges || [],
-    eloRatings,
+    pgrProfile,
   }
 }
 
-export async function getEloPageData() {
-  const { supabase, profile } = await requireSharedProfile()
+export async function getEloPageData(): Promise<PgrPageData> {
+  const { profile } = await requireSharedProfile()
+  const [pgrProfile, ratingHistory, pgrMatches, leaderboard] = await Promise.all([
+    getMyPgrProfileSafe(),
+    getMyPgrRatingHistorySafe(100),
+    getMyPgrMatchesSafe({ limit: 20 }),
+    getPgrLeaderboardSafe({ limit: 20 }),
+  ])
+
   return {
     profile,
-    eloRatings: await getSharedEloRatings(supabase, profile.id),
+    pgrProfile,
+    ratingHistory,
+    pgrMatches,
+    leaderboard,
   }
 }

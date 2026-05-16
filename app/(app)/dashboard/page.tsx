@@ -74,7 +74,7 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-2 gap-2">
         <QuickAction href="/sessions/new" icon={<Plus size={16} className="text-lime" />} label="Séance" tone="training" />
         <QuickAction href="/matches/new" icon={<Trophy size={16} className="text-white" />} label="Match" tone="match" />
-        <QuickAction href="/chat" icon={<Brain size={16} className="text-white" />} label="Ask IA" tone="ai" />
+        <QuickAction href="/coach" icon={<Brain size={16} className="text-white" />} label="Ask IA" tone="ai" />
         <QuickAction href="/stats" icon={<TrendingUp size={16} className="text-pp-white" />} label="Stats" tone="stats" />
       </div>
 

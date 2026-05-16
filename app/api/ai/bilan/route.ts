@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
+import { createOpenAiChatCompletion, getAiNotConfiguredPayload } from "@/lib/ai/config"
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import { Mistral } from "@mistralai/mistralai"
 import { z } from "zod"
 
 const bilanRequestSchema = z.object({
@@ -20,6 +20,17 @@ const recapContentSchema = z.object({
   objectif_prochain: z.string(),
   score_global: z.number().min(0).max(100),
 })
+
+function extractJsonObject(value: string) {
+  const trimmed = value.trim()
+  if (trimmed.startsWith("{")) return trimmed
+
+  const start = trimmed.indexOf("{")
+  const end = trimmed.lastIndexOf("}")
+  if (start >= 0 && end > start) return trimmed.slice(start, end + 1)
+
+  return trimmed
+}
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
@@ -77,16 +88,9 @@ Notes de séances:
 ${sessionNotes || "Aucune note."}
 `.trim()
 
-  if (!process.env.MISTRAL_APIKEY) {
-    return NextResponse.json({ error: "Service IA non configuré" }, { status: 500 })
-  }
-
-  const mistral = new Mistral({ apiKey: process.env.MISTRAL_APIKEY! })
-
   let content: Record<string, unknown>
   try {
-    const response = await mistral.chat.complete({
-      model: "mistral-small-latest",
+    const completion = await createOpenAiChatCompletion({
       messages: [
         {
           role: "system",
@@ -102,11 +106,15 @@ ${sessionNotes || "Aucune note."}
         },
         { role: "user", content: context },
       ],
+      json: true,
+      maxCompletionTokens: 1000,
     })
 
-    const raw = response.choices?.[0]?.message?.content
-    const rawStr = typeof raw === "string" ? raw : JSON.stringify(raw)
-    const parsedContent = recapContentSchema.safeParse(JSON.parse(rawStr))
+    if (!completion.configured) {
+      return NextResponse.json(getAiNotConfiguredPayload(), { status: 503 })
+    }
+
+    const parsedContent = recapContentSchema.safeParse(JSON.parse(extractJsonObject(completion.content)))
     if (!parsedContent.success) {
       return NextResponse.json({ error: "Réponse IA invalide" }, { status: 502 })
     }

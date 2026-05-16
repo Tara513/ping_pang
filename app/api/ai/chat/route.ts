@@ -1,13 +1,18 @@
 import { createClient } from "@/lib/supabase/server"
+import { createOpenAiChatCompletion, getAiNotConfiguredPayload } from "@/lib/ai/config"
+import { extractSetsFromBallData, formatSetsForPrompt } from "@/lib/utils/match-sets"
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import { Mistral } from "@mistralai/mistralai"
 import { z } from "zod"
 
 interface ChatMessage {
   role: "user" | "assistant"
   content: string
   timestamp: string
+}
+
+function getSetsDetailText(ballData: unknown) {
+  return formatSetsForPrompt(extractSetsFromBallData(ballData))
 }
 
 const chatPostSchema = z.object({
@@ -72,6 +77,9 @@ export async function POST(req: NextRequest) {
 - Résultat: ${match.result === "win" ? "Victoire" : "Défaite"} ${match.sets_won}-${match.sets_lost}
 - Type: ${match.match_type}
 - Date: ${match.date}
+- Source: ${match.source || "manual"}
+- Ranking match id: ${match.ranking_match_id || "aucun"}
+- Détail sets PGR: ${getSetsDetailText(match.ball_data)}
 - Notes: ${match.notes || "aucune"}`
       }
     }
@@ -95,23 +103,21 @@ export async function POST(req: NextRequest) {
   const userMsg: ChatMessage = { role: "user", content: message, timestamp: new Date().toISOString() }
   const allMessages = [...existingMessages, userMsg]
 
-  if (!process.env.MISTRAL_APIKEY) {
-    return NextResponse.json({ error: "Service IA non configuré" }, { status: 500 })
-  }
-
-  const mistral = new Mistral({ apiKey: process.env.MISTRAL_APIKEY! })
-
   let replyContent: string
   try {
-    const response = await mistral.chat.complete({
-      model: "mistral-small-latest",
+    const completion = await createOpenAiChatCompletion({
       messages: [
         { role: "system", content: systemContext },
         ...allMessages.slice(-20).map(m => ({ role: m.role, content: m.content })),
       ],
+      maxCompletionTokens: 900,
     })
-    const raw = response.choices?.[0]?.message?.content
-    replyContent = typeof raw === "string" ? raw : "Je ne peux pas répondre pour l'instant."
+
+    if (!completion.configured) {
+      return NextResponse.json(getAiNotConfiguredPayload(), { status: 503 })
+    }
+
+    replyContent = completion.content
   } catch {
     replyContent = "Erreur lors de la génération de la réponse. Réessaie dans un instant."
   }

@@ -9,7 +9,7 @@ import { PageLoader } from '@/components/ui/LoadingSpinner'
 import { Plus, Trophy, TrendingUp, TrendingDown } from 'lucide-react'
 import type { Match } from '@/lib/types'
 import { getMatches } from '@/lib/api'
-import { formatDateShort, formatSetsResult } from '@/lib/utils/format'
+import { formatDateShort, formatMatchSetsResult } from '@/lib/utils/format'
 
 export default function MatchesPage() {
   const [matches, setMatches] = useState<Match[]>([])
@@ -72,7 +72,7 @@ function StatCard({ label, value, highlight }: { label: string; value: string | 
 }
 
 function MatchCard({ match }: { match: Match }) {
-  const setsResult = formatSetsResult(match.sets)
+  const setsResult = formatMatchSetsResult(match)
   const isWin = match.result === 'win'
 
   return (
@@ -87,6 +87,7 @@ function MatchCard({ match }: { match: Match }) {
           <p className="text-sm font-medium text-onyx truncate">vs {match.opponent_name}</p>
           <div className="flex items-center gap-1.5 mt-0.5">
             <span className="text-xs text-onyx-400">{formatDateShort(match.date)}</span>
+            {match.source === 'ranking' && <span className="text-[10px] font-semibold text-blue-pp-dark">PGR</span>}
           </div>
         </div>
         <div className="text-right shrink-0">

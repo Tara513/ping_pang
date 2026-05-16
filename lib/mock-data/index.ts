@@ -1,6 +1,6 @@
 import type {
   UserProfile, TrainingSession, Exercise, Match, MatchAnalysis,
-  EloRating, Equipment, Badge, TrainingProgram, ProRoutine,
+  Equipment, Badge, TrainingProgram, ProRoutine,
   FollowActivity, Location, AIReport, ChatMessage,
 } from '@/lib/types'
 
@@ -398,7 +398,6 @@ export const mockMatches: Match[] = [
     ],
     result: 'win',
     source: 'manual',
-    analysis_id: 'analysis-1',
     created_at: '2025-05-11T22:00:00Z',
   },
   {
@@ -433,7 +432,7 @@ export const mockMatches: Match[] = [
       { player: 11, opponent: 8 },
     ],
     result: 'win',
-    source: 'ranking-import',
+    source: 'ranking',
     created_at: '2025-04-27T21:00:00Z',
   },
   {
@@ -504,61 +503,6 @@ export const mockAnalyses: MatchAnalysis[] = [
   },
 ]
 
-// ────────────────────────────────────────────────────────────
-// ELO Ratings
-// ────────────────────────────────────────────────────────────
-export const mockEloRatings: EloRating[] = [
-  {
-    id: 'elo-1',
-    user_id: 'user-1',
-    federation: 'FFTT',
-    rating: 1247,
-    percentile: 72,
-    confidence: 'high',
-    history: [
-      { date: '2024-10-01', rating: 1180, delta: undefined },
-      { date: '2024-11-01', rating: 1195, delta: 15 },
-      { date: '2024-12-01', rating: 1210, delta: 15 },
-      { date: '2025-01-01', rating: 1198, delta: -12 },
-      { date: '2025-02-01', rating: 1215, delta: 17 },
-      { date: '2025-03-01', rating: 1230, delta: 15 },
-      { date: '2025-04-01', rating: 1238, delta: 8 },
-      { date: '2025-05-01', rating: 1247, delta: 9 },
-    ],
-    last_updated: '2025-05-01',
-  },
-  {
-    id: 'elo-2',
-    user_id: 'user-1',
-    federation: 'TTR',
-    rating: 1312,
-    percentile: 68,
-    confidence: 'medium',
-    history: [
-      { date: '2024-10-01', rating: 1260 },
-      { date: '2024-12-01', rating: 1280, delta: 20 },
-      { date: '2025-02-01', rating: 1295, delta: 15 },
-      { date: '2025-04-01', rating: 1312, delta: 17 },
-    ],
-    last_updated: '2025-04-27',
-  },
-  {
-    id: 'elo-3',
-    user_id: 'user-1',
-    federation: 'WTT',
-    rating: 892,
-    percentile: 58,
-    confidence: 'low',
-    history: [
-      { date: '2025-01-01', rating: 850 },
-      { date: '2025-03-01', rating: 872, delta: 22 },
-      { date: '2025-05-01', rating: 892, delta: 20 },
-    ],
-    last_updated: '2025-05-01',
-  },
-]
-
-// ────────────────────────────────────────────────────────────
 // Badges
 // ────────────────────────────────────────────────────────────
 export const mockBadges: Badge[] = [
@@ -571,7 +515,7 @@ export const mockBadges: Badge[] = [
   { id: 'badge-7', name: 'Première victoire', description: 'Remporter ton premier match enregistré', icon: 'Award', category: 'matches', unlocked: true, unlocked_at: '2024-10-02' },
   { id: 'badge-8', name: '10 victoires', description: 'Remporter 10 matchs', icon: 'Medal', category: 'matches', unlocked: true, unlocked_at: '2025-01-15' },
   { id: 'badge-9', name: '25 victoires', description: 'Remporter 25 matchs', icon: 'Crown', category: 'matches', unlocked: false, progress: 60, target_label: '15/25 victoires' },
-  { id: 'badge-10', name: '+50 ELO', description: 'Gagner 50 points ELO en un mois', icon: 'TrendingUp', category: 'progression', unlocked: true, unlocked_at: '2024-12-01' },
+  { id: 'badge-10', name: '+50 ranking', description: 'Gagner 50 points ranking en un mois', icon: 'TrendingUp', category: 'progression', unlocked: true, unlocked_at: '2024-12-01' },
   { id: 'badge-11', name: 'Analyse IA', description: 'Générer ta première analyse IA de match', icon: 'Cpu', category: 'progression', unlocked: true, unlocked_at: '2025-01-20' },
   { id: 'badge-12', name: 'Programme complet', description: 'Terminer un programme d\'entraînement', icon: 'CheckCircle', category: 'progression', unlocked: false, progress: 30, target_label: '3/10 séances' },
 ]

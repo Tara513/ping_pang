@@ -22,6 +22,7 @@ export type ExerciseCategory = 'service' | 'return' | 'topspin' | 'block' | 'foo
 export type MatchType = 'friendly' | 'league' | 'tournament' | 'ranking' | 'training'
 export type MatchResult = 'win' | 'loss'
 export type Federation = 'FFTT' | 'WTT' | 'TTR' | 'PGR' | 'ITTF'
+export type MatchSource = 'manual' | 'import' | 'api' | 'ranking'
 export type BadgeCategory = 'regularity' | 'volume' | 'matches' | 'progression'
 export type RubberThickness = '1.5' | '1.8' | '2.0' | '2.1' | 'max'
 export type ConfidenceLevel = 'low' | 'medium' | 'high'
@@ -138,14 +139,21 @@ export interface Match {
   id: string
   user_id: string
   opponent_name: string
+  opponent_id?: string | null
   opponent_level?: Level
   match_type: MatchType
   date: string
   location?: string
   sets: SetScore[]
+  sets_won?: number | null
+  sets_lost?: number | null
   result: MatchResult
-  source: 'manual' | 'ranking-import'
-  analysis_id?: string
+  source: MatchSource
+  ranking_match_id?: string | null
+  visibility?: string | null
+  status?: string | null
+  ball_data?: Record<string, unknown> | null
+  has_set_details?: boolean
   created_at: string
 }
 
@@ -156,34 +164,16 @@ export interface MatchAnalysis {
   id: string
   match_id: string
   user_id: string
+  rating?: number | null
   summary: string
   strengths: string[]
   weaknesses: string[]
+  critical_moments?: string[]
   recommendations: string[]
+  model_used?: string | null
   suggested_exercise_ids: string[]
   generated_at: string
   status: AnalysisStatus
-}
-
-// ────────────────────────────────────────────────────────────
-// EloRating
-// ────────────────────────────────────────────────────────────
-export interface EloHistoryPoint {
-  date: string
-  rating: number
-  delta?: number
-  match_id?: string
-}
-
-export interface EloRating {
-  id: string
-  user_id: string
-  federation: Federation
-  rating: number
-  percentile?: number
-  confidence: ConfidenceLevel
-  history: EloHistoryPoint[]
-  last_updated: string
 }
 
 // ────────────────────────────────────────────────────────────

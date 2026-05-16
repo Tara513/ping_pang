@@ -47,7 +47,7 @@ export function generateMatchAnalysis(match: Partial<Match>): MatchAnalysis {
   const weaknesses = shuffle(WEAKNESSES_POOL).slice(0, isWin ? 2 : 3)
   const recommendations = shuffle(RECOMMENDATIONS_POOL).slice(0, 3)
 
-  const totalSets = (match.score_player?.length || 3)
+  const totalSets = (setsWon + setsLost) || 3
   const critical_moments = Array.from({ length: Math.min(totalSets, 3) }, (_, i) => ({
     set: i + 1,
     description: isWin

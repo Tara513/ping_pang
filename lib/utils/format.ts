@@ -47,6 +47,18 @@ export function formatSetsResult(sets: { player: number; opponent: number }[]): 
   return `${playerSets}/${opponentSets}`
 }
 
+export function formatMatchSetsResult(match: {
+  sets?: { player: number; opponent: number }[]
+  sets_won?: number | null
+  sets_lost?: number | null
+}): string {
+  if (match.sets && match.sets.length > 0) return formatSetsResult(match.sets)
+  if (typeof match.sets_won === 'number' || typeof match.sets_lost === 'number') {
+    return `${match.sets_won ?? 0}/${match.sets_lost ?? 0}`
+  }
+  return '-'
+}
+
 export const LEVEL_LABELS: Record<string, string> = {
   beginner: 'Débutant',
   intermediate: 'Intermédiaire',

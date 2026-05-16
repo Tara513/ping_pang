@@ -9,7 +9,7 @@ import { PageLoader } from '@/components/ui/LoadingSpinner'
 import { Brain, MapPin, Calendar, TrendingUp, TrendingDown } from 'lucide-react'
 import type { Match } from '@/lib/types'
 import { getMatch } from '@/lib/api'
-import { formatDate, formatSetsResult } from '@/lib/utils/format'
+import { formatDate, formatMatchSetsResult } from '@/lib/utils/format'
 
 export default function MatchDetailPage() {
   const { id } = useParams()
@@ -36,6 +36,11 @@ export default function MatchDetailPage() {
           <span className={`text-sm font-semibold ${isWin ? 'text-lime' : 'text-mauve'}`}>
             {isWin ? 'Victoire' : 'Défaite'}
           </span>
+          {match.source === 'ranking' && (
+            <span className="text-[10px] font-bold uppercase tracking-wide text-blue-pp bg-white/90 px-1.5 py-0.5 rounded-[4px]">
+              PGR
+            </span>
+          )}
         </div>
         <h2 className="font-heading font-bold text-2xl mb-0.5">vs {match.opponent_name}</h2>
         <div className="flex items-center gap-4 mt-3 text-sm opacity-70">
@@ -47,48 +52,50 @@ export default function MatchDetailPage() {
       {/* Score */}
       <Card>
         <CardTitle className="mb-4">Score</CardTitle>
-        <div className="space-y-2">
-          {match.sets.map((set, i) => {
-            const playerWon = set.player > set.opponent
-            return (
-              <div key={i} className="flex items-center gap-3">
-                <span className="text-xs text-onyx-400 w-10">Set {i + 1}</span>
-                <div className="flex-1 flex items-center gap-2">
-                  <div className={`flex-1 text-center py-2 rounded-[6px] font-heading font-bold text-lg ${playerWon ? 'bg-evergreen text-pp-white' : 'bg-onyx-50 text-onyx-600'}`}>
-                    {set.player}
-                  </div>
-                  <span className="text-onyx-300 text-sm">–</span>
-                  <div className={`flex-1 text-center py-2 rounded-[6px] font-heading font-bold text-lg ${!playerWon ? 'bg-onyx text-pp-white' : 'bg-onyx-50 text-onyx-600'}`}>
-                    {set.opponent}
+        {match.sets.length > 0 ? (
+          <div className="space-y-2">
+            {match.sets.map((set, i) => {
+              const playerWon = set.player > set.opponent
+              return (
+                <div key={i} className="flex items-center gap-3">
+                  <span className="text-xs text-onyx-400 w-10">Set {i + 1}</span>
+                  <div className="flex-1 flex items-center gap-2">
+                    <div className={`flex-1 text-center py-2 rounded-[6px] font-heading font-bold text-lg ${playerWon ? 'bg-evergreen text-pp-white' : 'bg-onyx-50 text-onyx-600'}`}>
+                      {set.player}
+                    </div>
+                    <span className="text-onyx-300 text-sm">–</span>
+                    <div className={`flex-1 text-center py-2 rounded-[6px] font-heading font-bold text-lg ${!playerWon ? 'bg-onyx text-pp-white' : 'bg-onyx-50 text-onyx-600'}`}>
+                      {set.opponent}
+                    </div>
                   </div>
                 </div>
-              </div>
-            )
-          })}
-        </div>
+              )
+            })}
+          </div>
+        ) : (
+          <p className="text-sm text-onyx-400">Détail des sets non disponible.</p>
+        )}
         <div className="mt-3 pt-3 border-t border-onyx-100 flex justify-between items-center">
           <span className="text-sm text-onyx-400">Résultat sets</span>
-          <span className="font-heading font-bold text-lg text-onyx">{formatSetsResult(match.sets)}</span>
+          <span className="font-heading font-bold text-lg text-onyx">{formatMatchSetsResult(match)}</span>
         </div>
       </Card>
 
       {/* Analysis CTA */}
-      <Link href={match.analysis_id ? `/matches/${match.id}/analysis` : '#'}>
+      <Link href={`/matches/${match.id}/analysis`}>
         <Card className="flex items-center gap-3 cursor-pointer hover:border-evergreen transition-colors">
           <div className="size-10 rounded-[6px] bg-evergreen/10 flex items-center justify-center shrink-0">
             <Brain size={18} className="text-evergreen" />
           </div>
           <div className="flex-1">
             <p className="font-medium text-sm text-onyx">
-              {match.analysis_id ? 'Voir l\'analyse IA' : 'Analyser avec l\'IA'}
+              Analyser avec l&apos;IA
             </p>
             <p className="text-xs text-onyx-400">
-              {match.analysis_id ? 'Analyse disponible' : 'Générer une analyse détaillée'}
+              Générer une analyse détaillée
             </p>
           </div>
-          {!match.analysis_id && (
-            <Button variant="primary" size="sm">Analyser</Button>
-          )}
+          <Button variant="primary" size="sm">Analyser</Button>
         </Card>
       </Link>
     </div>
