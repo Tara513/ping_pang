@@ -18,7 +18,7 @@ export default function SocialPage() {
   const [tab, setTab] = useState<'feed' | 'following'>('feed')
 
   useEffect(() => {
-    getFollowActivities().then(a => { setActivities(a); setLoading(false) })
+    getFollowActivities().then(a => { setActivities(a); setLoading(false) }).catch(() => setLoading(false))
   }, [])
 
   if (loading) return <PageLoader />

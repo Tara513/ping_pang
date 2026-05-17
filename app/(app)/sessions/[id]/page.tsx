@@ -20,7 +20,7 @@ export default function SessionDetailPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    getSession(id as string).then(s => { setSession(s); setLoading(false) })
+    getSession(id as string).then(s => { setSession(s); setLoading(false) }).catch(() => setLoading(false))
   }, [id])
 
   if (loading) return <PageLoader />
@@ -108,9 +108,9 @@ function MetricRow({ label, value, variant }: { label: string; value: number; va
     <div>
       <div className="flex items-center justify-between mb-1">
         <span className="text-sm text-onyx-600">{label}</span>
-        <span className="text-xs font-semibold text-onyx tabular-nums">{value}/100</span>
+        <span className="text-xs font-semibold text-onyx tabular-nums">{value}/5</span>
       </div>
-      <ProgressBar value={value} variant={variant as 'red' | 'blue' | 'lime'} size="sm" />
+      <ProgressBar value={value * 20} variant={variant as 'red' | 'blue' | 'lime'} size="sm" />
     </div>
   )
 }

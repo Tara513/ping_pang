@@ -16,7 +16,7 @@ export default function ProsPage() {
   const [selected, setSelected] = useState<string | null>(null)
 
   useEffect(() => {
-    getProRoutines().then(r => { setRoutines(r); setLoading(false) })
+    getProRoutines().then(r => { setRoutines(r); setLoading(false) }).catch(() => setLoading(false))
   }, [])
 
   if (loading) return <PageLoader />
@@ -34,7 +34,7 @@ export default function ProsPage() {
             <Card key={r.id} padding="sm" hover onClick={() => setSelected(r.id)} className="flex items-center gap-3">
               <div className="size-12 rounded-full bg-evergreen flex items-center justify-center shrink-0">
                 <span className="font-heading font-bold text-lime text-sm">
-                  {r.player_name.split(' ').map(n => n[0]).join('')}
+                  {r.player_name.split(' ').filter(Boolean).map(n => n[0]).join('')}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
@@ -60,7 +60,7 @@ export default function ProsPage() {
           <div className="flex items-center gap-3">
             <div className="size-14 rounded-full bg-evergreen flex items-center justify-center">
               <span className="font-heading font-bold text-lime text-lg">
-                {active.player_name.split(' ').map(n => n[0]).join('')}
+                {active.player_name.split(' ').filter(Boolean).map(n => n[0]).join('')}
               </span>
             </div>
             <div>

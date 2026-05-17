@@ -18,7 +18,7 @@ export default function ProgramsPage() {
   const [expanded, setExpanded] = useState<string | null>(null)
 
   useEffect(() => {
-    getPrograms().then(p => { setPrograms(p); setLoading(false) })
+    getPrograms().then(p => { setPrograms(p); setLoading(false) }).catch(() => setLoading(false))
   }, [])
 
   if (loading) return <PageLoader />
@@ -92,7 +92,7 @@ function ProgramCard({ program: p, expanded, onToggle }: { program: TrainingProg
       {expanded && (
         <div className="space-y-2 mb-3">
           {p.sessions.map(session => {
-            const exercises = session.exercise_ids.map(id => mockExercises.find(e => e.id === id)?.name).filter(Boolean)
+            const exercises = (session.exercise_ids ?? []).map(id => mockExercises.find(e => e.id === id)?.name).filter(Boolean)
             return (
               <div key={session.id} className="flex items-start gap-2.5 py-1.5 border-b border-onyx-50 last:border-0">
                 {session.completed

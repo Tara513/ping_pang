@@ -90,7 +90,7 @@ export async function createPersonalMatch(input: unknown): Promise<ActionResult<
 
   const match = parsed.data
   const setsWon = match.sets.filter((set) => set.player > set.opponent).length
-  const setsLost = match.sets.length - setsWon
+  const setsLost = match.sets.filter((set) => set.opponent > set.player).length
 
   const { data, error } = await supabase
     .from("matches")
@@ -202,7 +202,8 @@ export async function completeTrainingOnboarding(input: unknown): Promise<Action
 
   if (onboarding.target_hours) {
     const monday = new Date()
-    monday.setDate(monday.getDate() - monday.getDay() + 1)
+    const day = monday.getDay() || 7
+    monday.setDate(monday.getDate() - day + 1)
     const weekStart = monday.toISOString().split("T")[0]
 
     const { data: existingGoal, error: goalLookupError } = await supabase

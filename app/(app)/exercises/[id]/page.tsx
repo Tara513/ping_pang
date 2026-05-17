@@ -17,7 +17,7 @@ export default function ExerciseDetailPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    getExercise(id as string).then(e => { setExercise(e); setLoading(false) })
+    getExercise(id as string).then(e => { setExercise(e); setLoading(false) }).catch(() => setLoading(false))
   }, [id])
 
   if (loading) return <PageLoader />

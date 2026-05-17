@@ -28,7 +28,7 @@ export default function ExercisesPage() {
   const [activeCategory, setActiveCategory] = useState<ExerciseCategory | 'all'>('all')
 
   useEffect(() => {
-    getExercises().then(e => { setExercises(e); setLoading(false) })
+    getExercises().then(e => { setExercises(e); setLoading(false) }).catch(() => setLoading(false))
   }, [])
 
   const filtered = exercises.filter(ex => {

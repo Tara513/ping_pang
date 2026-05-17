@@ -15,7 +15,7 @@ export default function EquipmentPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    getEquipments().then(e => { setEquipments(e); setLoading(false) })
+    getEquipments().then(e => { setEquipments(e); setLoading(false) }).catch(() => setLoading(false))
   }, [])
 
   if (loading) return <PageLoader />

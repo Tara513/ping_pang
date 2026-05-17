@@ -34,7 +34,7 @@ export default function SessionsPage() {
   const [filter, setFilter] = useState<SessionType | 'all'>('all')
 
   useEffect(() => {
-    getSessions().then(s => { setSessions(s); setLoading(false) })
+    getSessions().then(s => { setSessions(s); setLoading(false) }).catch(() => setLoading(false))
   }, [])
 
   const filtered = filter === 'all' ? sessions : sessions.filter(s => s.type === filter)
@@ -70,7 +70,7 @@ export default function SessionsPage() {
           icon={Dumbbell}
           title="Aucune séance"
           description="Enregistre ta première séance d'entraînement"
-          action={{ label: 'Nouvelle séance', href: '/sessions/new' } as never}
+          action={{ label: 'Nouvelle séance', onClick: () => { window.location.href = '/sessions/new' } }}
         />
       ) : (
         <div className="space-y-2">

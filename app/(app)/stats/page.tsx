@@ -25,7 +25,7 @@ export default function StatsPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    getAggregatedStats(period).then(s => { setStats(s); setLoading(false) })
+    getAggregatedStats(period).then(s => { setStats(s); setLoading(false) }).catch(() => setLoading(false))
   }, [period])
 
   if (loading) return <PageLoader />
