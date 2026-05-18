@@ -16,7 +16,7 @@ export default function MatchesPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    getMatches().then(m => { setMatches(m); setLoading(false) })
+    getMatches().then(m => { setMatches(m); setLoading(false) }).catch(() => setLoading(false))
   }, [])
 
   const wins = matches.filter(m => m.result === 'win').length

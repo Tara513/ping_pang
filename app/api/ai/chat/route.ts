@@ -118,8 +118,9 @@ export async function POST(req: NextRequest) {
     }
 
     replyContent = completion.content
-  } catch {
-    replyContent = "Erreur lors de la génération de la réponse. Réessaie dans un instant."
+  } catch (err) {
+    console.error("[chat] openai error", err)
+    return NextResponse.json({ error: "Erreur lors de la génération de la réponse" }, { status: 502 })
   }
 
   const assistantMsg: ChatMessage = {

@@ -17,7 +17,7 @@ export default function MatchDetailPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    getMatch(id as string).then(m => { setMatch(m); setLoading(false) })
+    getMatch(id as string).then(m => { setMatch(m); setLoading(false) }).catch(() => setLoading(false))
   }, [id])
 
   if (loading) return <PageLoader />

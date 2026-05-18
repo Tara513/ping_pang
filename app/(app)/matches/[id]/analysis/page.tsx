@@ -19,7 +19,7 @@ export default function MatchAnalysisPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    getAnalysis(id as string).then(a => { setAnalysis(a); setLoading(false) })
+    getAnalysis(id as string).then(a => { setAnalysis(a); setLoading(false) }).catch(() => setLoading(false))
   }, [id])
 
   const generate = async () => {
@@ -68,7 +68,7 @@ export default function MatchAnalysisPage() {
     )
   }
 
-  const suggestedExercises = analysis.suggested_exercise_ids.map(id => mockExercises.find(e => e.id === id)).filter(Boolean)
+  const suggestedExercises = analysis.suggested_exercise_ids.map(exerciseId => mockExercises.find(e => e.id === exerciseId)).filter(Boolean)
 
   return (
     <div className="space-y-4">

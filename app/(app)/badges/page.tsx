@@ -33,7 +33,7 @@ export default function BadgesPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    getBadges().then(b => { setBadges(b); setLoading(false) })
+    getBadges().then(b => { setBadges(b); setLoading(false) }).catch(() => setLoading(false))
   }, [])
 
   if (loading) return <PageLoader />
@@ -47,7 +47,7 @@ export default function BadgesPage() {
           <h2 className="font-heading font-bold text-xl text-onyx">Badges</h2>
           <p className="text-sm text-onyx-400">{unlocked}/{badges.length} débloqués</p>
         </div>
-        <Badge variant="lime">{Math.round((unlocked / badges.length) * 100)}%</Badge>
+        <Badge variant="lime">{badges.length ? Math.round((unlocked / badges.length) * 100) : 0}%</Badge>
       </div>
 
       {CATEGORIES.map(cat => {

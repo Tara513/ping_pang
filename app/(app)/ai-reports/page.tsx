@@ -16,14 +16,19 @@ export default function AIReportsPage() {
   const [generating, setGenerating] = useState(false)
 
   useEffect(() => {
-    getAIReports().then(r => { setReports(r); setLoading(false) })
+    getAIReports().then(r => { setReports(r); setLoading(false) }).catch(() => setLoading(false))
   }, [])
 
   const generate = async () => {
     setGenerating(true)
-    const r = await generateWeeklyReport()
-    setReports(prev => [r, ...prev])
-    setGenerating(false)
+    try {
+      const r = await generateWeeklyReport()
+      setReports(prev => [r, ...prev])
+    } catch {
+      // silent fail — spinner stops, user can retry
+    } finally {
+      setGenerating(false)
+    }
   }
 
   if (loading) return <PageLoader />

@@ -17,8 +17,8 @@ import {
 
 export default async function DashboardPage() {
   const { profile, stats, feed, latestRecommendation } = await getTrainingDashboardData()
-  const displayName = profile.full_name || profile.username
-  const firstName = displayName.split(" ")[0] || profile.username
+  const displayName = profile.full_name || profile.username || "Joueur"
+  const firstName = displayName.split(" ")[0] || "Joueur"
 
   return (
     <div className="space-y-5">

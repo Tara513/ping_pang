@@ -17,7 +17,7 @@ export default function ChatPage() {
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    getChatHistory().then(m => { setMessages(m); setLoading(false) })
+    getChatHistory().then(m => { setMessages(m); setLoading(false) }).catch(() => setLoading(false))
   }, [])
 
   useEffect(() => {
@@ -35,9 +35,19 @@ export default function ChatPage() {
     setMessages(prev => [...prev, userMsg])
     setInput('')
     setSending(true)
-    const reply = await sendChatMessage(userMsg.content)
-    setMessages(prev => [...prev, reply])
-    setSending(false)
+    try {
+      const reply = await sendChatMessage(userMsg.content)
+      setMessages(prev => [...prev, reply])
+    } catch {
+      setMessages(prev => [...prev, {
+        id: `msg-error-${Date.now()}`,
+        role: 'assistant' as const,
+        content: "Une erreur est survenue. Réessaie dans un instant.",
+        timestamp: new Date().toISOString(),
+      }])
+    } finally {
+      setSending(false)
+    }
   }
 
   if (loading) return <PageLoader />

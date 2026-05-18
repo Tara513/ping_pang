@@ -97,6 +97,13 @@ function extractJsonObject(value: string) {
 }
 
 export async function POST(request: NextRequest) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) return NextResponse.json({ error: "Non authentifié" }, { status: 401 })
+
   let body: unknown
   try {
     body = await request.json()
@@ -108,13 +115,6 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Paramètres invalides" }, { status: 400 })
   }
-
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) return NextResponse.json({ error: "Non authentifié" }, { status: 401 })
 
   const { data: match, error: matchError } = await supabase
     .from("matches")

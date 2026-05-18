@@ -140,9 +140,9 @@ export function EloClient({ data }: { data: PgrPageData }) {
               <Card>
                 <CardTitle className="mb-3">Historique</CardTitle>
                 <div className="space-y-2">
-                  {[...history].reverse().map((point) => (
+                  {[...history].reverse().map((point, index) => (
                     <div
-                      key={`${point.date}-${point.rating}`}
+                      key={`${point.date}-${point.rating}-${index}`}
                       className="flex items-center justify-between py-1.5 border-b border-onyx-50 last:border-0"
                     >
                       <p className="text-sm text-onyx-600">{formatDate(point.date, "d MMM yyyy")}</p>

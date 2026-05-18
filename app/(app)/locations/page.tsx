@@ -14,7 +14,7 @@ export default function LocationsPage() {
   const [search, setSearch] = useState('')
 
   useEffect(() => {
-    getLocations().then(l => { setLocations(l); setLoading(false) })
+    getLocations().then(l => { setLocations(l); setLoading(false) }).catch(() => setLoading(false))
   }, [])
 
   const filtered = locations.filter(l =>

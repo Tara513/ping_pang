@@ -47,9 +47,10 @@ export default function NewSessionPage() {
   const submit = async () => {
     setLoading(true)
     const exercises = form.selectedExercises.map(id => {
-      const ex = mockExercises.find(e => e.id === id)!
+      const ex = mockExercises.find(e => e.id === id)
+      if (!ex) return null
       return { name: ex.name, notes: ex.objective }
-    })
+    }).filter((ex): ex is { name: string; notes: string } => ex !== null)
     const toRating = (value: number) => Math.max(1, Math.min(5, Math.round(value / 25) + 1))
     const result = await createTrainingSession({
       date: form.date,

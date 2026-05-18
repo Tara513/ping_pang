@@ -25,7 +25,7 @@ export default function CalendarPage() {
       setSessions(s)
       setMatches(m)
       setLoading(false)
-    })
+    }).catch(() => setLoading(false))
   }, [])
 
   const days = eachDayOfInterval({ start: startOfMonth(currentMonth), end: endOfMonth(currentMonth) })
